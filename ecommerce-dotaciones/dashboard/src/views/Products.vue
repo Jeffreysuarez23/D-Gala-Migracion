@@ -37,8 +37,7 @@
           <label>Categoría</label>
           <select class="select-input" v-model="filters.category">
             <option :value="null">Todas las categorías</option>
-            <option :value="1">Ropa</option>
-            <option :value="2">Camisetas</option>
+            <option v-for="cat in flatCategorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
           </select>
         </div>
 
@@ -52,6 +51,10 @@
         </div>
       </div>
     </section>
+
+    <!-- GLOBAL ALERTS -->
+    <div v-if="successMsg && !showDrawer" class="alert alert--success" style="margin-top: 0; margin-bottom: 24px;">{{ successMsg }}</div>
+    <div v-if="errorMsg && !showDrawer" class="alert alert--error" style="margin-top: 0; margin-bottom: 24px;">{{ errorMsg }}</div>
 
     <!-- PRODUCTS TABLE -->
     <section class="card table-card">
@@ -73,9 +76,17 @@
             <tr v-for="product in filteredProducts" :key="product.id">
               <td>#{{ product.id }}</td>
               <td>
-                <div class="product-info-cell">
-                  <span class="product-name">{{ product.nombre }}</span>
-                  <span class="product-slug">/{{ product.slug }}</span>
+                <div class="product-info-cell" style="display: flex; flex-direction: row; align-items: center; gap: 16px;">
+                  <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-input); flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                    <img v-if="getPrimaryImage(product.id)" :src="getPrimaryImage(product.id)" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--color-border);">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-direction: column;">
+                    <span class="product-name">{{ product.nombre }}</span>
+                    <span class="product-slug">/{{ product.slug }}</span>
+                  </div>
                 </div>
               </td>
               <td style="font-weight: 500;">
@@ -85,7 +96,20 @@
               </td>
               <td>{{ product.min_cantidad_mayorista }} uds.</td>
               <td>
-                <span class="badge badge--info">{{ getVariantsCount(product.id) }} vars</span>
+                <button 
+                  class="variant-btn" 
+                  title="Ver detalles de variantes"
+                  @click="openVariantsModal(product)"
+                >
+                  <span class="variant-btn__count">{{ getVariantsCount(product.id) }}</span>
+                  <span class="variant-btn__text">VARS</span>
+                  <svg class="variant-btn__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                  </svg>
+                </button>
               </td>
               <td style="font-weight: 600;">
                 <span :class="{ 'text-danger': getProductStock(product.id) === 0 }">
@@ -157,8 +181,7 @@
             <label>Categoría</label>
             <select class="select-input" v-model="form.categoria_id">
               <option :value="null">Ninguna</option>
-              <option :value="1">Ropa</option>
-              <option :value="2">Camisetas</option>
+              <option v-for="cat in flatCategorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
             </select>
           </div>
 
@@ -166,11 +189,11 @@
           <div class="grid-2">
             <div class="form-group">
               <label>Precio Detal (COP) *</label>
-              <input type="number" class="input-text" v-model="form.precio_minorista" required />
+              <input type="text" class="input-text" :value="formatInputMoney(form.precio_minorista)" @input="updatePrice('precio_minorista', $event, form)" required />
             </div>
             <div class="form-group">
               <label>Precio Mayorista (COP) *</label>
-              <input type="number" class="input-text" v-model="form.precio_mayorista" required />
+              <input type="text" class="input-text" :value="formatInputMoney(form.precio_mayorista)" @input="updatePrice('precio_mayorista', $event, form)" required />
             </div>
           </div>
 
@@ -196,8 +219,9 @@
           <div class="variants-panel-wrap" v-if="isEditMode">
             <div class="variants-panel__header">
               <h3>Variantes & Stock</h3>
-              <button type="button" class="btn-text-action" @click="showAddVariantForm = !showAddVariantForm">
-                {{ showAddVariantForm ? 'Cancelar' : '+ Agregar Variante' }}
+              <button type="button" class="btn-text-action" :class="{ cancel: showAddVariantForm }" @click="showAddVariantForm = !showAddVariantForm">
+                <svg v-if="!showAddVariantForm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {{ showAddVariantForm ? 'Cancelar' : 'Agregar Variante' }}
               </button>
             </div>
 
@@ -223,11 +247,15 @@
                   <input type="number" class="input-text" v-model="newVar.stock" />
                 </div>
               </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Precio Extra (Opcional)</label>
+                <input type="text" class="input-text" :value="formatInputMoney(newVar.precio_extra)" @input="updatePrice('precio_extra', $event, newVar)" />
+              </div>
               <div class="form-group">
                 <label>Lona Asociada (ID)</label>
                 <select class="select-input" v-model="newVar.lona_id">
                   <option :value="null">Ninguna lona</option>
-                  <option v-for="l in state.lonas" :key="l.id" :value="l.id">
+                  <option v-for="l in lonas" :key="l.id" :value="l.id">
                     {{ l.codigo }} - {{ l.tipo_producto }} ({{ l.color }})
                   </option>
                 </select>
@@ -255,21 +283,175 @@
             </div>
           </div>
 
+          <!-- IMAGES PANEL (Available in both modes) -->
+          <div class="variants-panel-wrap" style="margin-top: 15px; padding-top: 15px;">
+            <div class="variants-panel__header">
+              <h3>Imágenes del Producto</h3>
+              <button type="button" class="btn-text-action" :class="{ cancel: showAddImageForm }" @click="showAddImageForm = !showAddImageForm">
+                <svg v-if="!showAddImageForm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {{ showAddImageForm ? 'Cancelar' : 'Agregar Imagen' }}
+              </button>
+            </div>
+
+            <!-- Add Image Form -->
+            <div class="add-variant-box" v-if="showAddImageForm">
+              <div class="form-group">
+                <label>Seleccionar Imagen</label>
+                <input type="file" accept="image/*" class="input-file-styled" @change="onImageSelected" />
+              </div>
+              <div class="checkbox-group" style="margin-bottom: 12px;">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="newImg.es_portada" />
+                  <span>¿Es la imagen principal (portada)?</span>
+                </label>
+              </div>
+              <button type="button" class="btn btn--primary btn--sm" @click="isEditMode ? saveNewImage() : addLocalImage()">Guardar Imagen</button>
+            </div>
+
+            <!-- Existing Images List -->
+            <div class="image-grid">
+              <!-- Modo Edición -->
+              <template v-if="isEditMode">
+                <div v-for="img in getProductImages(form.id)" :key="img.id" class="image-card" :class="{ 'is-cover': img.es_portada }">
+                  <img :src="img.url" alt="Product Image" class="image-card__img" />
+                  <div v-if="img.es_portada" class="image-card__badge">Portada</div>
+                  <button v-if="!img.es_portada" type="button" class="image-card__btn-cover" @click="setAsCover(img.id)">Hacer Portada</button>
+                  <button type="button" class="image-card__btn-delete" @click="deleteImg(img.id)" title="Eliminar Imagen">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+              </template>
+              <!-- Modo Creación -->
+              <template v-else>
+                <div v-for="(img, index) in localImages" :key="index" class="image-card" :class="{ 'is-cover': img.es_portada }">
+                  <img :src="img.url" alt="Product Image" class="image-card__img" />
+                  <div v-if="img.es_portada" class="image-card__badge">Portada</div>
+                  <button v-if="!img.es_portada" type="button" class="image-card__btn-cover" @click="setLocalCover(index)">Hacer Portada</button>
+                  <button type="button" class="image-card__btn-delete" @click="removeLocalImage(index)" title="Eliminar Imagen">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div v-if="successMsg" class="alert alert--success">{{ successMsg }}</div>
+          <div v-if="errorMsg" class="alert alert--error">{{ errorMsg }}</div>
+
           <div class="form-actions">
             <button type="button" class="btn btn--secondary" @click="showDrawer = false">Cancelar</button>
-            <button type="submit" class="btn btn--primary">Guardar Producto</button>
+            <button type="submit" class="btn btn--primary" :disabled="saving">
+              <span class="spinner" v-if="saving"></span>
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {{ saving ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Producto') }}
+            </button>
           </div>
 
         </form>
       </div>
     </div>
 
+    <!-- Variants Modal -->
+    <Transition name="modal">
+      <div v-if="showVariantsModal" class="modal-overlay" @click.self="showVariantsModal = false">
+        <div class="modal-card" style="max-width: 800px; width: 95%;">
+          <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-border); padding-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 50px; height: 50px; border-radius: 8px; overflow: hidden; background: var(--bg-input); box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                <img v-if="getPrimaryImage(productForVariants.id)" :src="getPrimaryImage(productForVariants.id)" style="width: 100%; height: 100%; object-fit: cover;" />
+                <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--color-border);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                </div>
+              </div>
+              <div>
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); margin: 0 0 4px 0;">Variantes de {{ productForVariants.nombre }}</h2>
+                <span style="font-size: 0.85rem; color: var(--text-secondary); background: var(--bg-input); padding: 2px 8px; border-radius: 4px;">SKU Principal: {{ productForVariants.slug }}</span>
+              </div>
+            </div>
+            <button @click="showVariantsModal = false" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+          </div>
+          
+          <div v-if="!productForVariants.variantes || productForVariants.variantes.length === 0" style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 12px; opacity: 0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            <p style="margin: 0;">No hay variantes registradas para este producto.</p>
+          </div>
+          <div v-else style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+            <table class="table-custom" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th style="padding: 12px 16px;">SKU</th>
+                  <th style="padding: 12px 16px;">Color</th>
+                  <th style="padding: 12px 16px;">Talla</th>
+                  <th style="padding: 12px 16px; text-align: center;">Stock</th>
+                  <th style="padding: 12px 16px; text-align: right;">Precio Extra</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="v in productForVariants.variantes" :key="v.id">
+                  <td style="padding: 14px 16px; font-weight: 500; font-family: monospace; color: var(--color-accent);">{{ v.sku || 'N/A' }}</td>
+                  <td style="padding: 14px 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span v-if="v.color" style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15);" :style="{ backgroundColor: v.color }"></span>
+                      {{ v.color || 'N/A' }}
+                    </div>
+                  </td>
+                  <td style="padding: 14px 16px;">
+                    <span v-if="v.talla" style="background: var(--bg-input); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">{{ v.talla }}</span>
+                    <span v-else style="color: var(--text-muted);">N/A</span>
+                  </td>
+                  <td style="padding: 14px 16px; text-align: center;">
+                    <span :class="['badge', v.stock > 0 ? 'badge--success' : 'badge--danger']">{{ v.stock }} uds</span>
+                  </td>
+                  <td style="padding: 14px 16px; text-align: right; font-weight: 600; color: var(--text-primary);">
+                    {{ v.precio_extra > 0 ? '+$' + formatMoney(v.precio_extra) : 'Sin recargo' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Delete Confirmation Modal -->
+    <Transition name="modal">
+      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+        <div class="modal-card">
+          <div class="modal-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" class="modal-circle" />
+              <line x1="12" y1="8" x2="12" y2="12" class="modal-line" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 class="modal-title">¿Eliminar este producto?</h2>
+          <p class="modal-text">Se eliminará permanentemente <strong>{{ productToDelete?.nombre }}</strong> y todas sus variantes e imágenes. Esta acción no se puede deshacer.</p>
+          
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn--cancel" @click="showDeleteModal = false" :disabled="deleting">Cancelar</button>
+            <button class="modal-btn modal-btn--danger" @click="executeDelete" :disabled="deleting">
+              <span v-if="deleting">Eliminando...</span>
+              <span v-else>Sí, eliminar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
-import { state, actions } from '../store/state.js'
+import { ref, computed, reactive, onMounted, markRaw } from 'vue'
+import axios from 'axios'
+
+const API_URL = 'http://localhost:8000/api'
+
+// Data state
+const productos = ref([])
+const categorias = ref([])
+const lonas = ref([])
 
 // Filter state
 const filters = reactive({
@@ -282,6 +464,23 @@ const filters = reactive({
 const showDrawer = ref(false)
 const isEditMode = ref(false)
 const showAddVariantForm = ref(false)
+const showAddImageForm = ref(false)
+const saving = ref(false)
+const errorMsg = ref('')
+const successMsg = ref('')
+const showDeleteModal = ref(false)
+const productToDelete = ref(null)
+const deleting = ref(false)
+
+const showVariantsModal = ref(false)
+const productForVariants = ref(null)
+
+const openVariantsModal = (product) => {
+  productForVariants.value = product
+  showVariantsModal.value = true
+}
+
+const localImages = ref([])
 
 const form = reactive({
   id: null,
@@ -304,14 +503,36 @@ const newVar = reactive({
   precio_extra: 0
 })
 
+const newImg = reactive({
+  file: null,
+  url: '', // Local preview URL
+  es_portada: false
+})
+
 // Filter computation
+const flatCategorias = computed(() => {
+  const result = []
+  
+  const flatten = (cats) => {
+    cats.forEach(c => {
+      result.push({ id: c.id, nombre: c.nombre })
+      if (c.hijos && c.hijos.length > 0) {
+        flatten(c.hijos)
+      }
+    })
+  }
+  
+  flatten(categorias.value)
+  return result
+})
+
 const filteredProducts = computed(() => {
-  return state.productos.filter(p => {
+  return productos.value.filter(p => {
     // Search filter
     const matchesSearch = !filters.search || 
       p.nombre.toLowerCase().includes(filters.search.toLowerCase()) || 
       (p.descripcion && p.descripcion.toLowerCase().includes(filters.search.toLowerCase())) || 
-      p.slug.toLowerCase().includes(filters.search.toLowerCase())
+      (p.slug && p.slug.toLowerCase().includes(filters.search.toLowerCase()))
     
     // Category filter
     const matchesCat = filters.category === null || p.categoria_id === Number(filters.category)
@@ -326,28 +547,96 @@ const filteredProducts = computed(() => {
 })
 
 // Helper methods
+const formatInputMoney = (val) => {
+  if (val === null || val === undefined || val === '') return ''
+  return Number(val).toLocaleString('es-CO')
+}
+
+const updatePrice = (field, event, obj) => {
+  let raw = String(event.target.value).replace(/\D/g, '')
+  let num = raw ? parseInt(raw, 10) : 0
+  
+  if (num > 99999999) num = 99999999
+
+  obj[field] = num
+  event.target.value = num ? num.toLocaleString('es-CO') : ''
+}
+
 const formatMoney = (amount) => {
   return Number(amount).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
 const getVariantsCount = (productId) => {
-  return state.variantes_producto.filter(v => v.producto_id === productId).length
+  const p = productos.value.find(prod => prod.id === productId)
+  return p && p.variantes ? p.variantes.length : 0
 }
 
 const getProductStock = (productId) => {
-  return state.variantes_producto
-    .filter(v => v.producto_id === productId)
-    .reduce((sum, v) => sum + v.stock, 0)
+  const p = productos.value.find(prod => prod.id === productId)
+  return p && p.variantes 
+    ? p.variantes.reduce((sum, v) => sum + v.stock, 0)
+    : 0
 }
 
 const getProductVariants = (productId) => {
-  return state.variantes_producto.filter(v => v.producto_id === productId)
+  const p = productos.value.find(prod => prod.id === productId)
+  return p && p.variantes ? p.variantes : []
 }
 
+const getProductImages = (productId) => {
+  const p = productos.value.find(prod => prod.id === productId)
+  return p && p.imagenes ? p.imagenes : []
+}
+
+const getPrimaryImage = (productId) => {
+  const p = productos.value.find(prod => prod.id === productId)
+  if (!p || !p.imagenes || p.imagenes.length === 0) return null
+  const cover = p.imagenes.find(img => img.es_portada === 1)
+  return cover ? cover.url : p.imagenes[0].url
+}
+
+// Data fetching
+const fetchProducts = async () => {
+  try {
+    const { data } = await axios.get(`${API_URL}/productos`)
+    productos.value = data
+  } catch (error) {
+    console.error('Error fetching products:', error)
+  }
+}
+
+const fetchCategories = async () => {
+  try {
+    const { data } = await axios.get(`${API_URL}/categorias`)
+    categorias.value = data
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+  }
+}
+
+const fetchLonas = async () => {
+  try {
+    const { data } = await axios.get(`${API_URL}/lonas`)
+    lonas.value = data
+  } catch (error) {
+    console.error('Error fetching lonas:', error)
+  }
+}
+
+onMounted(() => {
+  fetchProducts()
+  fetchCategories()
+  fetchLonas()
+})
+
 // Actions
-const openCreateDrawer = () => {
+const openCreateDrawer = async () => {
+  errorMsg.value = ''
+  successMsg.value = ''
   isEditMode.value = false
   showAddVariantForm.value = false
+  showAddImageForm.value = false
+  localImages.value = []
   form.id = null
   form.nombre = ''
   form.descripcion = ''
@@ -357,12 +646,19 @@ const openCreateDrawer = () => {
   form.min_cantidad_mayorista = 12
   form.publicado = true
   form.permitir_sin_stock = true
+  
+  await fetchCategories() // Refresh categories from database
+  
   showDrawer.value = true
 }
 
-const openEditDrawer = (product) => {
+const openEditDrawer = async (product) => {
+  errorMsg.value = ''
+  successMsg.value = ''
   isEditMode.value = true
   showAddVariantForm.value = false
+  showAddImageForm.value = false
+  localImages.value = []
   form.id = product.id
   form.nombre = product.nombre
   form.descripcion = product.descripcion
@@ -372,59 +668,282 @@ const openEditDrawer = (product) => {
   form.min_cantidad_mayorista = product.min_cantidad_mayorista
   form.publicado = product.publicado === 1
   form.permitir_sin_stock = product.permitir_sin_stock === 1
+  
+  await fetchCategories() // Refresh categories from database
+  
   showDrawer.value = true
 }
 
-const submitForm = () => {
-  if (isEditMode.value) {
-    actions.updateProduct(form.id, form)
-  } else {
-    actions.addProduct(form)
+const submitForm = async () => {
+  errorMsg.value = ''
+  successMsg.value = ''
+  saving.value = true
+
+  const payload = {
+    nombre: form.nombre,
+    descripcion: form.descripcion,
+    categoria_id: form.categoria_id,
+    precio_minorista: form.precio_minorista,
+    precio_mayorista: form.precio_mayorista,
+    min_cantidad_mayorista: form.min_cantidad_mayorista,
+    publicado: form.publicado ? 1 : 0,
+    permitir_sin_stock: form.permitir_sin_stock ? 1 : 0
   }
-  showDrawer.value = false
+
+  try {
+    if (isEditMode.value) {
+      await axios.put(`${API_URL}/productos/${form.id}`, payload)
+      successMsg.value = 'Producto actualizado correctamente.'
+    } else {
+      const { data } = await axios.post(`${API_URL}/productos`, payload)
+      // Save local images for the new product
+      if (localImages.value.length > 0) {
+        const productId = data.id || data.data?.id
+        for (const img of localImages.value) {
+          const formData = new FormData()
+          formData.append('producto_id', productId)
+          formData.append('image', img.file)
+          formData.append('es_portada', img.es_portada ? 1 : 0)
+
+          await axios.post(`${API_URL}/imagenes`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+        }
+      }
+      successMsg.value = 'Producto creado correctamente.'
+    }
+    await fetchProducts()
+    showDrawer.value = false
+  } catch (error) {
+    console.error('Error saving product:', error)
+    errorMsg.value = error.response?.data?.message || 'Error al guardar el producto'
+  } finally {
+    saving.value = false
+  }
 }
 
 const confirmDelete = (product) => {
-  if (confirm(`¿Estás seguro de eliminar el producto "${product.nombre}"? Esto eliminará también todas sus variantes.`)) {
-    actions.deleteProduct(product.id)
+  errorMsg.value = ''
+  successMsg.value = ''
+  productToDelete.value = product
+  showDeleteModal.value = true
+}
+
+const executeDelete = async () => {
+  if (!productToDelete.value) return
+  deleting.value = true
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  try {
+    await axios.delete(`${API_URL}/productos/${productToDelete.value.id}`)
+    productos.value = productos.value.filter(p => p.id !== productToDelete.value.id)
+    successMsg.value = 'Producto eliminado correctamente.'
+    showDeleteModal.value = false
+    productToDelete.value = null
+  } catch (error) {
+    errorMsg.value = error.response?.data?.message || 'Error al eliminar el producto'
+    showDeleteModal.value = false
+    productToDelete.value = null
+  } finally {
+    deleting.value = false
   }
 }
 
 // Nested Variants Management
-const saveNewVariant = () => {
+const saveNewVariant = async () => {
+  errorMsg.value = ''
+  successMsg.value = ''
   if (!newVar.sku) {
-    alert('El SKU es obligatorio')
+    errorMsg.value = 'El SKU es obligatorio'
     return
   }
-  actions.addVariant(form.id, newVar)
-  // Reset fields
-  newVar.sku = ''
-  newVar.color = ''
-  newVar.talla = ''
-  newVar.stock = 0
-  newVar.lona_id = null
-  showAddVariantForm.value = false
-}
-
-const updateVarStock = (variant, change) => {
-  // If the variant is connected to a Lona, modify the stock via adjustLonaStock (to trigger SQL-like triggers/audits)
-  if (variant.lona_id) {
-    actions.adjustLonaStock(variant.lona_id, variant.talla, change)
-  } else {
-    actions.updateVariant(variant.id, { stock: variant.stock + change })
+  try {
+    await axios.post(`${API_URL}/variantes`, {
+      producto_id: form.id,
+      sku: newVar.sku,
+      color: newVar.color,
+      talla: newVar.talla,
+      stock: newVar.stock,
+      lona_id: newVar.lona_id,
+      precio_extra: newVar.precio_extra
+    })
+    
+    await fetchProducts()
+    
+    // Reset fields
+    newVar.sku = ''
+    newVar.color = ''
+    newVar.talla = ''
+    newVar.stock = 0
+    newVar.lona_id = null
+    showAddVariantForm.value = false
+    successMsg.value = 'Variante agregada correctamente.'
+  } catch (error) {
+    console.error('Error saving variant:', error)
+    errorMsg.value = error.response?.data?.message || 'Error al guardar la variante'
   }
 }
 
-const deleteVar = (variantId) => {
+const updateVarStock = async (variant, change) => {
+  errorMsg.value = ''
+  successMsg.value = ''
+  try {
+    if (variant.lona_id) {
+      errorMsg.value = 'Para modificar el stock de una lona, dirígete al módulo de Dotaciones.'
+      return
+    } else {
+      await axios.put(`${API_URL}/variantes/${variant.id}`, { stock: variant.stock + change })
+      await fetchProducts()
+    }
+  } catch (error) {
+    console.error('Error updating stock:', error)
+    errorMsg.value = 'Error al actualizar el stock'
+  }
+}
+
+const deleteVar = async (variantId) => {
+  errorMsg.value = ''
+  successMsg.value = ''
   if (confirm('¿Eliminar esta variante?')) {
-    actions.deleteVariant(variantId)
+    try {
+      await axios.delete(`${API_URL}/variantes/${variantId}`)
+      await fetchProducts()
+      successMsg.value = 'Variante eliminada correctamente.'
+    } catch (error) {
+      console.error('Error deleting variant:', error)
+      errorMsg.value = 'Error al eliminar la variante'
+    }
+  }
+}
+
+// Images Management
+const onImageSelected = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    newImg.file = markRaw(file)
+    newImg.url = URL.createObjectURL(file)
+  }
+}
+
+const addLocalImage = () => {
+  errorMsg.value = ''
+  successMsg.value = ''
+  if (!newImg.file) {
+    errorMsg.value = 'Por favor selecciona una imagen'
+    return
+  }
+  localImages.value.push({
+    file: newImg.file,
+    url: newImg.url,
+    es_portada: localImages.value.length === 0 ? true : newImg.es_portada
+  })
+  
+  // If this new one is cover, uncheck the rest
+  if (newImg.es_portada) {
+    localImages.value.forEach((img, idx) => {
+      if (idx !== localImages.value.length - 1) img.es_portada = false
+    })
+  }
+
+  newImg.file = null
+  newImg.url = ''
+  newImg.es_portada = false
+  showAddImageForm.value = false
+}
+
+const removeLocalImage = (index) => {
+  localImages.value.splice(index, 1)
+}
+
+const setLocalCover = (index) => {
+  localImages.value.forEach((img, idx) => {
+    img.es_portada = (idx === index)
+  })
+}
+
+const saveNewImage = async () => {
+  if (!newImg.file) {
+    alert('Por favor selecciona una imagen')
+    return
+  }
+  try {
+    const formData = new FormData()
+    formData.append('producto_id', form.id)
+    formData.append('image', newImg.file)
+    formData.append('es_portada', newImg.es_portada ? 1 : 0)
+
+    await axios.post(`${API_URL}/imagenes`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    
+    await fetchProducts()
+    
+    newImg.file = null
+    newImg.url = ''
+    newImg.es_portada = false
+    showAddImageForm.value = false
+  } catch (error) {
+    console.error('Error saving image:', error)
+    alert('Error al guardar la imagen')
+  }
+}
+
+const deleteImg = async (imageId) => {
+  if (confirm('¿Eliminar esta imagen?')) {
+    try {
+      await axios.delete(`${API_URL}/imagenes/${imageId}`)
+      await fetchProducts()
+    } catch (error) {
+      console.error('Error deleting image:', error)
+      alert('Error al eliminar la imagen')
+    }
+  }
+}
+
+const setAsCover = async (imageId) => {
+  try {
+    await axios.put(`${API_URL}/imagenes/${imageId}/portada`)
+    await fetchProducts()
+  } catch (error) {
+    console.error('Error setting cover:', error)
+    alert('Error al establecer como portada')
   }
 }
 </script>
 
 <style scoped>
+.products-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .filter-card {
   padding: 18px 24px;
+}
+
+/* Image Grid and Cards */
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.image-card {
+  position: relative;
+  width: 105px;
+  height: 105px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--color-border);
+  background-color: var(--bg-input);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .filter-grid {
@@ -441,11 +960,21 @@ const deleteVar = (variantId) => {
   }
 }
 
+/* Table cell padding specific to Products to increase breathing room */
+.table-custom th {
+  padding: 16px 24px;
+}
+
+.table-custom td {
+  padding: 22px 24px;
+  vertical-align: middle;
+}
+
 /* Cell alignment styling */
 .product-info-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .product-name {
@@ -523,6 +1052,30 @@ const deleteVar = (variantId) => {
 
 .checkbox-label input {
   cursor: pointer;
+}
+
+/* Button text action (Agregar/Cancelar) */
+.btn-text-action {
+  background: none;
+  border: none;
+  color: var(--color-accent, #2563eb);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-text-action:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+.btn-text-action.cancel {
+  color: var(--text-secondary);
+}
+.btn-text-action.cancel:hover {
+  background-color: var(--bg-input);
 }
 
 /* Nested variants panel styling */
@@ -649,4 +1202,340 @@ const deleteVar = (variantId) => {
   border-top: 1px solid var(--color-border);
   padding-top: 20px;
 }
+
+.image-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.image-card:hover .image-card__img {
+  transform: scale(1.08);
+}
+
+.image-card__badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background-color: var(--color-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.image-card__btn-cover {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+
+.image-card__btn-cover:hover {
+  background-color: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.image-card:hover .image-card__btn-cover {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.image-card__btn-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.image-card__btn-delete:hover {
+  background-color: #ef4444;
+  transform: scale(1.15);
+}
+
+.image-card:hover .image-card__btn-delete {
+  opacity: 1;
+}
+
+/* File input styling */
+.input-file-styled {
+  padding: 12px;
+  background-color: var(--bg-input);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  width: 100%;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input-file-styled:hover {
+  border-color: var(--color-accent);
+  background-color: rgba(99, 102, 241, 0.02);
+}
+
+.input-file-styled::file-selector-button {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  margin-right: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.input-file-styled::file-selector-button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background-color: var(--bg-input);
+}
+
+/* ─── Alerts ─── */
+.alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.alert--success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Spinner */
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Modal Styles ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  background: var(--bg-card, #fff);
+  border-radius: 20px;
+  padding: 48px 40px 36px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--color-border, rgba(255,255,255,0.1));
+  animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-icon {
+  margin-bottom: 20px;
+}
+
+.modal-circle {
+  stroke-dasharray: 63;
+  stroke-dashoffset: 63;
+  animation: drawCircle 0.6s ease forwards 0.1s;
+}
+
+.modal-line {
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  animation: drawLine 0.4s ease forwards 0.5s;
+}
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+}
+
+.modal-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 32px 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.modal-btn--cancel {
+  background: var(--bg-sidebar);
+  color: var(--text-secondary);
+}
+
+.modal-btn--cancel:hover {
+  background: var(--color-border);
+}
+
+.modal-btn--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.modal-btn--danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.modal-btn--danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Variants Button */
+.variant-btn {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent);
+  border: 1px solid rgba(122, 106, 83, 0.15);
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.variant-btn:hover {
+  background-color: var(--color-accent);
+  color: var(--bg-card);
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(122, 106, 83, 0.25);
+}
+
+.variant-btn__count {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-right: 6px;
+}
+
+.variant-btn__text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+.variant-btn__icon {
+  margin-left: 6px;
+  transition: transform 0.2s ease;
+}
+
+.variant-btn:hover .variant-btn__icon {
+  transform: scale(1.1);
+}
+
+/* Vue Transition */
+.modal-enter-active { transition: opacity 0.3s ease; }
+.modal-leave-active { transition: opacity 0.2s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
 </style>

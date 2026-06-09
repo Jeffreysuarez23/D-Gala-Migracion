@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Servidor: mysql
--- Tiempo de generación: 02-06-2026 a las 21:27:44
--- Versión del servidor: 8.4.6
--- Versión de PHP: 8.3.26
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 09-06-2026 a las 17:11:37
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,13 +28,13 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `banners` (
-  `id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `titulo` varchar(150) DEFAULT NULL,
   `subtitulo` varchar(250) DEFAULT NULL,
   `url_imagen` varchar(500) NOT NULL,
   `url_enlace` varchar(500) DEFAULT NULL,
-  `orden` int DEFAULT '0',
-  `activo` tinyint(1) DEFAULT '1',
+  `orden` int(11) DEFAULT 0,
+  `activo` tinyint(1) DEFAULT 1,
   `inicio_en` timestamp NULL DEFAULT NULL,
   `fin_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -46,9 +46,9 @@ CREATE TABLE `banners` (
 --
 
 CREATE TABLE `cache` (
-  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `value` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `expiration` bigint NOT NULL
+  `key` varchar(255) NOT NULL,
+  `value` mediumtext NOT NULL,
+  `expiration` bigint(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -58,9 +58,9 @@ CREATE TABLE `cache` (
 --
 
 CREATE TABLE `cache_locks` (
-  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `owner` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `expiration` bigint NOT NULL
+  `key` varchar(255) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `expiration` bigint(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -70,12 +70,12 @@ CREATE TABLE `cache_locks` (
 --
 
 CREATE TABLE `carritos` (
-  `id` bigint UNSIGNED NOT NULL,
-  `usuario_id` bigint UNSIGNED DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `usuario_id` bigint(20) UNSIGNED DEFAULT NULL,
   `session_id` varchar(100) DEFAULT NULL,
-  `cupon_id` bigint UNSIGNED DEFAULT NULL,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `actualizado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `cupon_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `creado_en` timestamp NULL DEFAULT current_timestamp(),
+  `actualizado_en` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -94,11 +94,11 @@ INSERT INTO `carritos` (`id`, `usuario_id`, `session_id`, `cupon_id`, `creado_en
 --
 
 CREATE TABLE `carrito_items` (
-  `id` bigint UNSIGNED NOT NULL,
-  `carrito_id` bigint UNSIGNED NOT NULL,
-  `variante_id` bigint UNSIGNED NOT NULL,
-  `lona_id` bigint UNSIGNED DEFAULT NULL,
-  `cantidad` int DEFAULT '1'
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `carrito_id` bigint(20) UNSIGNED NOT NULL,
+  `variante_id` bigint(20) UNSIGNED NOT NULL,
+  `lona_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `cantidad` int(11) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -108,11 +108,11 @@ CREATE TABLE `carrito_items` (
 --
 
 CREATE TABLE `categorias` (
-  `id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `slug` varchar(120) NOT NULL,
-  `padre_id` bigint UNSIGNED DEFAULT NULL,
-  `orden` int DEFAULT '0'
+  `padre_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `orden` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -130,14 +130,41 @@ INSERT INTO `categorias` (`id`, `nombre`, `slug`, `padre_id`, `orden`) VALUES
 --
 
 CREATE TABLE `configuraciones_cms` (
-  `id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `clave` varchar(100) NOT NULL,
-  `valor` text,
+  `valor` text DEFAULT NULL,
   `tipo` enum('texto','color','imagen','json','booleano') DEFAULT 'texto',
   `grupo` varchar(50) DEFAULT 'branding',
-  `actualizado_por` bigint UNSIGNED DEFAULT NULL,
-  `actualizado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `actualizado_por` bigint(20) UNSIGNED DEFAULT NULL,
+  `actualizado_en` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `contactos`
+--
+
+CREATE TABLE `contactos` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `first_name` varchar(255) NOT NULL,
+  `last_name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `status` enum('pendiente','leido','resuelto') NOT NULL DEFAULT 'pendiente',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `contactos`
+--
+
+INSERT INTO `contactos` (`id`, `first_name`, `last_name`, `email`, `subject`, `message`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'Jeffrey', 'Suarez', 'jeffrey@gmail.com', 'order', 'no me ha llegado.', 'pendiente', '2026-06-09 02:07:59', '2026-06-09 02:07:59'),
+(2, 'dsfdsffds', 'fdsdsfdsfd', 'sfdsdfsdf@gmail.com', 'product', 'que es eso?', 'pendiente', '2026-06-09 02:09:23', '2026-06-09 02:09:23'),
+(3, 'dfdfsfds', 'dsffdsdfs', 'sfdsdffdsfds@gmail.com', 'return', 'quiero mi plata', 'pendiente', '2026-06-09 02:11:12', '2026-06-09 02:11:12');
 
 -- --------------------------------------------------------
 
@@ -146,14 +173,14 @@ CREATE TABLE `configuraciones_cms` (
 --
 
 CREATE TABLE `cupones` (
-  `id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `codigo` varchar(50) NOT NULL,
   `tipo` enum('porcentaje','fijo') NOT NULL,
   `valor` decimal(10,2) NOT NULL,
-  `monto_minimo_pedido` decimal(10,2) DEFAULT '0.00',
-  `limite_usos` int DEFAULT NULL,
-  `usos_actuales` int DEFAULT '0',
-  `activo` tinyint(1) DEFAULT '1',
+  `monto_minimo_pedido` decimal(10,2) DEFAULT 0.00,
+  `limite_usos` int(11) DEFAULT NULL,
+  `usos_actuales` int(11) DEFAULT 0,
+  `activo` tinyint(1) DEFAULT 1,
   `expira_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -164,13 +191,13 @@ CREATE TABLE `cupones` (
 --
 
 CREATE TABLE `devoluciones` (
-  `id` bigint UNSIGNED NOT NULL,
-  `orden_id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `orden_id` bigint(20) UNSIGNED NOT NULL,
   `motivo` text NOT NULL,
   `estado` enum('pendiente','aprobada','rechazada','resuelta') DEFAULT 'pendiente',
-  `resolucion_admin` text,
-  `resuelto_por` bigint UNSIGNED DEFAULT NULL,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `resolucion_admin` text DEFAULT NULL,
+  `resuelto_por` bigint(20) UNSIGNED DEFAULT NULL,
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -187,14 +214,14 @@ INSERT INTO `devoluciones` (`id`, `orden_id`, `motivo`, `estado`, `resolucion_ad
 --
 
 CREATE TABLE `direcciones` (
-  `id` bigint UNSIGNED NOT NULL,
-  `usuario_id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `usuario_id` bigint(20) UNSIGNED NOT NULL,
   `etiqueta` varchar(50) DEFAULT 'Casa',
   `departamento` varchar(80) NOT NULL,
   `ciudad` varchar(80) NOT NULL,
   `direccion` varchar(250) NOT NULL,
   `codigo_postal` varchar(10) DEFAULT NULL,
-  `es_principal` tinyint(1) DEFAULT '0',
+  `es_principal` tinyint(1) DEFAULT 0,
   `eliminado_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -212,12 +239,12 @@ INSERT INTO `direcciones` (`id`, `usuario_id`, `etiqueta`, `departamento`, `ciud
 --
 
 CREATE TABLE `dotaciones` (
-  `id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `nombre` varchar(120) NOT NULL,
-  `descripcion` text,
-  `min_lonas` tinyint UNSIGNED DEFAULT '3',
-  `max_lonas` tinyint UNSIGNED DEFAULT '10',
-  `lonas_activas` int DEFAULT '0',
+  `descripcion` text DEFAULT NULL,
+  `min_lonas` tinyint(3) UNSIGNED DEFAULT 3,
+  `max_lonas` tinyint(3) UNSIGNED DEFAULT 10,
+  `lonas_activas` int(11) DEFAULT 0,
   `alerta_enviada_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -235,8 +262,8 @@ INSERT INTO `dotaciones` (`id`, `nombre`, `descripcion`, `min_lonas`, `max_lonas
 --
 
 CREATE TABLE `envios` (
-  `id` bigint UNSIGNED NOT NULL,
-  `orden_id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `orden_id` bigint(20) UNSIGNED NOT NULL,
   `transportadora` varchar(100) DEFAULT NULL,
   `guia` varchar(100) DEFAULT NULL,
   `estado` enum('preparando','enviado','en_ruta','entregado','fallido') DEFAULT 'preparando',
@@ -258,17 +285,17 @@ INSERT INTO `envios` (`id`, `orden_id`, `transportadora`, `guia`, `estado`, `fec
 --
 
 CREATE TABLE `historial_lonas` (
-  `id` bigint UNSIGNED NOT NULL,
-  `lona_id` bigint UNSIGNED NOT NULL,
-  `orden_item_id` bigint UNSIGNED DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `lona_id` bigint(20) UNSIGNED NOT NULL,
+  `orden_item_id` bigint(20) UNSIGNED DEFAULT NULL,
   `accion` enum('descuento','ajuste_manual','ingreso','agotado') NOT NULL,
   `talla` varchar(10) DEFAULT NULL,
-  `cantidad_cambio` int DEFAULT NULL,
-  `cantidad_restante` int DEFAULT NULL,
-  `snapshot_json` json DEFAULT NULL COMMENT 'Estado de tallas al momento del evento',
-  `notas` text,
-  `creado_por` bigint UNSIGNED DEFAULT NULL,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `cantidad_cambio` int(11) DEFAULT NULL,
+  `cantidad_restante` int(11) DEFAULT NULL,
+  `snapshot_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Estado de tallas al momento del evento' CHECK (json_valid(`snapshot_json`)),
+  `notas` text DEFAULT NULL,
+  `creado_por` bigint(20) UNSIGNED DEFAULT NULL,
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -286,12 +313,12 @@ INSERT INTO `historial_lonas` (`id`, `lona_id`, `orden_item_id`, `accion`, `tall
 --
 
 CREATE TABLE `imagenes_producto` (
-  `id` bigint UNSIGNED NOT NULL,
-  `producto_id` bigint UNSIGNED NOT NULL,
-  `variante_id` bigint UNSIGNED DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `producto_id` bigint(20) UNSIGNED NOT NULL,
+  `variante_id` bigint(20) UNSIGNED DEFAULT NULL,
   `url` varchar(500) NOT NULL,
-  `es_portada` tinyint(1) DEFAULT '0',
-  `orden` int DEFAULT '0'
+  `es_portada` tinyint(1) DEFAULT 0,
+  `orden` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -301,13 +328,13 @@ CREATE TABLE `imagenes_producto` (
 --
 
 CREATE TABLE `jobs` (
-  `id` bigint UNSIGNED NOT NULL,
-  `queue` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `attempts` tinyint UNSIGNED NOT NULL,
-  `reserved_at` int UNSIGNED DEFAULT NULL,
-  `available_at` int UNSIGNED NOT NULL,
-  `created_at` int UNSIGNED NOT NULL
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) UNSIGNED NOT NULL,
+  `reserved_at` int(10) UNSIGNED DEFAULT NULL,
+  `available_at` int(10) UNSIGNED NOT NULL,
+  `created_at` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -317,16 +344,16 @@ CREATE TABLE `jobs` (
 --
 
 CREATE TABLE `job_batches` (
-  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `total_jobs` int NOT NULL,
-  `pending_jobs` int NOT NULL,
-  `failed_jobs` int NOT NULL,
-  `failed_job_ids` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `options` mediumtext COLLATE utf8mb4_unicode_ci,
-  `cancelled_at` int DEFAULT NULL,
-  `created_at` int NOT NULL,
-  `finished_at` int DEFAULT NULL
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `total_jobs` int(11) NOT NULL,
+  `pending_jobs` int(11) NOT NULL,
+  `failed_jobs` int(11) NOT NULL,
+  `failed_job_ids` longtext NOT NULL,
+  `options` mediumtext DEFAULT NULL,
+  `cancelled_at` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  `finished_at` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -336,15 +363,15 @@ CREATE TABLE `job_batches` (
 --
 
 CREATE TABLE `lonas` (
-  `id` bigint UNSIGNED NOT NULL,
-  `dotacion_id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `dotacion_id` bigint(20) UNSIGNED NOT NULL,
   `codigo` varchar(50) NOT NULL,
   `tipo_producto` varchar(80) DEFAULT NULL,
   `categoria` varchar(80) DEFAULT NULL,
   `color` varchar(50) DEFAULT NULL,
   `estado` enum('nuevo','usado') DEFAULT 'nuevo',
-  `activa` tinyint(1) DEFAULT '1',
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `activa` tinyint(1) DEFAULT 1,
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -361,10 +388,10 @@ INSERT INTO `lonas` (`id`, `dotacion_id`, `codigo`, `tipo_producto`, `categoria`
 --
 
 CREATE TABLE `lona_tallas` (
-  `id` bigint UNSIGNED NOT NULL,
-  `lona_id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `lona_id` bigint(20) UNSIGNED NOT NULL,
   `talla` varchar(10) NOT NULL,
-  `cantidad` int DEFAULT '0'
+  `cantidad` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -409,9 +436,9 @@ DELIMITER ;
 --
 
 CREATE TABLE `migrations` (
-  `id` int UNSIGNED NOT NULL,
-  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `batch` int NOT NULL
+  `id` int(10) UNSIGNED NOT NULL,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -421,7 +448,8 @@ CREATE TABLE `migrations` (
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (5, '2026_06_02_205429_create_jobs_table', 1),
 (6, '2026_06_02_205446_create_job_batches_table', 2),
-(7, '2026_06_02_205513_create_cache_table', 3);
+(7, '2026_06_02_205513_create_cache_table', 3),
+(8, '2026_06_08_210453_create_contactos_table', 4);
 
 -- --------------------------------------------------------
 
@@ -430,14 +458,14 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 --
 
 CREATE TABLE `notificaciones` (
-  `id` bigint UNSIGNED NOT NULL,
-  `usuario_id` bigint UNSIGNED DEFAULT NULL COMMENT 'NULL = Para todos los admins',
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `usuario_id` bigint(20) UNSIGNED DEFAULT NULL COMMENT 'NULL = Para todos los admins',
   `tipo` enum('stock_bajo','orden','sistema','marketing') DEFAULT 'sistema',
   `titulo` varchar(200) DEFAULT NULL,
-  `mensaje` text,
+  `mensaje` text DEFAULT NULL,
   `leido_en` timestamp NULL DEFAULT NULL,
-  `confirmado_por` bigint UNSIGNED DEFAULT NULL COMMENT 'Doble check de la BD vieja',
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `confirmado_por` bigint(20) UNSIGNED DEFAULT NULL COMMENT 'Doble check de la BD vieja',
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -447,19 +475,19 @@ CREATE TABLE `notificaciones` (
 --
 
 CREATE TABLE `ordenes` (
-  `id` bigint UNSIGNED NOT NULL,
-  `usuario_id` bigint UNSIGNED NOT NULL,
-  `direccion_id` bigint UNSIGNED NOT NULL,
-  `cupon_id` bigint UNSIGNED DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `usuario_id` bigint(20) UNSIGNED NOT NULL,
+  `direccion_id` bigint(20) UNSIGNED NOT NULL,
+  `cupon_id` bigint(20) UNSIGNED DEFAULT NULL,
   `numero` varchar(30) NOT NULL,
   `estado` enum('pendiente','confirmada','procesando','enviado','entregado','cancelada','devuelta') DEFAULT 'pendiente',
   `tipo_precio` enum('minorista','mayorista') DEFAULT 'minorista',
   `subtotal` decimal(10,2) NOT NULL,
-  `descuento` decimal(10,2) DEFAULT '0.00',
-  `envio_costo` decimal(10,2) DEFAULT '0.00',
+  `descuento` decimal(10,2) DEFAULT 0.00,
+  `envio_costo` decimal(10,2) DEFAULT 0.00,
   `total` decimal(10,2) NOT NULL,
-  `notas_cliente` text,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `notas_cliente` text DEFAULT NULL,
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -476,11 +504,11 @@ INSERT INTO `ordenes` (`id`, `usuario_id`, `direccion_id`, `cupon_id`, `numero`,
 --
 
 CREATE TABLE `orden_items` (
-  `id` bigint UNSIGNED NOT NULL,
-  `orden_id` bigint UNSIGNED NOT NULL,
-  `variante_id` bigint UNSIGNED NOT NULL,
-  `lona_id_snapshot` bigint UNSIGNED DEFAULT NULL,
-  `cantidad` int NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `orden_id` bigint(20) UNSIGNED NOT NULL,
+  `variante_id` bigint(20) UNSIGNED NOT NULL,
+  `lona_id_snapshot` bigint(20) UNSIGNED DEFAULT NULL,
+  `cantidad` int(11) NOT NULL,
   `precio_unitario` decimal(10,2) NOT NULL,
   `total_linea` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -571,8 +599,8 @@ DELIMITER ;
 --
 
 CREATE TABLE `pagos` (
-  `id` bigint UNSIGNED NOT NULL,
-  `orden_id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `orden_id` bigint(20) UNSIGNED NOT NULL,
   `metodo` varchar(50) DEFAULT NULL,
   `referencia_pasarela` varchar(100) DEFAULT NULL,
   `estado` enum('pendiente','aprobado','rechazado','reembolsado') DEFAULT 'pendiente',
@@ -590,16 +618,28 @@ INSERT INTO `pagos` (`id`, `orden_id`, `metodo`, `referencia_pasarela`, `estado`
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `personal_access_tokens`
 --
 
 CREATE TABLE `personal_access_tokens` (
-  `id` bigint UNSIGNED NOT NULL,
-  `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tokenable_id` bigint UNSIGNED NOT NULL,
-  `name` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text COLLATE utf8mb4_unicode_ci,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) UNSIGNED NOT NULL,
+  `name` text NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
   `last_used_at` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -612,7 +652,15 @@ CREATE TABLE `personal_access_tokens` (
 
 INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
 (1, 'App\\Models\\User', 1, 'auth_token', '5a455b774a376fde7e1917889f4baa36d212873bf0ab6950c6ef2fe25c127ecc', '[\"*\"]', NULL, NULL, '2026-04-24 19:10:54', '2026-04-24 19:10:54'),
-(2, 'App\\Models\\User', 1, 'auth_token', '4a6e62faf36a4963a2a93a37c620760f24d228e9f7d5c0873e80d5454b62b550', '[\"*\"]', '2026-05-06 19:34:04', NULL, '2026-05-06 17:35:04', '2026-05-06 19:34:04');
+(2, 'App\\Models\\User', 1, 'auth_token', '4a6e62faf36a4963a2a93a37c620760f24d228e9f7d5c0873e80d5454b62b550', '[\"*\"]', '2026-05-06 19:34:04', NULL, '2026-05-06 17:35:04', '2026-05-06 19:34:04'),
+(4, 'App\\Models\\Usuario', 2, 'auth_token', '390116a454a355cdf847e4dba388e5508251ea4f0f051399656a7c3c09b2ecbf', '[\"*\"]', NULL, NULL, '2026-06-08 23:08:13', '2026-06-08 23:08:13'),
+(5, 'App\\Models\\Usuario', 3, 'auth_token', 'd1f80ac44a18c6a567e9f75e5926fe116a02bbeadcaade80c228fc548ee4e10a', '[\"*\"]', NULL, NULL, '2026-06-08 23:11:04', '2026-06-08 23:11:04'),
+(6, 'App\\Models\\Usuario', 2, 'auth_token', '93e25dd76e5f45114753f9fb24cd6aa390c5084115a6c8c75f1c213436480d15', '[\"*\"]', NULL, NULL, '2026-06-08 23:11:52', '2026-06-08 23:11:52'),
+(7, 'App\\Models\\Usuario', 2, 'auth_token', '1c52852add37826e672ac579c63cf59bbbf0d2b32adb85a381742b46c505f1d0', '[\"*\"]', NULL, NULL, '2026-06-08 23:14:03', '2026-06-08 23:14:03'),
+(15, 'App\\Models\\Usuario', 7, 'auth_token', 'cef2810b473acd9ea9ddb2eb56032bde056770b4aab49bb4742a9ae41a4d4851', '[\"*\"]', '2026-06-09 02:11:31', NULL, '2026-06-09 01:10:44', '2026-06-09 02:11:31'),
+(17, 'App\\Models\\Usuario', 7, 'auth_token', 'ddc743320bc83b2f408c685373fd406351a19823c19112afe07f2b3dc2197502', '[\"*\"]', '2026-06-09 02:36:36', NULL, '2026-06-09 02:36:31', '2026-06-09 02:36:36'),
+(23, 'App\\Models\\Usuario', 7, 'auth_token', '050c2759b3c15c1ca14a2bf7c45473e0fd264357fa230be1dea1d486e9b8ffb4', '[\"*\"]', NULL, NULL, '2026-06-09 19:46:29', '2026-06-09 19:46:29'),
+(24, 'App\\Models\\Usuario', 7, 'auth_token', 'beb4332339db8c9bf6a29d052926e5a9bf6084b4f66b188a3efcb388818f4b48', '[\"*\"]', '2026-06-09 19:57:56', NULL, '2026-06-09 19:47:48', '2026-06-09 19:57:56');
 
 -- --------------------------------------------------------
 
@@ -621,18 +669,18 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 --
 
 CREATE TABLE `productos` (
-  `id` bigint UNSIGNED NOT NULL,
-  `categoria_id` bigint UNSIGNED DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `categoria_id` bigint(20) UNSIGNED DEFAULT NULL,
   `nombre` varchar(150) NOT NULL,
   `slug` varchar(160) NOT NULL,
-  `descripcion` text,
+  `descripcion` text DEFAULT NULL,
   `precio_minorista` decimal(10,2) NOT NULL,
   `precio_mayorista` decimal(10,2) NOT NULL,
-  `min_cantidad_mayorista` int DEFAULT '12',
-  `publicado` tinyint(1) DEFAULT '0',
-  `permitir_sin_stock` tinyint(1) DEFAULT '1',
+  `min_cantidad_mayorista` int(11) DEFAULT 12,
+  `publicado` tinyint(1) DEFAULT 0,
+  `permitir_sin_stock` tinyint(1) DEFAULT 1,
   `eliminado_en` timestamp NULL DEFAULT NULL,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -651,12 +699,12 @@ INSERT INTO `productos` (`id`, `categoria_id`, `nombre`, `slug`, `descripcion`, 
 --
 
 CREATE TABLE `sessions` (
-  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` bigint UNSIGNED DEFAULT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_unicode_ci,
-  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `last_activity` int NOT NULL
+  `id` varchar(255) NOT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -670,6 +718,7 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 ('CdSZlZ4MUrIeif9EamOS97U50kd2JVn9TMeyxdK0', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.121.0 Chrome/142.0.7444.265 Electron/39.8.8 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWW15OElSQXRmS2Voc0s0Snd0dWZZeFVTT3NtTzZDenVYUUtoRkRqVCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1779826146),
 ('CInKXL6WI8toFa6OeiIo97Jdc9jXNfe3MkK0xSKG', NULL, '172.18.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 OPR/130.0.0.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTE9RZllNWU9zSTZlQkdpN0xMRVpXZlJPeXpwNEp3aHV1VDFnaFZVYyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1777054958),
 ('DGovnC562AlH43dm12VrVAE7bH60mmwVjy0WYaVY', NULL, '127.0.0.1', 'Thunder Client (https://www.thunderclient.com)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoieGpzWTNyVjUzVEVmOThhY0RaV0F2elR2MXc3WjlWbGpKalBTYmJJOCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1779314413),
+('DWxzrtBH8KLunutJIxPpHGFwxJiFxOAqoriIzcTL', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 OPR/131.0.0.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoic2NjWGxmMUNGYmE1UUYxeG15MkFZZUNkanh1VDRoN0FwdnNhTVNjMCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1780943948),
 ('FPmjQnISeXQYigScdUi4dgZmPS15HYu8o7QAZNJx', NULL, '127.0.0.1', 'Thunder Client (https://www.thunderclient.com)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiMngyb3hObk9TYUtVclZZdTRYWlFDUE1VMW1oZ09nOE11cm5PRjhPTCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1779906543),
 ('oSuZ37wPOTqv9vrm4RbWx4jKwSSg5Rn1iC33kgWv', NULL, '127.0.0.1', 'Thunder Client (https://www.thunderclient.com)', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWXQ0SGtsZjlVOUxJOHppUUlKeWhrS0NaM3JIR3l6RVZGNzZzVGxQUSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1779914554),
 ('PTtmOe8yU079uwauZFC8bSQVf1VmwA9mWoAAld4n', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.121.0 Chrome/142.0.7444.265 Electron/39.8.8 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiS3pub281azZ5S3RQOHRuS3FuRkhCcEh6TUhURXQzSHhnS0RpWUZmTSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1779817446),
@@ -689,10 +738,10 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 --
 
 CREATE TABLE `tokens_restablecimiento_password` (
-  `id` bigint UNSIGNED NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
   `email` varchar(180) NOT NULL,
   `token` varchar(255) NOT NULL,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -702,19 +751,19 @@ CREATE TABLE `tokens_restablecimiento_password` (
 --
 
 CREATE TABLE `usuarios` (
-  `id` bigint UNSIGNED NOT NULL,
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'NULL si usa Google OAuth',
-  `google_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `rol` enum('cliente','admin','super_admin') COLLATE utf8mb4_unicode_ci DEFAULT 'cliente',
-  `telefono` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `avatar_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `email` varchar(180) NOT NULL,
+  `password` varchar(255) DEFAULT NULL COMMENT 'NULL si usa Google OAuth',
+  `google_id` varchar(100) DEFAULT NULL,
+  `rol` enum('cliente','admin','super_admin') DEFAULT 'cliente',
+  `telefono` varchar(20) DEFAULT NULL,
+  `avatar_url` varchar(500) DEFAULT NULL,
   `email_verificado_en` timestamp NULL DEFAULT NULL,
-  `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
   `eliminado_en` timestamp NULL DEFAULT NULL,
-  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `actualizado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `creado_en` timestamp NULL DEFAULT current_timestamp(),
+  `actualizado_en` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -722,7 +771,12 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `google_id`, `rol`, `telefono`, `avatar_url`, `email_verificado_en`, `remember_token`, `eliminado_en`, `creado_en`, `actualizado_en`) VALUES
-(1, 'Alejandro', 'test@gmail.com', '$2y$12$jaaZNDO.XKDO432O90tRG.WWoSqjdPgBa1OgSetWo89.otsoER6DG', NULL, 'cliente', NULL, NULL, NULL, NULL, NULL, '2026-04-24 19:10:54', '2026-04-24 19:10:54');
+(1, 'Alejandro', 'test@gmail.com', '$2y$12$jaaZNDO.XKDO432O90tRG.WWoSqjdPgBa1OgSetWo89.otsoER6DG', NULL, 'cliente', NULL, NULL, NULL, NULL, NULL, '2026-04-24 19:10:54', '2026-04-24 19:10:54'),
+(7, 'Jeffrey hermoso divino', 'jeffrey232008suarez@gmail.com', '$2y$12$y7hNmzOV43ks7URJgmKWBO6znmC9O2mU2EzBWsUZmuR9fm7FH/K2K', NULL, 'super_admin', '111111', NULL, '2026-06-09 01:10:29', NULL, NULL, '2026-06-08 20:10:14', '2026-06-09 14:56:41'),
+(8, 'GABO', 'GAB@GMAIL.COM', '$2y$12$LE8.EjDkoAZ/W7a61EBw.Oe0T7kszClt5M0J0kZ95RE6cPquJ12vq', NULL, 'cliente', '111122222', NULL, NULL, NULL, NULL, '2026-06-08 22:46:00', '2026-06-08 22:46:00'),
+(9, 'evelyn', 'edfssdf@gmail.com', '$2y$12$eHOvT4NPCL2bXPtf5dghluQ/dFYRp38gNqdZqRzmqEq0rxdpm63jm', NULL, 'cliente', '324324324', NULL, NULL, NULL, NULL, '2026-06-08 22:52:16', '2026-06-08 22:52:16'),
+(10, 'evelyn', 'evelyn@gmail.com', '$2y$12$6XZA8qZSszGMP/bdzaqMtezA7sJJV0M.d/FIoVUiI9c6tpcKf1WW6', NULL, 'cliente', '123', NULL, '2026-06-09 03:57:06', NULL, NULL, '2026-06-08 22:55:36', '2026-06-08 22:57:06'),
+(14, 'beatriz', 'beatrizcatano0121@gmail.com', '$2y$12$2yB74Wz9o8arcPTqRdc1dOLOHl/Kvgtiy2Z/k4HnGPIMIe19wNVT2', NULL, 'cliente', '342432324', NULL, '2026-06-09 04:10:39', NULL, NULL, '2026-06-08 23:10:10', '2026-06-08 23:10:39');
 
 -- --------------------------------------------------------
 
@@ -731,14 +785,14 @@ INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `google_id`, `rol`,
 --
 
 CREATE TABLE `variantes_producto` (
-  `id` bigint UNSIGNED NOT NULL,
-  `producto_id` bigint UNSIGNED NOT NULL,
-  `lona_id` bigint UNSIGNED DEFAULT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `producto_id` bigint(20) UNSIGNED NOT NULL,
+  `lona_id` bigint(20) UNSIGNED DEFAULT NULL,
   `sku` varchar(100) DEFAULT NULL,
   `color` varchar(50) DEFAULT NULL,
   `talla` varchar(10) DEFAULT NULL,
-  `stock` int DEFAULT '0',
-  `precio_extra` decimal(10,2) DEFAULT '0.00',
+  `stock` int(11) DEFAULT 0,
+  `precio_extra` decimal(10,2) DEFAULT 0.00,
   `eliminado_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -805,6 +859,12 @@ ALTER TABLE `configuraciones_cms`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `clave` (`clave`),
   ADD KEY `actualizado_por` (`actualizado_por`);
+
+--
+-- Indices de la tabla `contactos`
+--
+ALTER TABLE `contactos`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `cupones`
@@ -928,6 +988,12 @@ ALTER TABLE `pagos`
   ADD KEY `idx_estado_pago` (`estado`);
 
 --
+-- Indices de la tabla `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`email`);
+
+--
 -- Indices de la tabla `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
@@ -987,151 +1053,157 @@ ALTER TABLE `variantes_producto`
 -- AUTO_INCREMENT de la tabla `banners`
 --
 ALTER TABLE `banners`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `carritos`
 --
 ALTER TABLE `carritos`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `carrito_items`
 --
 ALTER TABLE `carrito_items`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `configuraciones_cms`
 --
 ALTER TABLE `configuraciones_cms`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `contactos`
+--
+ALTER TABLE `contactos`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `cupones`
 --
 ALTER TABLE `cupones`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `devoluciones`
 --
 ALTER TABLE `devoluciones`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `direcciones`
 --
 ALTER TABLE `direcciones`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `dotaciones`
 --
 ALTER TABLE `dotaciones`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `envios`
 --
 ALTER TABLE `envios`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_lonas`
 --
 ALTER TABLE `historial_lonas`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `imagenes_producto`
 --
 ALTER TABLE `imagenes_producto`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `jobs`
 --
 ALTER TABLE `jobs`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `lonas`
 --
 ALTER TABLE `lonas`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `lona_tallas`
 --
 ALTER TABLE `lona_tallas`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `ordenes`
 --
 ALTER TABLE `ordenes`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_items`
 --
 ALTER TABLE `orden_items`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `tokens_restablecimiento_password`
 --
 ALTER TABLE `tokens_restablecimiento_password`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT de la tabla `variantes_producto`
 --
 ALTER TABLE `variantes_producto`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Restricciones para tablas volcadas
@@ -1200,7 +1272,7 @@ ALTER TABLE `imagenes_producto`
 -- Filtros para la tabla `lonas`
 --
 ALTER TABLE `lonas`
-  ADD CONSTRAINT `lonas_ibfk_1` FOREIGN KEY (`dotacion_id`) REFERENCES `dotaciones` (`id`) ON DELETE RESTRICT;
+  ADD CONSTRAINT `lonas_ibfk_1` FOREIGN KEY (`dotacion_id`) REFERENCES `dotaciones` (`id`);
 
 --
 -- Filtros para la tabla `lona_tallas`

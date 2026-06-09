@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\VarianteProductoController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\ImagenProductoController;
+use App\Http\Controllers\Api\ImagenProductoController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\DotacionController;
 use App\Http\Controllers\LonaController;
@@ -43,8 +43,10 @@ Route::delete('/variantes/{id}', [VarianteProductoController::class, 'destroy'])
 // IMÁGENES
 Route::get('/productos/{id}/imagenes', [ImagenProductoController::class, 'index']);
 Route::post('/imagenes', [ImagenProductoController::class, 'store']);
-Route::delete('/imagenes/{id}', [ImagenProductoController::class, 'destroy']);
 Route::put('/imagenes/{id}', [ImagenProductoController::class, 'update']);
+Route::put('/imagenes/{id}/portada', [ImagenProductoController::class, 'setPortada']);
+Route::put('/productos/{id}/imagenes/reorder', [ImagenProductoController::class, 'reorder']);
+Route::delete('/imagenes/{id}', [ImagenProductoController::class, 'destroy']);
 
 // CATEGORÍAS
 Route::get('/categorias', [CategoriaController::class, 'index']);

@@ -25,6 +25,6 @@ class Categoria extends Model
   
     public function hijos()
     {
-        return $this->hasMany(Categoria::class, 'padre_id');
+        return $this->hasMany(Categoria::class, 'padre_id')->with('hijos');
     }
 }

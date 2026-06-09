@@ -20,7 +20,7 @@ class ImagenProducto extends Model
     // RELACIONES CON PRODUCTO Y VARIANTE
     public function producto()
     {
-        return $this->belongsTo(Producto::class, 'producto_id');
+        return $this->belongsTo(Productos::class, 'producto_id');
     }
     //  RELACIÓN CON VARIANTE DE PRODUCTO
     public function variante()

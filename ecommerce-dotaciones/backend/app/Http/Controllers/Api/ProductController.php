@@ -34,18 +34,19 @@ class ProductController extends Controller
  // LISTAR TODOS LOS PRODUCTOS
     public function index()
     {
-        return Productos::all();
+        return Productos::with(['variantes', 'imagenes'])->get();
     }
- //  MOSTRAR UN PRODUCTO CON SUS VARIANTES
+ //  MOSTRAR UN PRODUCTO CON SUS VARIANTES E IMÁGENES
     public function show($id)
     {
-        $producto = Productos::with('variantes')->findOrFail($id);
+        $producto = Productos::with(['variantes', 'imagenes'])->findOrFail($id);
 
         return response()->json([
             'id' => $producto->id,
             'nombre' => $producto->nombre,
             'precio_minorista' => $producto->precio_minorista,
             'precio_mayorista' => $producto->precio_mayorista,
+            'imagenes' => $producto->imagenes,
             'variantes' => $producto->variantes->map(function ($v) {
                 return [
                     'id' => $v->id,

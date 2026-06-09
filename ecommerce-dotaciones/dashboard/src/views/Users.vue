@@ -487,6 +487,16 @@ const executeDelete = async () => {
 </script>
 
 <style scoped>
+/* Table cell padding specific to Users to increase breathing room */
+.table-custom th {
+  padding: 16px 24px;
+}
+
+.table-custom td {
+  padding: 22px 24px;
+  vertical-align: middle;
+}
+
 .users-view {
   display: flex;
   flex-direction: column;

@@ -73,10 +73,10 @@
       <!-- User Profile Dropdown -->
       <div class="header-action-wrap">
         <div class="header-profile" @click="showProfileDropdown = !showProfileDropdown">
-          <div class="profile-avatar">J</div>
+          <div class="profile-avatar">{{ authUser.nombre ? authUser.nombre.charAt(0).toUpperCase() : 'A' }}</div>
           <div class="profile-meta">
-            <span class="profile-name">Jeffrey</span>
-            <span class="profile-role">Super Admin</span>
+            <span class="profile-name">{{ authUser.nombre }}</span>
+            <span class="profile-role" style="text-transform: capitalize;">{{ authUser.rol?.replace('_', ' ') || 'Admin' }}</span>
           </div>
           <span class="arrow-icon">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -88,11 +88,11 @@
         <!-- Profile Dropdown Menu -->
         <div v-if="showProfileDropdown" class="header-dropdown profile-dropdown" v-click-outside="closeProfileDropdown">
           <div class="dropdown-profile-header">
-            <p class="p-name">Jeffrey</p>
-            <p class="p-email">jeffrey@company.com</p>
+            <p class="p-name">{{ authUser.nombre }}</p>
+            <p class="p-email">{{ authUser.email }}</p>
           </div>
           <div class="dropdown-divider"></div>
-          <router-link to="/users" class="dropdown-menu-item" @click="showProfileDropdown = false">
+          <router-link to="/account" class="dropdown-menu-item" @click="showProfileDropdown = false">
             Configuración Cuenta
           </router-link>
           <a href="#" class="dropdown-menu-item dropdown-menu-item--danger" @click.prevent="logoutAlert">
@@ -107,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { state, actions } from '../store/state.js'
 
 defineEmits(['toggle-sidebar'])
@@ -115,6 +115,23 @@ defineEmits(['toggle-sidebar'])
 const searchQuery = ref('')
 const showNotifDropdown = ref(false)
 const showProfileDropdown = ref(false)
+
+const authUser = ref({
+  nombre: 'Cargando...',
+  email: '',
+  rol: 'Admin'
+})
+
+onMounted(() => {
+  const storedUser = localStorage.getItem('auth_user')
+  if (storedUser) {
+    try {
+      authUser.value = JSON.parse(storedUser)
+    } catch (e) {
+      console.error('Error parsing auth_user', e)
+    }
+  }
+})
 
 const unreadNotifications = computed(() => {
   return state.notificaciones.filter(n => !n.leido_en)

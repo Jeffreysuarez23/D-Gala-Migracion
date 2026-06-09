@@ -126,8 +126,19 @@
             </svg>
           </div>
           <h2 class="modal-title">¡Bienvenido, {{ loggedUserName }}!</h2>
-          <p class="modal-text">Has iniciado sesión correctamente.<br>Explora nuestra tienda.</p>
-          <button class="modal-btn" @click="goToHome">Ir a la página principal</button>
+          <p class="modal-text">
+            Has iniciado sesión correctamente.<br>
+            <template v-if="isAdmin">
+              ¿Deseas ir al panel administrativo o explorar la tienda?
+            </template>
+            <template v-else>
+              Explora nuestra tienda.
+            </template>
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="modal-btn" @click="goToHome">Ir a la página principal</button>
+            <button v-if="isAdmin" class="modal-btn admin-btn" @click="goToAdmin">Ir a panel administrativo</button>
+          </div>
         </div>
       </div>
     </Transition>
@@ -170,6 +181,7 @@ export default {
       showLoginModal: false,
       showVerificationErrorModal: false,
       loggedUserName: '',
+      isAdmin: false,
       form: {
         login: '',
         nombre: '',
@@ -218,6 +230,13 @@ export default {
       this.showLoginModal = false
       this.$router.push('/')
     },
+    goToAdmin() {
+      this.showLoginModal = false
+      const user = localStorage.getItem('auth_user') || ''
+      const token = localStorage.getItem('auth_token') || ''
+      const qs = '?auth_user=' + encodeURIComponent(user) + '&auth_token=' + encodeURIComponent(token)
+      window.location.href = window.location.protocol + '//' + window.location.hostname + ':5174/' + qs
+    },
     async handleSubmit() {
       this.errorMsg = ''
       this.successMsg = ''
@@ -257,6 +276,7 @@ export default {
           localStorage.setItem('auth_user', JSON.stringify(response.data.user))
 
           this.loggedUserName = response.data.user.nombre || 'Usuario'
+          this.isAdmin = response.data.user.rol === 'admin' || response.data.user.rol === 'superadmin' || response.data.user.rol === 'super admin' || response.data.user.rol === 'super_admin'
           this.showLoginModal = true
 
         } else {
@@ -609,6 +629,17 @@ export default {
 .modal-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.admin-btn {
+  background: white;
+  color: #1a1a1a;
+  border: 1px solid #1a1a1a;
+}
+
+.admin-btn:hover {
+  background: #f4f4f4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes modalPop {

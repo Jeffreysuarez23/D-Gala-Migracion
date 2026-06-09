@@ -3,6 +3,15 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 
+// Sync auth from URL parameters if redirected from frontend
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('auth_user') && urlParams.has('auth_token')) {
+  localStorage.setItem('auth_user', urlParams.get('auth_user'));
+  localStorage.setItem('auth_token', urlParams.get('auth_token'));
+  // Clean URL without reloading
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 // Initialize Theme
 const storedState = localStorage.getItem('ecommerce_dashboard_state')
 if (storedState) {

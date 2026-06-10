@@ -69,6 +69,8 @@
               <th>Variantes</th>
               <th>Stock Total</th>
               <th>Estado</th>
+              <th>Destacado</th>
+              <th>Sin Stock</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -122,6 +124,16 @@
                 </span>
               </td>
               <td>
+                <span :class="['badge', product.destacado ? 'badge--info' : 'badge--pending']">
+                  {{ product.destacado ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="['badge', product.permitir_sin_stock ? 'badge--success' : 'badge--danger']">
+                  {{ product.permitir_sin_stock ? 'Permitido' : 'No' }}
+                </span>
+              </td>
+              <td>
                 <div class="action-buttons">
                   <button class="btn-icon-action" title="Editar Producto" @click="openEditDrawer(product)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -139,7 +151,7 @@
               </td>
             </tr>
             <tr v-if="filteredProducts.length === 0">
-              <td colspan="8" class="text-center text-muted" style="padding: 40px 0;">
+              <td colspan="10" class="text-center text-muted" style="padding: 40px 0;">
                 No se encontraron productos con los filtros seleccionados
               </td>
             </tr>
@@ -200,7 +212,7 @@
           <!-- Cantidad Mayorista Mínima -->
           <div class="form-group">
             <label>Cant. Mínima Mayorista</label>
-            <input type="number" class="input-text" v-model="form.min_cantidad_mayorista" />
+            <input type="text" class="input-text" :value="form.min_cantidad_mayorista" @input="form.min_cantidad_mayorista = $event.target.value.replace(/\D/g, '') || 1" />
           </div>
 
           <!-- Checkbox Toggles -->
@@ -213,13 +225,17 @@
               <input type="checkbox" v-model="form.permitir_sin_stock" />
               <span>Permitir pedidos sin stock disponible</span>
             </label>
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="form.destacado" />
+              <span>Marcar como producto destacado</span>
+            </label>
           </div>
 
           <!-- VARIANTS PANEL (Nested in edit mode) -->
           <div class="variants-panel-wrap" v-if="isEditMode">
             <div class="variants-panel__header">
               <h3>Variantes & Stock</h3>
-              <button type="button" class="btn-text-action" :class="{ cancel: showAddVariantForm }" @click="showAddVariantForm = !showAddVariantForm">
+              <button type="button" class="btn-text-action" :class="{ cancel: showAddVariantForm }" @click="showAddVariantForm = !showAddVariantForm; if(!showAddVariantForm) editingVarId = null; if(showAddVariantForm && !editingVarId) { newVar.sku=''; newVar.color=''; newVar.color_hex='#000000'; newVar.talla=''; newVar.stock=0; newVar.lona_id=null; newVar.precio_extra=0; }">
                 <svg v-if="!showAddVariantForm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 {{ showAddVariantForm ? 'Cancelar' : 'Agregar Variante' }}
               </button>
@@ -230,37 +246,52 @@
               <div class="grid-2">
                 <div class="form-group">
                   <label>SKU</label>
-                  <input type="text" class="input-text" placeholder="Ej: POLO-004" v-model="newVar.sku" />
+                  <input type="text" class="input-text" placeholder="Ej: POLO-004" v-model="newVar.sku" @input="newVar.sku = newVar.sku.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase()" />
                 </div>
                 <div class="form-group">
-                  <label>Color</label>
-                  <input type="text" class="input-text" placeholder="Ej: Azul" v-model="newVar.color" />
+                  <label>Nombre del Color</label>
+                  <input type="text" class="input-text" placeholder="Ej: Azul Marino" v-model="newVar.color" @input="newVar.color = newVar.color.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').toUpperCase()" />
                 </div>
               </div>
               <div class="grid-2">
                 <div class="form-group">
-                  <label>Talla</label>
-                  <input type="text" class="input-text" placeholder="Ej: M" v-model="newVar.talla" />
+                  <label>Tono del Color</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="color" v-model="newVar.color_hex" style="width: 42px; height: 42px; padding: 0; border: 1px solid var(--color-border); border-radius: 4px; cursor: pointer;" />
+                    <span style="font-family: monospace; color: var(--text-secondary);">{{ newVar.color_hex }}</span>
+                  </div>
                 </div>
                 <div class="form-group">
-                  <label>Stock Inicial</label>
-                  <input type="number" class="input-text" v-model="newVar.stock" />
+                  <label>Talla (Separa con comas para varias)</label>
+                  <input type="text" class="input-text" placeholder="Ej: S, M, L" :value="newVar.talla" @input="formatTallasInput($event, newVar, 'talla')" />
                 </div>
               </div>
-              <div class="form-group" style="margin-bottom: 12px;">
-                <label>Precio Extra (Opcional)</label>
-                <input type="text" class="input-text" :value="formatInputMoney(newVar.precio_extra)" @input="updatePrice('precio_extra', $event, newVar)" />
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Stock Inicial</label>
+                  <input type="text" class="input-text" :value="newVar.stock" @input="newVar.stock = $event.target.value.replace(/\D/g, '') || 0" />
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label>Precio Extra (Opcional)</label>
+                  <input type="text" class="input-text" :value="formatInputMoney(newVar.precio_extra)" @input="updatePrice('precio_extra', $event, newVar)" />
+                </div>
               </div>
-              <div class="form-group">
-                <label>Lona Asociada (ID)</label>
-                <select class="select-input" v-model="newVar.lona_id">
-                  <option :value="null">Ninguna lona</option>
-                  <option v-for="l in lonas" :key="l.id" :value="l.id">
-                    {{ l.codigo }} - {{ l.tipo_producto }} ({{ l.color }})
-                  </option>
-                </select>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Lona Asociada (ID)</label>
+                  <select class="select-input" v-model="newVar.lona_id">
+                    <option :value="null">Ninguna lona</option>
+                    <option v-for="l in lonas" :key="l.id" :value="l.id">
+                      {{ l.codigo }} - {{ l.tipo_producto }} ({{ l.color }})
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Descuento (%)</label>
+                  <input type="text" class="input-text" :value="newVar.descuento" @input="updateDescuento($event, newVar)" />
+                </div>
               </div>
-              <button type="button" class="btn btn--primary btn--sm" @click="saveNewVariant">Guardar Variante</button>
+              <button type="button" class="btn btn--primary btn--sm" @click="saveNewVariant">{{ editingVarId ? 'Actualizar Variante' : 'Guardar Variante' }}</button>
             </div>
 
             <!-- Existing Variants List -->
@@ -278,7 +309,10 @@
                   <button type="button" class="btn-stock-mod" @click="updateVarStock(v, 1)">+</button>
                 </div>
 
-                <button type="button" class="btn-delete-var" @click="deleteVar(v.id)">×</button>
+                <div class="variant-item__actions">
+                  <button type="button" class="btn-edit-var" @click="editVariant(v)">✎</button>
+                  <button type="button" class="btn-delete-var" @click="confirmDeleteVar(v)">×</button>
+                </div>
               </div>
             </div>
           </div>
@@ -439,6 +473,30 @@
         </div>
       </div>
     </Transition>
+    <!-- Delete Variant Modal -->
+    <Transition name="modal">
+      <div v-if="showDeleteVarModal" class="modal-overlay" @click.self="showDeleteVarModal = false">
+        <div class="modal-card">
+          <div class="modal-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" class="modal-circle" />
+              <line x1="12" y1="8" x2="12" y2="12" class="modal-line" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 class="modal-title">¿Eliminar esta variante?</h2>
+          <p class="modal-text">Se eliminará permanentemente la variante seleccionada (Color: {{ varToDelete?.color }} - Talla: {{ varToDelete?.talla }}). Esta acción no se puede deshacer.</p>
+          
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn--cancel" @click="showDeleteVarModal = false" :disabled="deletingVar">Cancelar</button>
+            <button class="modal-btn modal-btn--danger" @click="executeDeleteVar" :disabled="deletingVar">
+              <span v-if="deletingVar">Eliminando...</span>
+              <span v-else>Sí, eliminar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -464,6 +522,7 @@ const filters = reactive({
 const showDrawer = ref(false)
 const isEditMode = ref(false)
 const showAddVariantForm = ref(false)
+const editingVarId = ref(null)
 const showAddImageForm = ref(false)
 const saving = ref(false)
 const errorMsg = ref('')
@@ -471,6 +530,10 @@ const successMsg = ref('')
 const showDeleteModal = ref(false)
 const productToDelete = ref(null)
 const deleting = ref(false)
+
+const showDeleteVarModal = ref(false)
+const varToDelete = ref(null)
+const deletingVar = ref(false)
 
 const showVariantsModal = ref(false)
 const productForVariants = ref(null)
@@ -491,16 +554,19 @@ const form = reactive({
   precio_mayorista: 0,
   min_cantidad_mayorista: 12,
   publicado: true,
-  permitir_sin_stock: true
+  permitir_sin_stock: true,
+  destacado: false
 })
 
 const newVar = reactive({
   sku: '',
   color: '',
+  color_hex: '#000000',
   talla: '',
   stock: 0,
   lona_id: null,
-  precio_extra: 0
+  precio_extra: 0,
+  descuento: 0
 })
 
 const newImg = reactive({
@@ -560,6 +626,43 @@ const updatePrice = (field, event, obj) => {
 
   obj[field] = num
   event.target.value = num ? num.toLocaleString('es-CO') : ''
+}
+
+const updateDescuento = (event, obj) => {
+  let raw = String(event.target.value).replace(/\D/g, '')
+  if (raw === '') raw = '0'
+  let num = parseInt(raw, 10)
+  
+  if (num > 100) num = 100
+  if (num < 0) num = 0
+  
+  obj.descuento = num
+  event.target.value = num
+}
+
+const formatTallasInput = (event, obj, field) => {
+  let val = String(event.target.value).toUpperCase()
+  
+  // 1. Keep only alphanumeric, comma, and space
+  val = val.replace(/[^A-Z0-9,\s]/g, '')
+  
+  // 2. Remove leading commas or spaces
+  val = val.replace(/^[\s,]+/, '')
+  
+  // 3. Prevent consecutive commas
+  val = val.replace(/,+/g, ',')
+  
+  // 4. Remove spaces right before commas
+  val = val.replace(/\s+,/g, ',')
+  
+  // 5. Ensure exactly one space after a comma
+  val = val.replace(/,\s*/g, ', ')
+  
+  // 6. Prevent consecutive spaces elsewhere
+  val = val.replace(/\s{2,}/g, ' ')
+
+  obj[field] = val
+  event.target.value = val
 }
 
 const formatMoney = (amount) => {
@@ -646,6 +749,7 @@ const openCreateDrawer = async () => {
   form.min_cantidad_mayorista = 12
   form.publicado = true
   form.permitir_sin_stock = true
+  form.destacado = false
   
   await fetchCategories() // Refresh categories from database
   
@@ -668,6 +772,7 @@ const openEditDrawer = async (product) => {
   form.min_cantidad_mayorista = product.min_cantidad_mayorista
   form.publicado = product.publicado === 1
   form.permitir_sin_stock = product.permitir_sin_stock === 1
+  form.destacado = product.destacado === 1
   
   await fetchCategories() // Refresh categories from database
   
@@ -679,6 +784,32 @@ const submitForm = async () => {
   successMsg.value = ''
   saving.value = true
 
+  if (!form.nombre || form.nombre.trim() === '') {
+    errorMsg.value = 'El nombre del producto es obligatorio.'
+    saving.value = false
+    return
+  }
+  if (!form.precio_minorista || form.precio_minorista <= 0) {
+    errorMsg.value = 'El precio detal debe ser mayor a 0.'
+    saving.value = false
+    return
+  }
+  if (form.precio_mayorista < 0) {
+    errorMsg.value = 'El precio mayorista no puede ser negativo.'
+    saving.value = false
+    return
+  }
+  if (form.precio_mayorista > 0 && (!form.min_cantidad_mayorista || form.min_cantidad_mayorista < 1)) {
+    errorMsg.value = 'Si hay precio mayorista, la cantidad mínima debe ser al menos 1.'
+    saving.value = false
+    return
+  }
+  if (form.min_cantidad_mayorista < 0) {
+    errorMsg.value = 'La cantidad mínima mayorista no puede ser negativa.'
+    saving.value = false
+    return
+  }
+
   const payload = {
     nombre: form.nombre,
     descripcion: form.descripcion,
@@ -687,7 +818,8 @@ const submitForm = async () => {
     precio_mayorista: form.precio_mayorista,
     min_cantidad_mayorista: form.min_cantidad_mayorista,
     publicado: form.publicado ? 1 : 0,
-    permitir_sin_stock: form.permitir_sin_stock ? 1 : 0
+    permitir_sin_stock: form.permitir_sin_stock ? 1 : 0,
+    destacado: form.destacado ? 1 : 0
   }
 
   try {
@@ -754,31 +886,89 @@ const executeDelete = async () => {
 const saveNewVariant = async () => {
   errorMsg.value = ''
   successMsg.value = ''
-  if (!newVar.sku) {
-    errorMsg.value = 'El SKU es obligatorio'
+  if (!newVar.sku || newVar.sku.trim() === '') {
+    errorMsg.value = 'El SKU es obligatorio.'
     return
   }
+  if (!newVar.color || newVar.color.trim() === '') {
+    errorMsg.value = 'El nombre del color es obligatorio.'
+    return
+  }
+  if (!newVar.talla || newVar.talla.trim() === '') {
+    errorMsg.value = 'Debes ingresar al menos una talla.'
+    return
+  }
+  if (newVar.stock === null || newVar.stock === undefined || newVar.stock < 0) {
+    errorMsg.value = 'El stock inicial no puede ser negativo.'
+    return
+  }
+  if (newVar.precio_extra === null || newVar.precio_extra === undefined || newVar.precio_extra < 0) {
+    errorMsg.value = 'El precio extra no puede ser negativo.'
+    return
+  }
+  if (newVar.descuento === null || newVar.descuento === undefined || newVar.descuento < 0 || newVar.descuento > 100) {
+    errorMsg.value = 'El descuento debe ser un porcentaje de 0 a 100.'
+    return
+  }
+  
+  const tallas = newVar.talla ? String(newVar.talla).split(',').map(t => t.trim()).filter(t => t) : ['']
+  if (tallas.length === 0) tallas.push('')
+
   try {
-    await axios.post(`${API_URL}/variantes`, {
-      producto_id: form.id,
-      sku: newVar.sku,
-      color: newVar.color,
-      talla: newVar.talla,
-      stock: newVar.stock,
-      lona_id: newVar.lona_id,
-      precio_extra: newVar.precio_extra
-    })
+    if (editingVarId.value) {
+      const firstTalla = tallas.shift()
+      await axios.put(`${API_URL}/variantes/${editingVarId.value}`, {
+        sku: newVar.sku,
+        color: newVar.color,
+        color_hex: newVar.color_hex,
+        talla: firstTalla,
+        stock: newVar.stock,
+        lona_id: newVar.lona_id,
+        precio_extra: newVar.precio_extra,
+        descuento: newVar.descuento
+      })
+      for (const t of tallas) {
+        await axios.post(`${API_URL}/variantes`, {
+          producto_id: form.id,
+          sku: newVar.sku,
+          color: newVar.color,
+          color_hex: newVar.color_hex,
+          talla: t,
+          stock: newVar.stock,
+          lona_id: newVar.lona_id,
+          precio_extra: newVar.precio_extra,
+          descuento: newVar.descuento
+        })
+      }
+    } else {
+      for (const t of tallas) {
+        await axios.post(`${API_URL}/variantes`, {
+          producto_id: form.id,
+          sku: newVar.sku,
+          color: newVar.color,
+          color_hex: newVar.color_hex,
+          talla: t,
+          stock: newVar.stock,
+          lona_id: newVar.lona_id,
+          precio_extra: newVar.precio_extra,
+          descuento: newVar.descuento
+        })
+      }
+    }
     
     await fetchProducts()
     
-    // Reset fields
     newVar.sku = ''
     newVar.color = ''
+    newVar.color_hex = '#000000'
     newVar.talla = ''
     newVar.stock = 0
     newVar.lona_id = null
+    newVar.precio_extra = 0
+    newVar.descuento = 0
+    editingVarId.value = null
     showAddVariantForm.value = false
-    successMsg.value = 'Variante agregada correctamente.'
+    successMsg.value = 'Variante guardada correctamente.'
   } catch (error) {
     console.error('Error saving variant:', error)
     errorMsg.value = error.response?.data?.message || 'Error al guardar la variante'
@@ -802,18 +992,46 @@ const updateVarStock = async (variant, change) => {
   }
 }
 
-const deleteVar = async (variantId) => {
+const editVariant = (v) => {
+  newVar.sku = v.sku || ''
+  newVar.color = v.color || ''
+  newVar.color_hex = v.color_hex || '#000000'
+  newVar.talla = v.talla || ''
+  newVar.stock = v.stock || 0
+  newVar.lona_id = v.lona_id || null
+  newVar.precio_extra = v.precio_extra || 0
+  newVar.descuento = v.descuento || 0
+  
+  editingVarId.value = v.id
+  showAddVariantForm.value = true
+}
+
+const confirmDeleteVar = (variant) => {
   errorMsg.value = ''
   successMsg.value = ''
-  if (confirm('¿Eliminar esta variante?')) {
-    try {
-      await axios.delete(`${API_URL}/variantes/${variantId}`)
-      await fetchProducts()
-      successMsg.value = 'Variante eliminada correctamente.'
-    } catch (error) {
-      console.error('Error deleting variant:', error)
-      errorMsg.value = 'Error al eliminar la variante'
-    }
+  varToDelete.value = variant
+  showDeleteVarModal.value = true
+}
+
+const executeDeleteVar = async () => {
+  if (!varToDelete.value) return
+  deletingVar.value = true
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  try {
+    await axios.delete(`${API_URL}/variantes/${varToDelete.value.id}`)
+    await fetchProducts()
+    successMsg.value = 'Variante eliminada correctamente.'
+    showDeleteVarModal.value = false
+    varToDelete.value = null
+  } catch (error) {
+    console.error('Error deleting variant:', error)
+    errorMsg.value = 'Error al eliminar la variante'
+    showDeleteVarModal.value = false
+    varToDelete.value = null
+  } finally {
+    deletingVar.value = false
   }
 }
 
@@ -864,7 +1082,7 @@ const setLocalCover = (index) => {
 
 const saveNewImage = async () => {
   if (!newImg.file) {
-    alert('Por favor selecciona una imagen')
+    errorMsg.value = 'Por favor selecciona una imagen'
     return
   }
   try {
@@ -885,7 +1103,7 @@ const saveNewImage = async () => {
     showAddImageForm.value = false
   } catch (error) {
     console.error('Error saving image:', error)
-    alert('Error al guardar la imagen')
+    errorMsg.value = 'Error al guardar la imagen'
   }
 }
 
@@ -893,10 +1111,11 @@ const deleteImg = async (imageId) => {
   if (confirm('¿Eliminar esta imagen?')) {
     try {
       await axios.delete(`${API_URL}/imagenes/${imageId}`)
+      successMsg.value = 'Imagen eliminada correctamente.'
       await fetchProducts()
     } catch (error) {
       console.error('Error deleting image:', error)
-      alert('Error al eliminar la imagen')
+      errorMsg.value = 'Error al eliminar la imagen'
     }
   }
 }
@@ -904,10 +1123,11 @@ const deleteImg = async (imageId) => {
 const setAsCover = async (imageId) => {
   try {
     await axios.put(`${API_URL}/imagenes/${imageId}/portada`)
+    successMsg.value = 'Imagen establecida como portada.'
     await fetchProducts()
   } catch (error) {
     console.error('Error setting cover:', error)
-    alert('Error al establecer como portada')
+    errorMsg.value = 'Error al establecer como portada'
   }
 }
 </script>
@@ -918,6 +1138,7 @@ const setAsCover = async (imageId) => {
   flex-direction: column;
   gap: 24px;
   padding: 24px;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -927,6 +1148,10 @@ const setAsCover = async (imageId) => {
 }
 
 /* Image Grid and Cards */
+.table-card {
+  margin-top: 24px;
+}
+
 .image-grid {
   display: flex;
   flex-wrap: wrap;
@@ -998,7 +1223,7 @@ const setAsCover = async (imageId) => {
 }
 
 .price-wholesale {
-  color: var(--color-accent);
+  color: var(--text-accent);
 }
 
 /* Action button configurations */
@@ -1038,7 +1263,7 @@ const setAsCover = async (imageId) => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 4px;
 }
 
 .checkbox-label {
@@ -1173,6 +1398,7 @@ const setAsCover = async (imageId) => {
 }
 
 .input-stock-val {
+  color: white !important ;
   width: 40px;
   text-align: center;
   border: none;
@@ -1182,17 +1408,36 @@ const setAsCover = async (imageId) => {
   outline: none;
 }
 
+.variant-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-edit-var,
 .btn-delete-var {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-var:hover {
+  color: var(--color-accent);
+  background: rgba(255,255,255,0.05);
+}
+
+.btn-delete-var {
+  font-size: 18px;
 }
 
 .btn-delete-var:hover {
   color: var(--color-danger);
+  background: rgba(255,255,255,0.05);
 }
 
 .form-actions {
@@ -1538,4 +1783,6 @@ const setAsCover = async (imageId) => {
 .modal-enter-active { transition: opacity 0.3s ease; }
 .modal-leave-active { transition: opacity 0.2s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
+
+
 </style>

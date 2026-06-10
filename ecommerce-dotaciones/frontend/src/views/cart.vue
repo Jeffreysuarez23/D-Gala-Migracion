@@ -29,7 +29,7 @@
               <div>
                 <p class="cart-item__category">{{ item.category }}</p>
                 <p class="cart-item__name">{{ item.name }}</p>
-                <p class="cart-item__price">{{ item.price }}</p>
+                <p class="cart-item__price">{{ formatPrice(item.price) }}</p>
               </div>
 
               <div class="cart-item__actions">
@@ -77,16 +77,16 @@
 
             <div class="summary__row">
               <span>Subtotal</span>
-              <span>${{ formatPrice(subtotal) }}</span>
+              <span>{{ formatPrice(subtotal) }}</span>
             </div>
             <div class="summary__row">
               <span>Envío</span>
-              <span v-if="subtotal > 200" class="shipping--free">Gratis</span>
-              <span v-else>$12.00</span>
+              <span v-if="subtotal > 200000" class="shipping--free">Gratis</span>
+              <span v-else>{{ formatPrice(15000) }}</span>
             </div>
             <div class="summary__row summary__row--total">
               <span>Total</span>
-              <span class="total-amount">${{ formatPrice(total) }}</span>
+              <span class="total-amount">{{ formatPrice(total) }}</span>
             </div>
 
             <button v-if="isLoggedIn" class="checkout-btn" @click="proceedToCheckout">
@@ -110,7 +110,7 @@
             </p>
 
             <p class="summary__note">
-              Envío gratis en pedidos superiores a $200
+              Envío gratis en pedidos superiores a $200.000
             </p>
           </div>
         </div>
@@ -140,37 +140,63 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+import { updateCartCount } from '../cartState'
 
 const router = useRouter()
 
-// Datos de ejemplo - en producción vendrían de un store (Pinia/Vuex)
-const cartItems = ref([
-  {
-    id: 1,
-    name: 'Blazer Oversize de Lino',
-    category: 'ABRIGOS',
-    price: 189,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=400&q=80'
-  },
-  {
-    id: 2,
-    name: 'Suéter de Merino Acanalado',
-    category: 'TEJIDOS',
-    price: 134,
-    quantity: 2,
-    image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&q=80'
+const cartItems = ref([])
+
+const fetchCart = async () => {
+  const cartId = localStorage.getItem('carrito_id')
+  if (!cartId) return
+
+  try {
+    const { data } = await axios.get(`http://localhost:8000/api/carritos/${cartId}`)
+    if (data && data.items) {
+      cartItems.value = data.items.map(item => {
+        const v = item.variante
+        const p = v.producto || {}
+        
+        let extra = parseFloat(v.precio_extra) || 0
+        let desc = parseInt(v.descuento) || 0
+        let base = parseFloat(p.precio_minorista || 0) + extra
+        let finalPrice = base * (1 - desc / 100)
+
+        let image = 'https://via.placeholder.com/400'
+        if (p.imagenes && p.imagenes.length > 0) {
+          const cover = p.imagenes.find(img => img.es_portada === 1)
+          image = cover ? cover.url : p.imagenes[0].url
+        }
+
+        return {
+          id: item.id, // CarritoItem ID
+          name: `${p.nombre || 'Producto'} (${v.color} - ${v.talla})`,
+          category: p.categoria ? p.categoria.nombre : 'General',
+          price: finalPrice,
+          quantity: item.cantidad,
+          image: image
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error fetching cart:', error)
   }
-])
+}
+
+onMounted(() => {
+  fetchCart()
+})
 
 const subtotal = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 })
 
 const shippingCost = computed(() => {
-  return subtotal.value > 200 ? 0 : 12
+  if (cartItems.value.length === 0) return 0
+  return subtotal.value > 200000 ? 0 : 15000
 })
 
 const total = computed(() => {
@@ -178,19 +204,36 @@ const total = computed(() => {
 })
 
 const formatPrice = (value) => {
-  return value.toFixed(2)
+  if (value === undefined || value === null) return '$ 0'
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(value)
 }
 
-const updateQuantity = (id, newQuantity) => {
+const updateQuantity = async (id, newQuantity) => {
   if (newQuantity < 1) return
   const item = cartItems.value.find(i => i.id === id)
   if (item) {
     item.quantity = newQuantity
+    try {
+      await axios.put(`http://localhost:8000/api/carrito-items/${id}`, { cantidad: newQuantity })
+      await updateCartCount()
+    } catch (error) {
+      console.error('Error updating quantity:', error)
+    }
   }
 }
 
-const removeItem = (id) => {
-  cartItems.value = cartItems.value.filter(i => i.id !== id)
+const removeItem = async (id) => {
+  try {
+    await axios.delete(`http://localhost:8000/api/carrito-items/${id}`)
+    cartItems.value = cartItems.value.filter(i => i.id !== id)
+    await updateCartCount()
+  } catch (error) {
+    console.error('Error removing item:', error)
+  }
 }
 
 const isLoggedIn = computed(() => {
@@ -277,21 +320,22 @@ const goToLogin = () => {
 .cart__items {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
 }
 
 .cart-item {
   display: flex;
-  gap: 28px;
-  padding-bottom: 32px;
+  gap: 20px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #e0d8cc;
+  align-items: center;
 }
 
 .cart-item__image-wrap {
-  width: 120px;
-  height: 160px;
+  width: 70px;
+  height: 90px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   background: #f0ebe3;
 }
@@ -311,27 +355,27 @@ const goToLogin = () => {
   flex: 1;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .cart-item__category {
   font-family: 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.1em;
   color: #aaa;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
 }
 
 .cart-item__name {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 500;
   color: #1a1a1a;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
 }
 
 .cart-item__price {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
   color: #6b5f4e;
   margin: 0;
@@ -339,18 +383,18 @@ const goToLogin = () => {
 
 .cart-item__actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
 }
 
 .cart-item__quantity {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   background: #f5f0e8;
   border-radius: 100px;
-  padding: 6px 12px;
+  padding: 4px 8px;
 }
 
 .qty-btn {

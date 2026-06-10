@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Navbar v-if="!$route.meta.hideNavbar" :cart-count="1" />
+    <Navbar v-if="!$route.meta.hideNavbar" :cart-count="cartItemCount" />
     <main>
       <router-view />
     </main>
@@ -8,8 +8,14 @@
   </div>
 </template>
 <script setup>
+import { onMounted } from 'vue';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
+import { cartItemCount, updateCartCount } from './cartState';
+
+onMounted(() => {
+  updateCartCount();
+});
 </script>
 
 <style>

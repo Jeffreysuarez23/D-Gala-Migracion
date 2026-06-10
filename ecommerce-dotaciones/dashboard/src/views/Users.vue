@@ -371,23 +371,6 @@ const closeDrawer = () => {
   document.body.style.overflow = ''
 }
 
-const sanitizeName = (field, obj) => {
-  if (obj[field] == null) return
-  let val = obj[field].replace(/^\s+/, '') // Sin espacios al inicio
-  val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '') // Solo letras y espacios
-  val = val.replace(/\s{2,}/g, ' ') // Sin espacios dobles
-  obj[field] = val
-}
-
-const sanitizePhone = (field, obj) => {
-  if (obj[field] == null) return
-  let val = obj[field].replace(/^\s+/, '')
-  val = val.replace(/[^\+0-9\s]/g, '') // Solo números, + y espacios
-  val = val.replace(/(?!^\+)\+/g, '') // + solo al inicio
-  val = val.replace(/\s{2,}/g, ' ')
-  obj[field] = val
-}
-
 const sanitizeNoSpaces = (field, obj) => {
   if (obj[field] == null) return
   obj[field] = obj[field].replace(/\s/g, '') // Sin espacios
@@ -414,7 +397,6 @@ const submitForm = async () => {
   saving.value = true
   try {
     if (isEditMode.value) {
-      // EDIT
       if (form.rol === 'cliente' &&
         usuarios.value.find(u => u.id === form.id)?.rol === 'super_admin' &&
         countSuperAdmins() <= 1) {
@@ -427,14 +409,8 @@ const submitForm = async () => {
       if (idx !== -1) usuarios.value[idx] = data.usuario
       successMsg.value = 'Usuario actualizado correctamente.'
     } else {
-      // CREATE
       const { data } = await axios.post('http://localhost:8000/api/usuarios', form)
-      
-      // Fix for missing date on creation issue
-      if (!data.usuario.creado_en) {
-        data.usuario.creado_en = new Date().toISOString()
-      }
-      
+      if (!data.usuario.creado_en) data.usuario.creado_en = new Date().toISOString()
       usuarios.value.push(data.usuario)
       successMsg.value = 'Usuario creado correctamente.'
     }
@@ -444,7 +420,7 @@ const submitForm = async () => {
       const firstError = Object.values(error.response.data.errors)[0][0]
       errorMsg.value = `Error de validación: ${firstError}`
     } else {
-      errorMsg.value = error.response?.data?.message || 'Hubo un error al guardar el usuario.'
+      errorMsg.value = error.response?.data?.message || 'Error al guardar el usuario.'
     }
   } finally {
     saving.value = false
@@ -459,7 +435,6 @@ const confirmDelete = (user) => {
     errorMsg.value = 'No puedes eliminar al único Super Administrador del sistema.'
     return
   }
-  
   userToDelete.value = user
   showDeleteModal.value = true
 }
@@ -477,7 +452,7 @@ const executeDelete = async () => {
     showDeleteModal.value = false
     userToDelete.value = null
   } catch (error) {
-    errorMsg.value = error.response?.data?.message || 'Hubo un error al eliminar el usuario.'
+    errorMsg.value = error.response?.data?.message || 'Error al eliminar el usuario.'
     showDeleteModal.value = false
     userToDelete.value = null
   } finally {
@@ -502,8 +477,10 @@ const executeDelete = async () => {
   flex-direction: column;
   gap: 24px;
   padding: 24px;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  align-self: center;
 }
 
 .grid-3 {

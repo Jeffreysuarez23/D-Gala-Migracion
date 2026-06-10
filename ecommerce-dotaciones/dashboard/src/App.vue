@@ -41,19 +41,19 @@ const mobileMenuOpen = ref(false)
 
 .main-viewport-container {
   flex: 1;
+  width: calc(100% - var(--sidebar-width));
   margin-left: var(--sidebar-width);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s ease;
+  transition: width 0.3s ease, margin-left 0.3s ease;
 }
 
 .main-content {
   flex: 1;
+  width: 100%;
   padding: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+  display: block;
 }
 
 /* Page transitions */

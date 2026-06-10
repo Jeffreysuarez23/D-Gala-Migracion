@@ -13,16 +13,24 @@ class Productos extends Model
     protected $fillable = [
         'nombre',
         'slug',
+        'descripcion',
         'precio_minorista',
         'precio_mayorista',
         'min_cantidad_mayorista',
-        'publicado'
+        'publicado',
+        'categoria_id',
+        'destacado'
     ];
     
     // RELACIÓN CON VARIANTES DE PRODUCTO
     public function variantes()
     {
         return $this->hasMany(VarianteProducto::class, 'producto_id');
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
     }
 
     public function imagenes()

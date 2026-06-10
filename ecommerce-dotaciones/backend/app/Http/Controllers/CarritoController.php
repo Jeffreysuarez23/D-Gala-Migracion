@@ -53,7 +53,7 @@ class CarritoController extends Controller
     // LISTAR CARRITO
     public function show($id)
     {
-        $carrito = Carrito::with('items.variante')->findOrFail($id);
+        $carrito = Carrito::with(['items.variante.producto.imagenes'])->findOrFail($id);
 
         return response()->json($carrito);
     }

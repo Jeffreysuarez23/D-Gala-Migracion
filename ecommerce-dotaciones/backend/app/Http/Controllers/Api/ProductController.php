@@ -15,18 +15,27 @@ class ProductController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:150',
+            'descripcion' => 'nullable|string',
             'precio_minorista' => 'required|numeric|min:0',
             'precio_mayorista' => 'required|numeric|min:0',
-            'min_cantidad_mayorista' => 'nullable|integer|min:1'
+            'min_cantidad_mayorista' => 'nullable|integer|min:1',
+            'categoria_id' => 'nullable|integer|exists:categorias,id',
+            'publicado' => 'nullable|boolean',
+            'permitir_sin_stock' => 'nullable|boolean',
+            'destacado' => 'nullable|boolean'
         ]);
 
         $producto = Productos::create([
             'nombre' => $request->nombre,
             'slug' => Str::slug($request->nombre),
+            'descripcion' => $request->descripcion,
             'precio_minorista' => $request->precio_minorista,
             'precio_mayorista' => $request->precio_mayorista,
             'min_cantidad_mayorista' => $request->min_cantidad_mayorista ?? 12,
-            'publicado' => 1
+            'categoria_id' => $request->categoria_id,
+            'destacado' => $request->destacado ?? 0,
+            'publicado' => $request->has('publicado') ? $request->publicado : 1,
+            'permitir_sin_stock' => $request->has('permitir_sin_stock') ? $request->permitir_sin_stock : 1
         ]);
 
         return response()->json($producto, 201);
@@ -34,16 +43,21 @@ class ProductController extends Controller
  // LISTAR TODOS LOS PRODUCTOS
     public function index()
     {
-        return Productos::with(['variantes', 'imagenes'])->get();
+        return Productos::with(['variantes', 'imagenes', 'categoria'])->get();
     }
  //  MOSTRAR UN PRODUCTO CON SUS VARIANTES E IMÁGENES
     public function show($id)
     {
-        $producto = Productos::with(['variantes', 'imagenes'])->findOrFail($id);
+        $producto = Productos::with(['variantes', 'imagenes', 'categoria'])->findOrFail($id);
 
         return response()->json([
             'id' => $producto->id,
             'nombre' => $producto->nombre,
+            'descripcion' => $producto->descripcion,
+            'categoria_id' => $producto->categoria_id,
+            'destacado' => $producto->destacado,
+            'publicado' => $producto->publicado,
+            'permitir_sin_stock' => $producto->permitir_sin_stock,
             'precio_minorista' => $producto->precio_minorista,
             'precio_mayorista' => $producto->precio_mayorista,
             'imagenes' => $producto->imagenes,
@@ -52,9 +66,11 @@ class ProductController extends Controller
                     'id' => $v->id,
                     'sku' => $v->sku,
                     'color' => $v->color,
+                    'color_hex' => $v->color_hex,
                     'talla' => $v->talla,
                     'stock' => $v->stock,
-                    'precio_extra' => $v->precio_extra
+                    'precio_extra' => $v->precio_extra,
+                    'descuento' => $v->descuento
                 ];
             })
         ]);
@@ -66,9 +82,14 @@ public function update(Request $request, $id)
 
     $validated = $request->validate([
         'nombre' => 'sometimes|string|max:150',
+        'descripcion' => 'nullable|string',
         'precio_minorista' => 'sometimes|numeric|min:0',
         'precio_mayorista' => 'sometimes|numeric|min:0',
-        'min_cantidad_mayorista' => 'nullable|integer|min:1'
+        'min_cantidad_mayorista' => 'nullable|integer|min:1',
+        'categoria_id' => 'nullable|integer|exists:categorias,id',
+        'publicado' => 'nullable|boolean',
+        'permitir_sin_stock' => 'nullable|boolean',
+        'destacado' => 'nullable|boolean'
     ]);
 
     if(isset($validated['nombre'])){

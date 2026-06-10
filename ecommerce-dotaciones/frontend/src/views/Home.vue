@@ -72,10 +72,12 @@
         </div>
 
         <div class="featured__grid">
-          <div
+          <router-link
             v-for="product in featuredProducts"
             :key="product.id"
+            :to="`/product/${product.id}`"
             class="product-card"
+            style="text-decoration: none;"
           >
             <div class="product-card__image-wrap">
               <img :src="product.image" :alt="product.name" class="product-card__image" />
@@ -88,7 +90,7 @@
               <p class="product-card__name">{{ product.name }}</p>
               <p class="product-card__price">{{ product.price }}</p>
             </div>
-          </div>
+          </router-link>
         </div>
       </div>
     </section>
@@ -168,6 +170,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'HomeView',
   data() {
@@ -203,44 +207,7 @@ export default {
           link: '/products'
         }
       ],
-      featuredProducts: [
-        {
-          id: 1,
-          name: 'Blazer Oversize de Lino',
-          category: 'ABRIGOS',
-          price: '$189',
-          badge: 'Oferta',
-          badgeType: 'dark',
-          image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80'
-        },
-        {
-          id: 2,
-          name: 'Suéter de Merino Acanalado',
-          category: 'TEJIDOS',
-          price: '$134',
-          badge: 'Más Vendido',
-          badgeType: 'light',
-          image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'
-        },
-        {
-          id: 3,
-          name: 'Pantalones de Pierna Ancha',
-          category: 'PANTALONES',
-          price: '$112',
-          badge: null,
-          badgeType: null,
-          image: 'https://images.unsplash.com/photo-1594938298603-c8148c4b9f50?w=600&q=80'
-        },
-        {
-          id: 4,
-          name: 'Bolso Cruzado de Cuero',
-          category: 'ACCESORIOS',
-          price: '$245',
-          badge: 'Nuevo',
-          badgeType: 'outline',
-          image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80'
-        }
-      ],
+      featuredProducts: [],
       collections: [
         {
           id: 1,
@@ -270,6 +237,7 @@ export default {
   },
   mounted() {
     this.startSlider()
+    this.fetchFeaturedProducts()
   },
   unmounted() {
     this.stopSlider()
@@ -290,6 +258,32 @@ export default {
       this.currentSlide = index
       this.stopSlider()
       this.startSlider()
+    },
+    async fetchFeaturedProducts() {
+      try {
+        const { data } = await axios.get('http://localhost:8000/api/productos')
+        const destacados = data.filter(p => p.destacado === 1 && p.publicado === 1).slice(0, 4)
+        
+        this.featuredProducts = destacados.map(p => {
+          let image = 'https://via.placeholder.com/600'
+          if (p.imagenes && p.imagenes.length > 0) {
+            const cover = p.imagenes.find(img => img.es_portada === 1)
+            image = cover ? cover.url : p.imagenes[0].url
+          }
+
+          return {
+            id: p.id,
+            name: p.nombre,
+            category: p.categoria ? p.categoria.nombre : 'General',
+            price: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.precio_minorista),
+            badge: null,
+            badgeType: null,
+            image: image
+          }
+        })
+      } catch (error) {
+        console.error('Error fetching featured products:', error)
+      }
     }
   }
 }

@@ -9,6 +9,7 @@ import ProductDetail from '../views/ProductDetail.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
 import ResetPassword from '../views/ResetPassword.vue'
 import MyAccount from '../views/MyAccount.vue'
+import About from '../views/About.vue'
 
 const routes = [
   {
@@ -20,6 +21,11 @@ const routes = [
     path: '/products',
     name: 'Products',
     component: Products,
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: About,
   },
   {
     path: '/contact',

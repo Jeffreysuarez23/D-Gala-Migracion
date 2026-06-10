@@ -14,9 +14,11 @@ class VarianteProducto extends Model
         'lona_id',
         'sku',
         'color',
+        'color_hex',
         'talla',
         'stock',
-        'precio_extra'
+        'precio_extra',
+        'descuento'
     ];
     
     // RELACIONES CON PRODUCTO PRINCIPAL

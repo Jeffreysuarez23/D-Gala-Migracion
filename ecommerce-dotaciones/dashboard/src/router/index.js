@@ -5,6 +5,7 @@ import Orders from '../views/Orders.vue'
 import Dotaciones from '../views/Dotaciones.vue'
 import Users from '../views/Users.vue'
 import AdminAccount from '../views/AdminAccount.vue'
+import Categorias from '../views/Categorias.vue'
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/account',
     name: 'AdminAccount',
     component: AdminAccount
+  },
+  {
+    path: '/categorias',
+    name: 'Categorias',
+    component: Categorias
   }
 ]
 

@@ -44,7 +44,7 @@ class UsuarioController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:100',
-            'email' => 'required|email|unique:usuarios,email',
+            'email' => 'required|email:rfc,dns|unique:usuarios,email',
             'telefono' => 'nullable|string|max:20',
             'password' => 'required|string|min:8',
             'rol' => 'required|in:cliente,admin,super_admin',
@@ -61,7 +61,15 @@ class UsuarioController extends Controller
         $usuario->save();
 
         if (!$request->estado) {
-            $this->sendVerificationEmail($usuario);
+            try {
+                $this->sendVerificationEmail($usuario);
+            } catch (\Exception $e) {
+                // Si falla el envío (ej: el servidor SMTP rechaza el correo porque no existe)
+                $usuario->delete();
+                return response()->json([
+                    'message' => 'No se pudo enviar el correo. Es posible que la dirección de correo no exista o sea inválida.'
+                ], 400);
+            }
         }
 
         return response()->json([

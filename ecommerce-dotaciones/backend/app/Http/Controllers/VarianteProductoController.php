@@ -15,9 +15,11 @@ class VarianteProductoController extends Controller
             'lona_id' => 'nullable|integer|exists:lonas,id',
             'sku' => 'nullable|string|max:100',
             'color' => 'required|string|max:50',
+            'color_hex' => 'nullable|string|max:20',
             'talla' => 'required|string|max:10',
             'stock' => 'nullable|integer|min:0',
-            'precio_extra' => 'nullable|numeric|min:0'
+            'precio_extra' => 'nullable|numeric|min:0',
+            'descuento' => 'nullable|integer|min:0|max:100'
         ]);
 
         try {
@@ -50,9 +52,11 @@ public function update(Request $request, $id)
         'lona_id' => 'nullable|integer|exists:lonas,id',
         'sku' => 'nullable|string|max:100',
         'color' => 'sometimes|string|max:50',
+        'color_hex' => 'nullable|string|max:20',
         'talla' => 'sometimes|string|max:10',
         'stock' => 'nullable|integer|min:0',
-        'precio_extra' => 'nullable|numeric|min:0'
+        'precio_extra' => 'nullable|numeric|min:0',
+        'descuento' => 'nullable|integer|min:0|max:100'
     ]);
 
     $variante->update($validated);

@@ -30,15 +30,14 @@
         <div class="filters-bar__sorts">
           <select class="sort-select" v-model="priceFilter">
             <option value="">Todos los precios</option>
-            <option value="under100">Menos de $100</option>
-            <option value="100to200">$100 – $200</option>
-            <option value="over200">Más de $200</option>
+            <option value="under50k">Menos de $50.000</option>
+            <option value="50kto100k">$50.000 – $100.000</option>
+            <option value="100kto500k">$100.000 – $500.000</option>
+            <option value="over500k">Más de $500.000</option>
           </select>
           <select class="sort-select" v-model="sortBy">
-            <option value="featured">Destacados</option>
             <option value="price-asc">Precio: Menor a Mayor</option>
             <option value="price-desc">Precio: Mayor a Menor</option>
-            <option value="rating">Mejor Calificados</option>
           </select>
         </div>
       </div>
@@ -59,8 +58,8 @@
             >
               {{ product.badge }}
             </span>
-            <button class="product-card__quick-add" @click="addToCart(product)">
-              Añadir al Carrito
+            <button class="product-card__quick-add" @click.stop="goToProduct(product.id)">
+              Seleccionar opciones
             </button>
           </div>
 
@@ -68,13 +67,8 @@
             <p class="product-card__category">{{ product.category }}</p>
             <p class="product-card__name">{{ product.name }}</p>
             <div class="product-card__pricing">
-              <span class="product-card__price">${{ product.price }}</span>
-              <span v-if="product.originalPrice" class="product-card__original">${{ product.originalPrice }}</span>
-            </div>
-            <div class="product-card__rating">
-              <span class="star">★</span>
-              <span class="rating-value">{{ product.rating }}</span>
-              <span class="rating-count">({{ product.reviews }})</span>
+              <span class="product-card__price">{{ formatPrice(product.price) }}</span>
+              <span v-if="product.originalPrice" class="product-card__original">{{ formatPrice(product.originalPrice) }}</span>
             </div>
           </div>
         </div>
@@ -90,113 +84,24 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'ProductsView',
   data() {
     return {
       activeCategory: 'Todos',
       priceFilter: '',
-      sortBy: 'featured',
-      categories: ['Todos', 'Abrigos', 'Tejidos', 'Pantalones', 'Vestidos', 'Tops', 'Accesorios', 'Calzado'],
-      products: [
-        {
-          id: 1,
-          name: 'Blazer Oversize de Lino',
-          category: 'Abrigos',
-          price: 189,
-          originalPrice: 240,
-          badge: 'Oferta',
-          badgeType: 'dark',
-          rating: 4.8,
-          reviews: 124,
-          image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80'
-        },
-        {
-          id: 2,
-          name: 'Suéter de Merino Acanalado',
-          category: 'Tejidos',
-          price: 145,
-          originalPrice: null,
-          badge: 'Más Vendido',
-          badgeType: 'light',
-          rating: 4.9,
-          reviews: 89,
-          image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'
-        },
-        {
-          id: 3,
-          name: 'Pantalones de Pierna Ancha',
-          category: 'Pantalones',
-          price: 129,
-          originalPrice: null,
-          badge: null,
-          badgeType: null,
-          rating: 4.7,
-          reviews: 67,
-          image: 'https://images.unsplash.com/photo-1594938298603-c8148c4b9f50?w=600&q=80'
-        },
-        {
-          id: 4,
-          name: 'Bolso Cruzado de Cuero',
-          category: 'Accesorios',
-          price: 295,
-          originalPrice: null,
-          badge: 'Nuevo',
-          badgeType: 'outline',
-          rating: 4.9,
-          reviews: 203,
-          image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80'
-        },
-        {
-          id: 5,
-          name: 'Vestido de Seda',
-          category: 'Vestidos',
-          price: 215,
-          originalPrice: null,
-          badge: null,
-          badgeType: null,
-          rating: 4.6,
-          reviews: 45,
-          image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600&q=80'
-        },
-        {
-          id: 6,
-          name: 'Camisa de Popelín de Algodón',
-          category: 'Tops',
-          price: 98,
-          originalPrice: null,
-          badge: null,
-          badgeType: null,
-          rating: 4.7,
-          reviews: 156,
-          image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80'
-        },
-        {
-          id: 7,
-          name: 'Cárdigan de Cachemira',
-          category: 'Tejidos',
-          price: 265,
-          originalPrice: 320,
-          badge: 'Oferta',
-          badgeType: 'dark',
-          rating: 4.9,
-          reviews: 78,
-          image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80'
-        },
-        {
-          id: 8,
-          name: 'Botas Chelsea de Cuero',
-          category: 'Calzado',
-          price: 345,
-          originalPrice: null,
-          badge: 'Nuevo',
-          badgeType: 'outline',
-          rating: 4.8,
-          reviews: 92,
-          image: 'https://images.unsplash.com/photo-1638247025967-b4e38f787b76?w=600&q=80'
-        }
-      ]
+      sortBy: 'price-asc',
+      categories: ['Todos'],
+      products: [],
+      loading: false,
+      error: ''
     }
+  },
+  mounted() {
+    this.fetchCategories()
+    this.fetchProducts()
   },
   computed: {
     filteredProducts() {
@@ -208,12 +113,14 @@ export default {
       }
 
       // Price filter
-      if (this.priceFilter === 'under100') {
-        list = list.filter(p => p.price < 100)
-      } else if (this.priceFilter === '100to200') {
-        list = list.filter(p => p.price >= 100 && p.price <= 200)
-      } else if (this.priceFilter === 'over200') {
-        list = list.filter(p => p.price > 200)
+      if (this.priceFilter === 'under50k') {
+        list = list.filter(p => p.price < 50000)
+      } else if (this.priceFilter === '50kto100k') {
+        list = list.filter(p => p.price >= 50000 && p.price <= 100000)
+      } else if (this.priceFilter === '100kto500k') {
+        list = list.filter(p => p.price > 100000 && p.price <= 500000)
+      } else if (this.priceFilter === 'over500k') {
+        list = list.filter(p => p.price > 500000)
       }
 
       // Sort
@@ -221,19 +128,81 @@ export default {
         list.sort((a, b) => a.price - b.price)
       } else if (this.sortBy === 'price-desc') {
         list.sort((a, b) => b.price - a.price)
-      } else if (this.sortBy === 'rating') {
-        list.sort((a, b) => b.rating - a.rating)
       }
 
       return list
     }
   },
   methods: {
+    async fetchCategories() {
+      try {
+        const { data } = await axios.get('http://localhost:8000/api/categorias')
+        if (data && Array.isArray(data)) {
+          const flatList = []
+          const flatten = (cats) => {
+            cats.forEach(c => {
+              flatList.push(c.nombre)
+              if (c.hijos && c.hijos.length > 0) {
+                flatten(c.hijos)
+              }
+            })
+          }
+          flatten(data)
+          this.categories = ['Todos', ...flatList]
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+      }
+    },
+    async fetchProducts() {
+      this.loading = true
+      this.error = ''
+      try {
+        const { data } = await axios.get('http://localhost:8000/api/productos')
+        const publicados = data.filter(p => p.publicado === 1)
+        this.products = publicados.map(p => {
+          let badge = null
+          if (!p.publicado) {
+             badge = 'Inactivo'
+          } else if (p.variantes && p.variantes.some(v => v.descuento > 0)) {
+             badge = 'Oferta'
+          }
+          
+          return {
+            id: p.id,
+            name: p.nombre,
+            category: p.categoria ? p.categoria.nombre : 'General', // O ajusta según lo que retorne tu API
+            price: p.precio_minorista,
+            originalPrice: null,
+            badge: badge,
+            badgeType: badge === 'Oferta' ? 'dark' : 'outline',
+            rating: 5.0, // Dato simulado, ajusta según la db real
+            reviews: 0,
+            image: p.imagenes && p.imagenes.length > 0 
+              ? (p.imagenes.find(img => img.es_portada === 1)?.url || p.imagenes[0].url)
+              : 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80'
+          }
+        })
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        this.error = 'No se pudieron cargar los productos'
+      } finally {
+        this.loading = false
+      }
+    },
     addToCart(product) {
       this.$emit('add-to-cart', product)
     },
     goToProduct(id) {
       this.$router.push(`/product/${id}`)
+    },
+    formatPrice(value) {
+      if (!value) return '$ 0'
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+      }).format(value)
     }
   }
 }
@@ -488,13 +457,6 @@ export default {
   text-decoration: line-through;
 }
 
-.product-card__rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-}
 
 .star {
   color: #f5a623;

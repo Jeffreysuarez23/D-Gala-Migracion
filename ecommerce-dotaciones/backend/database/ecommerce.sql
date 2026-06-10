@@ -679,6 +679,7 @@ CREATE TABLE `productos` (
   `min_cantidad_mayorista` int(11) DEFAULT 12,
   `publicado` tinyint(1) DEFAULT 0,
   `permitir_sin_stock` tinyint(1) DEFAULT 1,
+  `destacado` tinyint(1) DEFAULT 0,
   `eliminado_en` timestamp NULL DEFAULT NULL,
   `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

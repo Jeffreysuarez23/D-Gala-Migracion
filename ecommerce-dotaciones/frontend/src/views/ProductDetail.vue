@@ -2,18 +2,19 @@
   <div class="detail-page">
 
     <!-- ─── BREADCRUMB ── -->
-    <div class="detail__breadcrumb-wrap">
-      <div class="detail__breadcrumb">
-        <router-link to="/" class="breadcrumb__link">Inicio</router-link>
-        <span class="breadcrumb__sep">/</span>
-        <router-link to="/products" class="breadcrumb__link">Productos</router-link>
-        <span class="breadcrumb__sep">/</span>
-        <span class="breadcrumb__current">{{ product.name }}</span>
+    <template v-if="!loading && product.id">
+      <div class="detail__breadcrumb-wrap">
+        <div class="detail__breadcrumb">
+          <router-link to="/" class="breadcrumb__link">Inicio</router-link>
+          <span class="breadcrumb__sep">/</span>
+          <router-link to="/products" class="breadcrumb__link">Productos</router-link>
+          <span class="breadcrumb__sep">/</span>
+          <span class="breadcrumb__current">{{ product.name }}</span>
+        </div>
       </div>
-    </div>
 
-    <!-- ─── PRODUCT LAYOUT ── -->
-    <div class="detail__inner">
+      <!-- ─── PRODUCT LAYOUT ── -->
+      <div class="detail__inner">
       <div class="detail__layout">
 
         <!-- LEFT: Gallery -->
@@ -47,21 +48,14 @@
           <h1 class="detail__name">{{ product.name }}</h1>
 
           <div class="detail__pricing">
-            <span class="detail__price">${{ currentPrice.toFixed(2) }}</span>
-            <span v-if="product.originalPrice" class="detail__original">${{ product.originalPrice.toFixed(2) }}</span>
-            <span v-if="product.originalPrice" class="detail__discount">
-              -{{ Math.round((1 - product.price / product.originalPrice) * 100) }}%
+            <span class="detail__price">{{ formatPrice(currentPrice) }}</span>
+            <span v-if="currentOriginalPrice" class="detail__original">{{ formatPrice(currentOriginalPrice) }}</span>
+            <span v-if="currentDiscountPercent > 0" class="detail__discount">
+              -{{ currentDiscountPercent }}%
             </span>
           </div>
 
-          <div class="detail__rating">
-            <div class="detail__stars">
-              <span v-for="n in 5" :key="n" class="star" :class="{ 'star--filled': n <= Math.round(product.rating) }">★</span>
-            </div>
-            <span class="detail__rating-text">{{ product.rating }} ({{ product.reviews }} reseñas)</span>
-          </div>
-
-          <p class="detail__description">{{ product.description }}</p>
+          <div class="detail__description" v-html="product.description"></div>
 
           <div class="detail__divider"></div>
 
@@ -94,7 +88,7 @@
             </p>
             <div class="size-options">
               <button
-                v-for="size in product.sizes"
+                v-for="size in availableSizes"
                 :key="size.label"
                 class="size-btn"
                 :class="{
@@ -136,7 +130,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
               </svg>
-              <span v-if="!added">Añadir al Carrito — ${{ (currentPrice * quantity).toFixed(2) }}</span>
+              <span v-if="!added">Añadir al Carrito — {{ formatPrice(currentPrice * quantity) }}</span>
               <span v-else>Añadido ✓</span>
             </button>
           </div>
@@ -166,288 +160,301 @@
 
       </div>
     </div>
+    </template>
+    
+    <div v-else-if="loading" class="detail__loading" style="padding: 100px; text-align: center;">
+      <p>Cargando detalles del producto...</p>
+    </div>
+    <div v-else class="detail__loading" style="padding: 100px; text-align: center;">
+      <p>Producto no encontrado.</p>
+    </div>
 
   </div>
 </template>
 
 <script>
+import axios from 'axios'
+import { updateCartCount } from '../cartState'
+
 export default {
   name: 'ProductDetailView',
   data() {
     return {
+      loading: true,
+      error: '',
       activeImageIndex: 0,
       selectedColor: '',
       selectedSize: '',
       quantity: 1,
       added: false,
-      // Sample products - in production these come from API
-      allProducts: [
-        {
-          id: 1,
-          name: 'Blazer Oversize de Lino',
-          category: 'ABRIGOS',
-          price: 189,
-          originalPrice: 240,
-          badge: 'Oferta',
-          badgeType: 'dark',
-          rating: 4.8,
-          reviews: 124,
-          description: 'Confeccionado en lino europeo de primera calidad, este blazer de ajuste relajado presenta un hombro estructurado y cierre de un solo botón. Perfecto para combinar.',
-          images: [
-            'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=800&q=80',
-            'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80',
-            'https://images.unsplash.com/photo-1594938298603-c8148c4b9f50?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Arena', hex: '#c8b89a', checkColor: '#1a1a1a' },
-            { name: 'Carbón', hex: '#3a3a3a', checkColor: '#fff' },
-            { name: 'Marfil', hex: '#f0ebe3', checkColor: '#1a1a1a' }
-          ],
-          sizes: [
-            { label: 'XS', inStock: true },
-            { label: 'S', inStock: true },
-            { label: 'M', inStock: true },
-            { label: 'L', inStock: true },
-            { label: 'XL', inStock: false }
-          ]
-        },
-        {
-          id: 2,
-          name: 'Suéter de Merino Acanalado',
-          category: 'TEJIDOS',
-          price: 145,
-          originalPrice: null,
-          badge: 'Más Vendido',
-          badgeType: 'light',
-          rating: 4.9,
-          reviews: 89,
-          description: 'Hecho de lana merino australiana ultra fina, este suéter acanalado ofrece una sensación lujosamente suave. Un esencial atemporal para los meses más fríos.',
-          images: [
-            'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80',
-            'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80',
-            'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Avena', hex: '#d4c5a9', checkColor: '#1a1a1a' },
-            { name: 'Marino', hex: '#1e2d4a', checkColor: '#fff' },
-            { name: 'Bosque', hex: '#3a5a40', checkColor: '#fff' }
-          ],
-          sizes: [
-            { label: 'XS', inStock: true },
-            { label: 'S', inStock: true },
-            { label: 'M', inStock: true },
-            { label: 'L', inStock: true },
-            { label: 'XL', inStock: true }
-          ]
-        },
-        {
-          id: 3,
-          name: 'Pantalones de Pierna Ancha',
-          category: 'PANTALONES',
-          price: 129,
-          originalPrice: null,
-          badge: null,
-          badgeType: null,
-          rating: 4.7,
-          reviews: 67,
-          description: 'De cintura alta y fluidos, estos pantalones de pierna ancha caen maravillosamente y se mueven contigo. Hechos de una mezcla de algodón y lino.',
-          images: [
-            'https://images.unsplash.com/photo-1594938298603-c8148c4b9f50?w=800&q=80',
-            'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=800&q=80',
-            'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Negro', hex: '#1a1a1a', checkColor: '#fff' },
-            { name: 'Topos', hex: '#b5a892', checkColor: '#1a1a1a' }
-          ],
-          sizes: [
-            { label: 'XS', inStock: false },
-            { label: 'S', inStock: true },
-            { label: 'M', inStock: true },
-            { label: 'L', inStock: true },
-            { label: 'XL', inStock: true }
-          ]
-        },
-        {
-          id: 4,
-          name: 'Bolso Cruzado de Cuero',
-          category: 'ACCESORIOS',
-          price: 295,
-          originalPrice: null,
-          badge: 'Nuevo',
-          badgeType: 'outline',
-          rating: 4.9,
-          reviews: 203,
-          description: 'Hecho a mano con cuero italiano de plena flor, este bolso cruzado cuenta con correa ajustable y cierre magnético. Envejece maravillosamente con el tiempo.',
-          images: [
-            'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
-            'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80',
-            'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Cognac', hex: '#8b5e3c', checkColor: '#fff' },
-            { name: 'Negro', hex: '#1a1a1a', checkColor: '#fff' },
-            { name: 'Canela', hex: '#c8a96e', checkColor: '#1a1a1a' }
-          ],
-          sizes: [
-            { label: 'Única', inStock: true }
-          ]
-        },
-        {
-          id: 5,
-          name: 'Vestido de Seda',
-          category: 'VESTIDOS',
-          price: 215,
-          originalPrice: null,
-          badge: null,
-          badgeType: null,
-          rating: 4.6,
-          reviews: 45,
-          description: 'Un vestido fluido de seda con escote en V y delicados tirantes de espagueti. El corte al bies sigue tu silueta de forma natural.',
-          images: [
-            'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80',
-            'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80',
-            'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Champán', hex: '#f0e5c9', checkColor: '#1a1a1a' },
-            { name: 'Noir', hex: '#1a1a1a', checkColor: '#fff' }
-          ],
-          sizes: [
-            { label: 'XS', inStock: true },
-            { label: 'S', inStock: true },
-            { label: 'M', inStock: true },
-            { label: 'L', inStock: false },
-            { label: 'XL', inStock: false }
-          ]
-        },
-        {
-          id: 6,
-          name: 'Camisa de Popelín de Algodón',
-          category: 'TOPS',
-          price: 98,
-          originalPrice: null,
-          badge: null,
-          badgeType: null,
-          rating: 4.7,
-          reviews: 156,
-          description: 'Una impecable camisa de popelín de algodón con un ajuste holgado y oversize. Cuenta con botones de nácar.',
-          images: [
-            'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80',
-            'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80',
-            'https://images.unsplash.com/photo-1594938298603-c8148c4b9f50?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Blanco', hex: '#ffffff', checkColor: '#1a1a1a' },
-            { name: 'Azul Claro', hex: '#a8c4db', checkColor: '#1a1a1a' },
-            { name: 'Rayas', hex: 'repeating-linear-gradient(90deg, #fff 0px, #fff 3px, #c8c8c8 3px, #c8c8c8 4px)', checkColor: '#1a1a1a' }
-          ],
-          sizes: [
-            { label: 'XS', inStock: true },
-            { label: 'S', inStock: true },
-            { label: 'M', inStock: true },
-            { label: 'L', inStock: true },
-            { label: 'XL', inStock: true }
-          ]
-        },
-        {
-          id: 7,
-          name: 'Cárdigan de Cachemira',
-          category: 'TEJIDOS',
-          price: 265,
-          originalPrice: 320,
-          badge: 'Oferta',
-          badgeType: 'dark',
-          rating: 4.9,
-          reviews: 78,
-          description: 'Cachemira mongola pura, suave como la mantequilla al tacto. Este cárdigan abierto presenta puños acanalados.',
-          images: [
-            'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80',
-            'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80',
-            'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Camello', hex: '#c8a96e', checkColor: '#1a1a1a' },
-            { name: 'Gris', hex: '#9a9a9a', checkColor: '#1a1a1a' },
-            { name: 'Negro', hex: '#1a1a1a', checkColor: '#fff' }
-          ],
-          sizes: [
-            { label: 'XS', inStock: true },
-            { label: 'S', inStock: true },
-            { label: 'M', inStock: true },
-            { label: 'L', inStock: true },
-            { label: 'XL', inStock: false }
-          ]
-        },
-        {
-          id: 8,
-          name: 'Botas Chelsea de Cuero',
-          category: 'CALZADO',
-          price: 345,
-          originalPrice: null,
-          badge: 'Nuevo',
-          badgeType: 'outline',
-          rating: 4.8,
-          reviews: 92,
-          description: 'Hechas a mano en Portugal en cuero de becerro pulido. Cuenta con paneles laterales elásticos, suela de cuero y un cómodo tacón bajo.',
-          images: [
-            'https://images.unsplash.com/photo-1638247025967-b4e38f787b76?w=800&q=80',
-            'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80',
-            'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80'
-          ],
-          colors: [
-            { name: 'Negro', hex: '#1a1a1a', checkColor: '#fff' },
-            { name: 'Marrón', hex: '#6b4226', checkColor: '#fff' }
-          ],
-          sizes: [
-            { label: '38', inStock: true },
-            { label: '39', inStock: true },
-            { label: '40', inStock: true },
-            { label: '41', inStock: true },
-            { label: '42', inStock: true },
-            { label: '43', inStock: false }
-          ]
-        }
-      ]
+      product: {
+        id: null,
+        name: '',
+        category: 'General',
+        price: 0,
+        originalPrice: null,
+        badge: null,
+        badgeType: '',
+        rating: 5.0,
+        reviews: 0,
+        description: '',
+        images: [],
+        colors: [],
+        sizes: [],
+        rawVariants: []
+      }
     }
   },
   computed: {
-    product() {
-      const id = parseInt(this.$route.params.id)
-      return this.allProducts.find(p => p.id === id) || this.allProducts[0]
-    },
     activeImage() {
-      return this.product.images[this.activeImageIndex] || this.product.images[0]
+      return this.product.images[this.activeImageIndex] || 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=800&q=80'
     },
     currentPrice() {
-      return this.product.price
+      let extra = 0
+      let descuento = 0
+      if (this.selectedColor && this.selectedSize && this.product.rawVariants) {
+        const variant = this.product.rawVariants.find(v => v.color === this.selectedColor && v.talla === this.selectedSize)
+        if (variant) {
+          if (variant.precio_extra) extra = parseFloat(variant.precio_extra) || 0
+          if (variant.descuento) descuento = parseInt(variant.descuento) || 0
+        }
+      }
+      const base = this.product.price + extra
+      return base * (1 - descuento / 100)
+    },
+    currentOriginalPrice() {
+      let extra = 0
+      let descuento = 0
+      if (this.selectedColor && this.selectedSize && this.product.rawVariants) {
+        const variant = this.product.rawVariants.find(v => v.color === this.selectedColor && v.talla === this.selectedSize)
+        if (variant) {
+          if (variant.precio_extra) extra = parseFloat(variant.precio_extra) || 0
+          if (variant.descuento) descuento = parseInt(variant.descuento) || 0
+        }
+      }
+      const base = this.product.price + extra
+      if (descuento > 0) return base
+      return null
+    },
+    currentDiscountPercent() {
+      let descuento = 0
+      if (this.selectedColor && this.selectedSize && this.product.rawVariants) {
+        const variant = this.product.rawVariants.find(v => v.color === this.selectedColor && v.talla === this.selectedSize)
+        if (variant && variant.descuento) {
+          descuento = parseInt(variant.descuento) || 0
+        }
+      }
+      return descuento
+    },
+    // Dynamically compute available sizes based on selected color
+    availableSizes() {
+      if (!this.selectedColor) return this.product.sizes
+      
+      const sizesForColor = this.product.rawVariants
+        .filter(v => v.color === this.selectedColor)
+        .map(v => ({ label: v.talla, inStock: v.stock > 0 }))
+      
+      // If no color-specific sizes, fallback to all sizes
+      return sizesForColor.length > 0 ? sizesForColor : this.product.sizes
     }
   },
   watch: {
-    product: {
-      handler(p) {
-        if (p) {
-          this.selectedColor = p.colors[0]?.name || ''
-          this.selectedSize = p.sizes.find(s => s.inStock)?.label || ''
-          this.activeImageIndex = 0
-          this.quantity = 1
-          this.added = false
-        }
-      },
-      immediate: true
+    // When selected color changes, select first available size
+    selectedColor(newColor) {
+      if (newColor && this.availableSizes.length > 0) {
+        const firstInStock = this.availableSizes.find(s => s.inStock)
+        this.selectedSize = firstInStock ? firstInStock.label : ''
+      }
     }
   },
+  mounted() {
+    this.fetchProduct()
+  },
   methods: {
-    addToCart() {
-      if (!this.selectedSize) return
-      this.added = true
-      this.$emit('add-to-cart', {
-        product: this.product,
-        color: this.selectedColor,
-        size: this.selectedSize,
-        quantity: this.quantity
-      })
-      setTimeout(() => { this.added = false }, 2500)
+    async fetchProduct() {
+      const id = parseInt(this.$route.params.id)
+      this.loading = true
+      this.error = ''
+      try {
+        const { data } = await axios.get(`http://localhost:8000/api/productos/${id}`)
+        
+        const minorista = parseFloat(data.precio_minorista) || 0
+        
+        let badge = null
+        if (!data.publicado) badge = 'Inactivo'
+        
+        // Extract unique colors from variantes
+        const colorsMap = {}
+        if (data.variantes) {
+          data.variantes.forEach(v => {
+            if (v.color) {
+              if (!colorsMap[v.color] || (v.color_hex && !colorsMap[v.color].hasCustomHex)) {
+                 const cData = this.getColorData(v.color)
+                 let checkColor = cData.check
+                 let finalHex = cData.hex
+                 let hasCustomHex = false
+                 
+                 if (v.color_hex) {
+                    finalHex = v.color_hex
+                    hasCustomHex = true
+                    const hex = v.color_hex.replace('#', '')
+                    if (hex.length === 6) {
+                      const r = parseInt(hex.substr(0, 2), 16)
+                      const g = parseInt(hex.substr(2, 2), 16)
+                      const b = parseInt(hex.substr(4, 2), 16)
+                      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
+                      checkColor = (yiq >= 128) ? '#1a1a1a' : '#fff'
+                    }
+                 }
+                 
+                 colorsMap[v.color] = { 
+                   name: v.color, 
+                   hex: finalHex, 
+                   checkColor: checkColor,
+                   hasCustomHex: hasCustomHex
+                 }
+              }
+            }
+          })
+        }
+        const colors = Object.values(colorsMap)
+        
+        // Extract unique sizes from variantes
+        const sizesMap = {}
+        if (data.variantes) {
+          data.variantes.forEach(v => {
+            if (v.talla) {
+              if (!sizesMap[v.talla]) {
+                sizesMap[v.talla] = { label: v.talla, inStock: v.stock > 0 }
+              } else if (v.stock > 0) {
+                 sizesMap[v.talla].inStock = true
+              }
+            }
+          })
+        }
+        const sizes = Object.values(sizesMap)
+        
+        let coverIndex = 0
+        if (data.imagenes && data.imagenes.length > 0) {
+          const idx = data.imagenes.findIndex(img => img.es_portada === 1)
+          if (idx !== -1) coverIndex = idx
+        }
+        
+        this.product = {
+          id: data.id,
+          name: data.nombre,
+          category: data.categoria ? data.categoria.nombre : 'General',
+          price: minorista,
+          originalPrice: null,
+          badge: badge,
+          badgeType: badge === 'Oferta' ? 'dark' : 'outline',
+          rating: 5.0,
+          reviews: 0,
+          description: data.descripcion || 'Producto sin descripción detallada.',
+          images: data.imagenes && data.imagenes.length > 0 ? data.imagenes.map(img => img.url) : [],
+          colors: colors,
+          sizes: sizes,
+          rawVariants: data.variantes || []
+        }
+        
+        this.activeImageIndex = coverIndex
+        
+        // Setup initial defaults
+        if (colors.length > 0) this.selectedColor = colors[0].name
+        if (sizes.length > 0) this.selectedSize = sizes.find(s => s.inStock)?.label || sizes[0].label
+        
+      } catch (err) {
+        console.error('Error fetching product:', err)
+        this.error = 'No se pudo cargar el producto'
+      } finally {
+        this.loading = false
+      }
+    },
+    async addToCart() {
+      if (!this.selectedSize || !this.selectedColor) return
+      
+      const variant = this.product.rawVariants.find(v => v.color === this.selectedColor && v.talla === this.selectedSize)
+      if (!variant) {
+        alert('Variante no encontrada')
+        return
+      }
+
+      try {
+        let cartId = localStorage.getItem('carrito_id')
+        
+        // Si no existe, creamos el carrito
+        if (!cartId) {
+          const { data } = await axios.post('http://localhost:8000/api/carritos', {
+            session_id: Date.now().toString()
+          })
+          cartId = data.data.id
+          localStorage.setItem('carrito_id', cartId)
+        }
+
+        // Agregamos el item al carrito
+        await axios.post(`http://localhost:8000/api/carritos/${cartId}/items`, {
+          variante_id: variant.id,
+          cantidad: this.quantity
+        })
+
+        // Actualizar el contador global del carrito
+        await updateCartCount()
+
+        this.added = true
+        this.$emit('add-to-cart', {
+          product: this.product,
+          variant_id: variant.id,
+          color: this.selectedColor,
+          size: this.selectedSize,
+          quantity: this.quantity
+        })
+        
+        setTimeout(() => { this.added = false }, 2500)
+      } catch (error) {
+        console.error('Error al agregar al carrito:', error)
+        alert('Hubo un error al agregar el producto al carrito.')
+      }
+    },
+    formatPrice(value) {
+      if (!value) return '$ 0'
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+      }).format(value)
+    },
+    getColorData(name) {
+      if (!name) return { hex: '#cccccc', check: '#1a1a1a' }
+      const n = name.trim().toUpperCase()
+      
+      const map = {
+        'BLANCO': { hex: '#FFFFFF', check: '#1a1a1a' },
+        'NEGRO': { hex: '#1a1a1a', check: '#fff' },
+        'AZUL CLARO': { hex: '#ADD8E6', check: '#1a1a1a' },
+        'AZUL OSCURO': { hex: '#00008B', check: '#fff' },
+        'AZUL MARINO': { hex: '#000080', check: '#fff' },
+        'AZUL': { hex: '#1D4ED8', check: '#fff' }, // standard blue
+        'ROJO': { hex: '#DC2626', check: '#fff' },
+        'VERDE': { hex: '#15803D', check: '#fff' },
+        'AMARILLO': { hex: '#FACC15', check: '#1a1a1a' },
+        'NARANJA': { hex: '#F97316', check: '#1a1a1a' },
+        'GRIS': { hex: '#9CA3AF', check: '#1a1a1a' },
+        'CAFE': { hex: '#78350F', check: '#fff' },
+        'MARRON': { hex: '#78350F', check: '#fff' },
+        'ROSA': { hex: '#F472B6', check: '#1a1a1a' },
+        'ROSADO': { hex: '#F472B6', check: '#1a1a1a' },
+        'MORADO': { hex: '#7E22CE', check: '#fff' },
+        'VIOLETA': { hex: '#A855F7', check: '#fff' },
+        'BEIGE': { hex: '#F5F5DC', check: '#1a1a1a' },
+        'VINO': { hex: '#4e070c', check: '#fff' },
+        'ORO': { hex: '#D4AF37', check: '#1a1a1a' }
+      }
+      
+      for (const key in map) {
+        if (n.includes(key)) return map[key]
+      }
+      
+      return { hex: '#cccccc', check: '#1a1a1a' } // default fallback
     }
   }
 }
@@ -630,12 +637,6 @@ export default {
   border-radius: 100px;
 }
 
-.detail__rating {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
 
 .detail__stars {
   display: flex;
@@ -651,11 +652,6 @@ export default {
   color: #f5a623;
 }
 
-.detail__rating-text {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #888;
-}
 
 .detail__description {
   font-size: 14px;
@@ -713,8 +709,9 @@ export default {
 }
 
 .color-swatch--active {
-  border-color: #1a1a1a;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1a1a1a;
+  transform: scale(1.1);
+  border-color: rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 /* Sizes */
@@ -744,7 +741,8 @@ export default {
   color: #1a1a1a;
 }
 
-.size-btn--active {
+.size-btn--active,
+.size-btn--active:hover:not(:disabled) {
   background: #1a1a1a;
   border-color: #1a1a1a;
   color: white;

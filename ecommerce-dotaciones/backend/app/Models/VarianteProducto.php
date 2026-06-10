@@ -1,10 +1,15 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // MODELO DE VARIANTES DE PRODUCTO, QUE REPRESENTA LAS DIFERENTES VARIANTES DE UN PRODUCTO PRINCIPAL, ASOCIADAS A UNA LONA ESPECÍFICA. INCLUYE CAMPOS PARA SKU, COLOR, TALLA, STOCK Y PRECIO EXTRA.
 class VarianteProducto extends Model
 {
+    use SoftDeletes;
+
+    const DELETED_AT = 'eliminado_en';
+
     protected $table = 'variantes_producto';
 
     public $timestamps = false;

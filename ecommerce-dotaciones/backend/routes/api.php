@@ -36,6 +36,7 @@ Route::post( 'cupones/validar',[CuponController::class, 'validar']);
 Route::post('cupones/aplicar',[CuponController::class, 'aplicar']);
 
 // VARIANTES
+Route::get('/variantes', [VarianteProductoController::class, 'index']);
 Route::post('/variantes', [VarianteProductoController::class, 'store']);
 Route::put('/variantes/{id}', [VarianteProductoController::class, 'update']);
 Route::delete('/variantes/{id}', [VarianteProductoController::class, 'destroy']);
@@ -69,6 +70,7 @@ Route::post('/lonas', [LonaController::class, 'store']);
 Route::get('/lonas/{id}', [LonaController::class, 'show']);
 Route::put('/lonas/{id}', [LonaController::class, 'update']);
 Route::delete('/lonas/{id}', [LonaController::class, 'destroy']);
+Route::post('/lonas/{id}/ajustar-stock', [LonaController::class, 'ajustarStock']);
 
 // LONA TALLAS
 Route::get('/lona-tallas', [LonaTallaController::class, 'index']);

@@ -9,13 +9,29 @@ class Lona extends Model
 
     public $timestamps = false;
 
+    public function dotacion()
+    {
+        return $this->belongsTo(Dotacion::class);
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class);
+    }
+
+    public function tallas()
+    {
+        return $this->hasMany(LonaTalla::class, 'lona_id');
+    }
+
     protected $fillable = [
         'dotacion_id',
         'codigo',
         'tipo_producto',
-        'categoria',
+        'categoria_id',
         'color',
         'estado',
-        'activa'
+        'activa',
+        'capacidad_maxima'
     ];
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="dotaciones-view">
+  <div class="dotaciones-view" style="display: flex; flex-direction: column; gap: 32px;">
     
     <!-- PAGE HEADER -->
     <header class="page-header">
@@ -17,12 +17,23 @@
       </div>
     </header>
 
+    <!-- GLOBAL ALERTS -->
+    <div v-if="successMsg" class="alert alert--success" style="margin-bottom: 20px;">
+      {{ successMsg }}
+    </div>
+    <div v-if="errorMsg" class="alert alert--error" style="margin-bottom: 20px;">
+      {{ errorMsg }}
+    </div>
+
     <!-- DOTACIONES LIST & OVERVIEW -->
-    <section class="grid-3">
+    <section v-if="state.dotaciones.length > 0" class="grid-3">
       <div v-for="dot in state.dotaciones" :key="dot.id" class="card dotacion-card">
         <div class="dotacion-card__header">
           <span class="badge badge--info">ID: #{{ dot.id }}</span>
-          <span class="dot-status-icon" :class="getDotationStatusClass(dot)"></span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="dot-status-icon" :class="getDotationStatusClass(dot)"></span>
+            <button class="btn btn--danger btn--sm" style="padding: 2px 8px; font-size: 11px;" @click="confirmDeleteDotacion(dot)" title="Eliminar Dotación">Eliminar</button>
+          </div>
         </div>
         <div class="dotacion-card__body">
           <h3 class="dotacion-name">{{ dot.nombre }}</h3>
@@ -57,6 +68,7 @@
               <th>Estado Físico</th>
               <th>Tallas & Cantidades</th>
               <th>Total Stock</th>
+              <th>Capacidad</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -67,7 +79,7 @@
               <td>
                 <div class="product-cell">
                   <span class="p-type">{{ lona.tipo_producto }}</span>
-                  <span class="p-cat">/ {{ lona.categoria }}</span>
+                  <span class="p-cat">/ {{ lona.categoria ? lona.categoria.nombre : 'Sin Categoría' }}</span>
                 </div>
               </td>
               <td>
@@ -94,8 +106,22 @@
                 {{ getLonaTotalStock(lona.id) }} uds
               </td>
               <td>
-                <button class="btn btn--secondary btn--sm" style="padding: 6px 14px;" @click="openStockAdjustDrawer(lona)">
-                  Ajustar Stock
+                <div class="capacity-gauge">
+                  <span style="font-size: 11px;">{{ getLonaTotalStock(lona.id) }} / {{ lona.capacidad_maxima || '∞' }}</span>
+                  <div class="gauge-bar-wrap" style="height: 4px; margin-top: 4px; width: 60px;">
+                    <div class="gauge-bar" :class="getCapacityColorClass(lona)" :style="{ width: getCapacityPercentage(lona) + '%' }"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <button class="btn btn--secondary btn--sm" style="padding: 6px 14px; margin-bottom: 4px; display: block; width: 100%;" @click="openVariablesDrawer(lona)">
+                  Ver Variables
+                </button>
+                <button class="btn btn--secondary btn--sm" style="padding: 6px 14px; margin-bottom: 4px; display: block; width: 100%;" @click="editLona(lona)">
+                  Editar Lona
+                </button>
+                <button class="btn btn--danger btn--sm" style="padding: 6px 14px; display: block; width: 100%;" @click="confirmDeleteLona(lona)">
+                  Eliminar Lona
                 </button>
               </td>
             </tr>
@@ -143,28 +169,36 @@
         </button>
       </div>
       <div class="drawer__body">
-        <form @submit.prevent="submitDotation">
+        <!-- Alertas -->
+        <div v-if="errorMsg" class="alert alert--error">
+          {{ errorMsg }}
+        </div>
+        <div v-if="successMsg" class="alert alert--success">
+          {{ successMsg }}
+        </div>
+
+        <form @submit.prevent>
           <div class="form-group">
             <label>Nombre de la Dotación *</label>
-            <input type="text" class="input-text" placeholder="Ej: Dotación Operativa Masculina" v-model="dotationForm.nombre" required />
+            <input type="text" class="input-text" placeholder="Ej: Dotación Operativa Masculina" v-model="dotationForm.nombre" @input="dotationForm.nombre = (dotationForm.nombre || '').replace(/[^a-zA-Z0-9\sñÑáéíóúÁÉÍÓÚ\-]/g, '')" />
           </div>
           <div class="form-group">
             <label>Descripción</label>
-            <textarea class="textarea-input" placeholder="Detalle a qué área de la empresa o temporada aplica..." v-model="dotationForm.descripcion"></textarea>
+            <textarea class="textarea-input" placeholder="Detalle a qué área de la empresa o temporada aplica..." v-model="dotationForm.descripcion" @input="dotationForm.descripcion = (dotationForm.descripcion || '').replace(/[^a-zA-Z0-9\sñÑáéíóúÁÉÍÓÚ\-\.,()]/g, '')"></textarea>
           </div>
           <div class="grid-2">
             <div class="form-group">
               <label>Min Lonas Alerta *</label>
-              <input type="number" class="input-text" v-model="dotationForm.min_lonas" required />
+              <input type="number" class="input-text" v-model.number="dotationForm.min_lonas" min="0" />
             </div>
             <div class="form-group">
               <label>Max Lonas Capacidad *</label>
-              <input type="number" class="input-text" v-model="dotationForm.max_lonas" required />
+              <input type="number" class="input-text" v-model.number="dotationForm.max_lonas" min="0" />
             </div>
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn--secondary" @click="showDotationDrawer = false">Cancelar</button>
-            <button type="submit" class="btn btn--primary">Crear Dotación</button>
+            <button type="button" class="btn btn--primary" @click="submitDotacion">Crear Dotación</button>
           </div>
         </form>
       </div>
@@ -183,10 +217,18 @@
         </button>
       </div>
       <div class="drawer__body">
+        <!-- Alertas -->
+        <div v-if="errorMsg" class="alert alert--error">
+          {{ errorMsg }}
+        </div>
+        <div v-if="successMsg" class="alert alert--success">
+          {{ successMsg }}
+        </div>
+
         <form @submit.prevent="submitLona">
           <div class="form-group">
             <label>Código de Lona *</label>
-            <input type="text" class="input-text" placeholder="Ej: LONA-004" v-model="lonaForm.codigo" required />
+            <input type="text" class="input-text" placeholder="Ej: LONA-004" v-model="lonaForm.codigo" @input="lonaForm.codigo = lonaForm.codigo.replace(/[^a-zA-Z0-9\-]/g, '').toUpperCase()" required />
           </div>
           <div class="form-group">
             <label>Dotación Asociada *</label>
@@ -197,17 +239,22 @@
           <div class="grid-2">
             <div class="form-group">
               <label>Tipo de Prenda *</label>
-              <input type="text" class="input-text" placeholder="Ej: Camiseta Polo, Overol" v-model="lonaForm.tipo_producto" required />
+              <input type="text" class="input-text" placeholder="Ej: Camiseta Polo, Overol" v-model="lonaForm.tipo_producto" @input="lonaForm.tipo_producto = lonaForm.tipo_producto.replace(/[^a-zA-Z0-9\sñÑáéíóúÁÉÍÓÚ\-.,]/g, '')" required />
             </div>
             <div class="form-group">
-              <label>Categoría Tela *</label>
-              <input type="text" class="input-text" placeholder="Ej: Deportiva, Antifluido" v-model="lonaForm.categoria" required />
+              <label>Categoría Oficial</label>
+              <select class="input-text" v-model="lonaForm.categoria_id">
+                <option :value="null">-- Seleccionar Categoría --</option>
+                <option v-for="cat in state.categorias" :key="cat.id" :value="cat.id">
+                  {{ cat.nombre }}
+                </option>
+              </select>
             </div>
           </div>
           <div class="grid-2">
             <div class="form-group">
               <label>Color *</label>
-              <input type="text" class="input-text" placeholder="Ej: Azul, Blanco" v-model="lonaForm.color" required />
+              <input type="text" class="input-text" placeholder="Ej: Azul, Blanco" v-model="lonaForm.color" @input="lonaForm.color = lonaForm.color.replace(/[^a-zA-Z\sñÑáéíóúÁÉÍÓÚ]/g, '')" required />
             </div>
             <div class="form-group">
               <label>Estado Inicial *</label>
@@ -217,29 +264,12 @@
               </select>
             </div>
           </div>
-          
-          <!-- Initial stock seed -->
           <div class="form-group">
-            <label>Stock Inicial por Talla</label>
-            <div class="initial-sizes-grid">
-              <div class="size-seed-row">
-                <span>Talla S:</span>
-                <input type="number" class="input-text size-seed-input" v-model="lonaForm.tallas.S" />
-              </div>
-              <div class="size-seed-row">
-                <span>Talla M:</span>
-                <input type="number" class="input-text size-seed-input" v-model="lonaForm.tallas.M" />
-              </div>
-              <div class="size-seed-row">
-                <span>Talla L:</span>
-                <input type="number" class="input-text size-seed-input" v-model="lonaForm.tallas.L" />
-              </div>
-              <div class="size-seed-row">
-                <span>Talla XL:</span>
-                <input type="number" class="input-text size-seed-input" v-model="lonaForm.tallas.XL" />
-              </div>
-            </div>
+            <label>Capacidad Máxima de Variables (Productos)</label>
+            <input type="number" class="input-text" placeholder="Ej: 50" v-model="lonaForm.capacidad_maxima" />
           </div>
+          
+          
 
           <div class="form-actions">
             <button type="button" class="btn btn--secondary" @click="showLonaDrawer = false">Cancelar</button>
@@ -266,6 +296,14 @@
       </div>
       <div class="drawer__body" v-if="selectedLona">
         
+        <!-- Alertas -->
+        <div v-if="errorMsg" class="alert alert--error">
+          {{ errorMsg }}
+        </div>
+        <div v-if="successMsg" class="alert alert--success">
+          {{ successMsg }}
+        </div>
+
         <div class="adjust-sizes-list">
           <div v-for="lt in getLonaTallas(selectedLona.id)" :key="lt.id" class="adjust-size-item">
             <span class="size-tag">{{ lt.talla }}</span>
@@ -282,7 +320,7 @@
           <div class="add-new-size-to-lona">
             <h3>Añadir Talla Faltante</h3>
             <div class="grid-2" style="margin-top: 8px;">
-              <input type="text" class="input-text" placeholder="Ej: XXL, XS" v-model="newSizeField.talla" />
+              <input type="text" class="input-text" placeholder="Ej: XXL, 38" v-model="newSizeField.talla" @input="newSizeField.talla = (newSizeField.talla || '').replace(/[^a-zA-Z0-9\-]/g, '').toUpperCase()" />
               <button type="button" class="btn btn--secondary" @click="addNewSizeToLona">Crear Talla</button>
             </div>
           </div>
@@ -291,34 +329,161 @@
       </div>
     </div>
 
+    <!-- DRAWER FOR VARIABLES (VARIANTES) -->
+    <div class="drawer-backdrop" :class="{ active: showVariablesDrawer }" @click="showVariablesDrawer = false"></div>
+    <div class="drawer" :class="{ active: showVariablesDrawer }">
+      <div class="drawer__header" v-if="selectedLona">
+        <div>
+          <span class="badge badge--info" style="margin-bottom: 6px;">{{ selectedLona.codigo }}</span>
+          <h2 class="title-serif">Variables Asignadas</h2>
+        </div>
+        <button class="drawer__close" @click="showVariablesDrawer = false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="drawer__body" v-if="selectedLona">
+        
+        <div v-if="getLonaVariables(selectedLona.id).length === 0" style="padding: 20px; text-align: center; color: var(--text-muted);">
+          No hay variables (variantes de producto) asignadas a esta lona aún.
+        </div>
+        <div v-else class="adjust-sizes-list">
+          <div v-for="v in getLonaVariables(selectedLona.id)" :key="v.id" class="adjust-size-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div style="display: flex; width: 100%; justify-content: space-between; align-items: center;">
+              <strong style="color: var(--text-primary); font-size: 14px;">{{ v.producto ? v.producto.nombre : 'Producto ' + v.producto_id }}</strong>
+              <span class="badge badge--success">Stock: {{ v.stock }}</span>
+            </div>
+            <div style="display: flex; gap: 12px; font-size: 13px; color: var(--text-secondary);">
+              <span><strong>SKU:</strong> {{ v.sku || 'N/A' }}</span>
+              <span><strong>Color:</strong> {{ v.color }}</span>
+              <span><strong>Talla:</strong> {{ v.talla }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Modals for Delete Confirmation -->
+    <Transition name="modal">
+      <div v-if="showDeleteLonaModal" class="modal-overlay" @click.self="showDeleteLonaModal = false">
+        <div class="modal-card">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444; width: 48px; height: 48px; margin: 0 auto;">
+              <circle cx="12" cy="12" r="10" class="modal-circle" />
+              <line x1="12" y1="8" x2="12" y2="12" class="modal-line" />
+              <line x1="12" y1="16" x2="12.01" y2="16" class="modal-line" />
+            </svg>
+          </div>
+          <h2 class="modal-title">¿Eliminar esta Lona?</h2>
+          <p class="modal-text">Se eliminará permanentemente la lona <strong>{{ lonaToDelete?.codigo }}</strong>. Se perderán sus existencias y configuración de tallas. Esta acción no se puede deshacer.</p>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn--cancel" @click="showDeleteLonaModal = false" :disabled="deleting">Cancelar</button>
+            <button class="modal-btn modal-btn--danger" @click="executeDeleteLona" :disabled="deleting">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <Transition name="modal">
+      <div v-if="showDeleteDotacionModal" class="modal-overlay" @click.self="showDeleteDotacionModal = false">
+        <div class="modal-card">
+          <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444; width: 48px; height: 48px; margin: 0 auto;">
+              <circle cx="12" cy="12" r="10" class="modal-circle" />
+              <line x1="12" y1="8" x2="12" y2="12" class="modal-line" />
+              <line x1="12" y1="16" x2="12.01" y2="16" class="modal-line" />
+            </svg>
+          </div>
+          <h2 class="modal-title">¿Eliminar Dotación?</h2>
+          <p class="modal-text">Se eliminará permanentemente la dotación <strong>{{ dotacionToDelete?.nombre }}</strong>. Esto solo funcionará si la dotación no tiene lonas asociadas. Esta acción no se puede deshacer.</p>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn--cancel" @click="showDeleteDotacionModal = false" :disabled="deleting">Cancelar</button>
+            <button class="modal-btn modal-btn--danger" @click="executeDeleteDotacion" :disabled="deleting">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
-import { state, actions } from '../store/state.js'
+import { ref, computed, reactive, onMounted } from 'vue'
+import axios from 'axios'
+
+const API_URL = 'http://localhost:8000/api'
+
+const state = reactive({
+  dotaciones: [],
+  lonas: [],
+  lona_tallas: [],
+  historial_lonas: [],
+  variantes: [],
+  categorias: []
+})
+
+const errorMsg = ref('')
+const successMsg = ref('')
+const loading = ref(true)
+
+const fetchData = async () => {
+  try {
+    const [dots, lns, ltas, hist, vars, cats] = await Promise.all([
+      axios.get(`${API_URL}/dotaciones`),
+      axios.get(`${API_URL}/lonas`),
+      axios.get(`${API_URL}/lona-tallas`),
+      axios.get(`${API_URL}/historial-lonas`),
+      axios.get(`${API_URL}/variantes`),
+      axios.get(`${API_URL}/categorias`)
+    ])
+    state.dotaciones = dots.data
+    state.lonas = lns.data
+    state.lona_tallas = ltas.data
+    state.historial_lonas = hist.data
+    state.variantes = vars.data
+    state.categorias = cats.data
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+  }
+}
+
+onMounted(() => {
+  fetchData()
+})
 
 // Drawers toggles
 const showDotationDrawer = ref(false)
 const showLonaDrawer = ref(false)
 const showStockAdjustDrawer = ref(false)
+const showVariablesDrawer = ref(false)
 const selectedLona = ref(null)
+
+const showDeleteLonaModal = ref(false)
+const showDeleteDotacionModal = ref(false)
+const lonaToDelete = ref(null)
+const dotacionToDelete = ref(null)
+const deleting = ref(false)
 
 // Forms data
 const dotationForm = reactive({
   nombre: '',
   descripcion: '',
-  min_lonas: 3,
+  min_lonas: 1,
   max_lonas: 10
 })
 
 const lonaForm = reactive({
+  id: null,
+  dotacion_id: null,
   codigo: '',
-  dotacion_id: 1,
   tipo_producto: '',
-  categoria: '',
+  categoria_id: null,
   color: '',
   estado: 'nuevo',
+  capacidad_maxima: 500,
   tallas: { S: 0, M: 0, L: 0, XL: 0 }
 })
 
@@ -347,6 +512,11 @@ const getLonasCountForDot = (dotId) => {
 const getDotationName = (dotId) => {
   const dot = state.dotaciones.find(d => d.id === dotId)
   return dot ? dot.nombre : 'Desconocido'
+}
+
+const getCategoryName = (catId) => {
+  const cat = state.categorias.find(c => c.id === catId)
+  return cat ? cat.nombre : 'Sin Categoría'
 }
 
 const getDotationStatusClass = (dot) => {
@@ -378,17 +548,50 @@ const getLonaTotalStock = (lonaId) => {
     .reduce((sum, lt) => sum + lt.cantidad, 0)
 }
 
+const getLonaVariablesCount = (lonaId) => {
+  return state.variantes.filter(v => v.lona_id === lonaId).length
+}
+
+const getLonaVariables = (lonaId) => {
+  return state.variantes.filter(v => v.lona_id === lonaId)
+}
+
+const getCapacityPercentage = (lona) => {
+  if (!lona.capacidad_maxima) return 0
+  const count = getLonaTotalStock(lona.id)
+  return Math.min((count / lona.capacidad_maxima) * 100, 100)
+}
+
+const getCapacityColorClass = (lona) => {
+  if (!lona.capacidad_maxima) return 'gauge-bar--success'
+  const count = getLonaTotalStock(lona.id)
+  if (count >= lona.capacidad_maxima) return 'gauge-bar--danger'
+  if (count >= lona.capacidad_maxima * 0.8) return 'gauge-bar--warning'
+  return 'gauge-bar--success'
+}
+
 const getColorHex = (colorName) => {
+  if (!colorName) return '#7a6a53'
+  
+  const normalized = colorName.toLowerCase().trim()
   const colors = {
-    'Azul': '#3b82f6',
-    'Blanco': '#f3f4f6',
-    'Naranja': '#f97316',
-    'Rojo': '#ef4444',
-    'Negro': '#1f2937',
-    'Gris': '#9ca3af',
-    'Verde': '#22c55e'
+    'azul': '#3b82f6',
+    'blanco': '#f3f4f6',
+    'naranja': '#f97316',
+    'rojo': '#ef4444',
+    'negro': '#1f2937',
+    'gris': '#9ca3af',
+    'verde': '#22c55e',
+    'amarillo': '#eab308',
+    'morado': '#a855f7',
+    'rosado': '#ec4899',
+    'rosa': '#ec4899',
+    'cafe': '#8b5a2b',
+    'marrón': '#8b5a2b',
+    'marron': '#8b5a2b',
+    'beige': '#d5bdaf'
   }
-  return colors[colorName] || '#7a6a53'
+  return colors[normalized] || '#7a6a53'
 }
 
 const getLonaCode = (lonaId) => {
@@ -408,82 +611,265 @@ const getActionLabel = (action) => {
 
 // Drawer openers
 const openCreateDotacionDrawer = () => {
+  errorMsg.value = ''
+  successMsg.value = ''
   dotationForm.nombre = ''
   dotationForm.descripcion = ''
-  dotationForm.min_lonas = 3
+  dotationForm.min_lonas = 1
   dotationForm.max_lonas = 10
   showDotationDrawer.value = true
 }
 
 const openCreateLonaDrawer = () => {
+  errorMsg.value = ''
+  successMsg.value = ''
+  lonaForm.id = null
   lonaForm.codigo = ''
   lonaForm.tipo_producto = ''
-  lonaForm.categoria = ''
+  lonaForm.categoria_id = null
   lonaForm.color = ''
   lonaForm.estado = 'nuevo'
+  lonaForm.capacidad_maxima = 500
   lonaForm.tallas = { S: 0, M: 0, L: 0, XL: 0 }
   showLonaDrawer.value = true
 }
 
 const openStockAdjustDrawer = (lona) => {
+  errorMsg.value = ''
+  successMsg.value = ''
   selectedLona.value = lona
   // Reset fields
   Object.keys(adjustInputs).forEach(k => adjustInputs[k] = null)
   showStockAdjustDrawer.value = true
 }
 
+const openVariablesDrawer = (lona) => {
+  selectedLona.value = lona
+  showVariablesDrawer.value = true
+}
+
+const editLona = (lona) => {
+  errorMsg.value = ''
+  successMsg.value = ''
+  lonaForm.id = lona.id
+  lonaForm.codigo = lona.codigo
+  lonaForm.dotacion_id = lona.dotacion_id
+  lonaForm.tipo_producto = lona.tipo_producto || ''
+  lonaForm.categoria_id = lona.categoria_id || null
+  lonaForm.color = lona.color || ''
+  lonaForm.estado = lona.estado
+  lonaForm.capacidad_maxima = lona.capacidad_maxima || 500
+  showLonaDrawer.value = true
+}
+
 // Submits
-const submitDotation = () => {
-  actions.addDotacion(dotationForm)
-  showDotationDrawer.value = false
-  alert('Nueva dotación registrada exitosamente')
+const submitDotacion = async () => {
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  if (!dotationForm.nombre || String(dotationForm.nombre).trim() === '') {
+    errorMsg.value = 'El nombre de la dotación es obligatorio.'
+    return
+  }
+  if (dotationForm.min_lonas === null || dotationForm.min_lonas === '' || Number(dotationForm.min_lonas) < 0) {
+    errorMsg.value = 'El mínimo de lonas no puede ser negativo.'
+    return
+  }
+  if (dotationForm.max_lonas === null || dotationForm.max_lonas === '' || Number(dotationForm.max_lonas) < Number(dotationForm.min_lonas)) {
+    errorMsg.value = 'El máximo de lonas debe ser válido y mayor o igual al mínimo.'
+    return
+  }
+
+  try {
+    const res = await axios.post(`${API_URL}/dotaciones`, dotationForm)
+    
+    // Mostramos éxito instantáneamente
+    successMsg.value = 'Dotación creada correctamente'
+    
+    // Actualizamos localmente sin esperar a fetchData() para que sea muy rápido
+    if (res.data && res.data.data) {
+      state.dotaciones.unshift(res.data.data)
+    } else {
+      const dots = await axios.get(`${API_URL}/dotaciones`)
+      state.dotaciones = dots.data
+    }
+
+    setTimeout(() => {
+      showDotationDrawer.value = false
+    }, 1500)
+  } catch (error) {
+    console.error(error)
+    if(error.response && error.response.data && error.response.data.message) {
+      errorMsg.value = error.response.data.message
+    } else {
+      errorMsg.value = 'Error al crear la dotación'
+    }
+  }
 }
 
-const submitLona = () => {
-  actions.addLona(lonaForm)
-  showLonaDrawer.value = false
-  alert('Nueva lona de material agregada')
+const confirmDeleteLona = (lona) => {
+  lonaToDelete.value = lona
+  showDeleteLonaModal.value = true
 }
 
-const adjustStock = (talla, direction) => {
+const executeDeleteLona = async () => {
+  if (!lonaToDelete.value) return
+  deleting.value = true
+  try {
+    await axios.delete(`${API_URL}/lonas/${lonaToDelete.value.id}`)
+    showDeleteLonaModal.value = false
+    successMsg.value = 'Lona eliminada correctamente.'
+    state.lonas = state.lonas.filter(l => l.id !== lonaToDelete.value.id)
+    setTimeout(() => { successMsg.value = '' }, 4000)
+  } catch (error) {
+    console.error(error)
+    showDeleteLonaModal.value = false
+    errorMsg.value = error.response?.data?.message || 'Error al eliminar la Lona. Es posible que existan variables asociadas.'
+    setTimeout(() => { errorMsg.value = '' }, 4000)
+  } finally {
+    deleting.value = false
+    lonaToDelete.value = null
+  }
+}
+
+const confirmDeleteDotacion = (dot) => {
+  dotacionToDelete.value = dot
+  showDeleteDotacionModal.value = true
+}
+
+const executeDeleteDotacion = async () => {
+  if (!dotacionToDelete.value) return
+  deleting.value = true
+  try {
+    await axios.delete(`${API_URL}/dotaciones/${dotacionToDelete.value.id}`)
+    showDeleteDotacionModal.value = false
+    successMsg.value = 'Dotación eliminada correctamente.'
+    state.dotaciones = state.dotaciones.filter(d => d.id !== dotacionToDelete.value.id)
+    setTimeout(() => { successMsg.value = '' }, 4000)
+  } catch (error) {
+    console.error(error)
+    showDeleteDotacionModal.value = false
+    errorMsg.value = error.response?.data?.message || 'Error al eliminar la Dotación. Asegúrate de eliminar o mover sus lonas primero.'
+    setTimeout(() => { errorMsg.value = '' }, 4000)
+  } finally {
+    deleting.value = false
+    dotacionToDelete.value = null
+  }
+}
+
+const submitLona = async () => {
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  if (!lonaForm.codigo || lonaForm.codigo.trim() === '') {
+    errorMsg.value = 'El código de la lona es obligatorio.'
+    return
+  }
+  if (!lonaForm.dotacion_id) {
+    errorMsg.value = 'Debes asignar obligatoriamente una Dotación a esta lona.'
+    return
+  }
+  if (!lonaForm.categoria_id) {
+    errorMsg.value = 'Debes asignar obligatoriamente una Categoría a esta lona.'
+    return
+  }
+  if (!lonaForm.color || lonaForm.color.trim() === '') {
+    errorMsg.value = 'El color predominante de la lona es obligatorio.'
+    return
+  }
+  if (lonaForm.capacidad_maxima === null || lonaForm.capacidad_maxima < 1) {
+    errorMsg.value = 'La capacidad máxima de la lona debe ser al menos 1.'
+    return
+  }
+
+  try {
+    if (lonaForm.id) {
+      await axios.put(`${API_URL}/lonas/${lonaForm.id}`, lonaForm)
+      successMsg.value = 'Lona actualizada exitosamente'
+    } else {
+      await axios.post(`${API_URL}/lonas`, lonaForm)
+      successMsg.value = 'Nueva lona agregada exitosamente'
+    }
+    
+    // Solo recargamos las lonas, mucho más rápido que todo el fetchData()
+    const lns = await axios.get(`${API_URL}/lonas`)
+    state.lonas = lns.data
+
+    setTimeout(() => {
+      showLonaDrawer.value = false
+    }, 1500)
+  } catch (error) {
+    console.error(error)
+    if(error.response && error.response.data && error.response.data.message) {
+      errorMsg.value = error.response.data.message
+    } else {
+      errorMsg.value = 'Error al guardar la lona'
+    }
+  }
+}
+
+const adjustStock = async (talla, direction) => {
+  errorMsg.value = ''
+  successMsg.value = ''
   const amount = adjustInputs[talla]
   if (!amount || amount <= 0) {
-    alert('Ingresa una cantidad válida mayor a 0')
+    errorMsg.value = 'Ingresa una cantidad válida mayor a 0'
     return
   }
   
   const change = amount * direction
-  actions.adjustLonaStock(selectedLona.value.id, talla, change)
   
-  // Clear input
-  adjustInputs[talla] = null
-  alert('Inventario actualizado con éxito')
+  try {
+    await axios.post(`${API_URL}/lonas/${selectedLona.value.id}/ajustar-stock`, {
+      talla: talla,
+      cantidad_cambio: change
+    })
+    
+    // Clear input
+    adjustInputs[talla] = null
+    await fetchData()
+    successMsg.value = 'Inventario actualizado con éxito'
+  } catch (error) {
+    console.error(error)
+    if(error.response && error.response.data && error.response.data.message) {
+      errorMsg.value = error.response.data.message
+    } else {
+      errorMsg.value = 'Error al ajustar el inventario'
+    }
+  }
 }
 
-const addNewSizeToLona = () => {
+const addNewSizeToLona = async () => {
+  errorMsg.value = ''
+  successMsg.value = ''
   const size = newSizeField.talla.toUpperCase().trim()
   if (!size) {
-    alert('Ingresa una talla válida')
+    errorMsg.value = 'El nombre de la talla es obligatorio y no debe contener espacios ni símbolos.'
     return
   }
   
-  // Check if exists
+  // Check if exists locally
   const exists = state.lona_tallas.some(lt => lt.lona_id === selectedLona.value.id && lt.talla === size)
   if (exists) {
-    alert('Esa talla ya existe en la lona')
+    errorMsg.value = 'Esa talla ya existe en la lona'
     return
   }
 
-  // Seed size
-  state.lona_tallas.push({
-    id: Date.now(),
-    lona_id: selectedLona.value.id,
-    talla: size,
-    cantidad: 0
-  })
-
-  adjustInputs[size] = null
-  newSizeField.talla = ''
+  try {
+    await axios.post(`${API_URL}/lona-tallas`, {
+      lona_id: selectedLona.value.id,
+      talla: size,
+      cantidad: 0
+    })
+    
+    adjustInputs[size] = null
+    newSizeField.talla = ''
+    await fetchData()
+    successMsg.value = 'Talla añadida con éxito'
+  } catch (error) {
+    console.error(error)
+    errorMsg.value = 'Error al añadir la talla'
+  }
 }
 </script>
 
@@ -780,4 +1166,149 @@ const addNewSizeToLona = () => {
 .text-success { color: var(--color-success); }
 .text-danger { color: var(--color-danger); }
 .font-mono { font-family: monospace; }
+
+/* ─── Alerts ─── */
+.alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.alert--success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  background: var(--bg-card, #fff);
+  border-radius: 20px;
+  padding: 48px 40px 36px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--color-border, rgba(255,255,255,0.1));
+  animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-icon {
+  margin-bottom: 20px;
+}
+
+.modal-circle {
+  stroke-dasharray: 63;
+  stroke-dashoffset: 63;
+  animation: drawCircle 0.6s ease forwards 0.1s;
+}
+
+.modal-line {
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  animation: drawLine 0.4s ease forwards 0.5s;
+}
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+}
+
+.modal-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 32px 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.modal-btn--cancel {
+  background: var(--bg-sidebar);
+  color: var(--text-secondary);
+}
+
+.modal-btn--cancel:hover {
+  background: var(--color-border);
+}
+
+.modal-btn--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.modal-btn--danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.modal-btn--danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+.modal-enter-active { transition: opacity 0.3s ease; }
+.modal-leave-active { transition: opacity 0.2s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
 </style>

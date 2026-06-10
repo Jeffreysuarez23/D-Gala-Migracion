@@ -257,6 +257,17 @@ export const actions = {
     }
   },
 
+  updateLona(lonaId, fields) {
+    const idx = state.lonas.findIndex(l => l.id === lonaId)
+    if (idx !== -1) {
+      state.lonas[idx] = {
+        ...state.lonas[idx],
+        ...fields,
+        dotacion_id: fields.dotacion_id ? Number(fields.dotacion_id) : state.lonas[idx].dotacion_id
+      }
+    }
+  },
+
   adjustLonaStock(lonaId, talla, change, userId = 2) {
     const record = state.lona_tallas.find(lt => lt.lona_id === lonaId && lt.talla === talla)
     const prevQty = record ? record.cantidad : 0

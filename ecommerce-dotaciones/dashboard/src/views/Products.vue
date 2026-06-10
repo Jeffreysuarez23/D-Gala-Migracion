@@ -190,10 +190,21 @@
 
           <!-- Categoría -->
           <div class="form-group">
-            <label>Categoría</label>
-            <select class="select-input" v-model="form.categoria_id">
-              <option :value="null">Ninguna</option>
+            <label>Categoría *</label>
+            <select class="select-input" v-model="form.categoria_id" required>
+              <option :value="null">Seleccione una categoría</option>
               <option v-for="cat in flatCategorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
+            </select>
+          </div>
+
+          <!-- Lona Inicial (Solo creación) -->
+          <div class="form-group" v-if="!isEditMode">
+            <label>Ubicación Inicial (Lona) *</label>
+            <select class="select-input" v-model="form.lona_id" required>
+              <option :value="null">Seleccione una lona para el producto</option>
+              <option v-for="l in lonas" :key="l.id" :value="l.id">
+                {{ l.codigo }} - {{ l.tipo_producto }} ({{ l.color }})
+              </option>
             </select>
           </div>
 
@@ -233,6 +244,15 @@
 
           <!-- VARIANTS PANEL (Nested in edit mode) -->
           <div class="variants-panel-wrap" v-if="isEditMode">
+            
+            <!-- Alertas de Variante -->
+            <div v-if="varErrorMsg" class="alert alert--error" style="margin-top: 16px;">
+              {{ varErrorMsg }}
+            </div>
+            <div v-if="varSuccessMsg" class="alert alert--success" style="margin-top: 16px;">
+              {{ varSuccessMsg }}
+            </div>
+
             <div class="variants-panel__header">
               <h3>Variantes & Stock</h3>
               <button type="button" class="btn-text-action" :class="{ cancel: showAddVariantForm }" @click="showAddVariantForm = !showAddVariantForm; if(!showAddVariantForm) editingVarId = null; if(showAddVariantForm && !editingVarId) { newVar.sku=''; newVar.color=''; newVar.color_hex='#000000'; newVar.talla=''; newVar.stock=0; newVar.lona_id=null; newVar.precio_extra=0; }">
@@ -243,6 +263,7 @@
 
             <!-- Add Variant Form -->
             <div class="add-variant-box" v-if="showAddVariantForm">
+
               <div class="grid-2">
                 <div class="form-group">
                   <label>SKU</label>
@@ -250,7 +271,7 @@
                 </div>
                 <div class="form-group">
                   <label>Nombre del Color</label>
-                  <input type="text" class="input-text" placeholder="Ej: Azul Marino" v-model="newVar.color" @input="newVar.color = newVar.color.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').toUpperCase()" />
+                  <input type="text" class="input-text" placeholder="Ej: Azul Marino" v-model="newVar.color" @input="handleColorInput" />
                 </div>
               </div>
               <div class="grid-2">
@@ -527,6 +548,8 @@ const showAddImageForm = ref(false)
 const saving = ref(false)
 const errorMsg = ref('')
 const successMsg = ref('')
+const varErrorMsg = ref('')
+const varSuccessMsg = ref('')
 const showDeleteModal = ref(false)
 const productToDelete = ref(null)
 const deleting = ref(false)
@@ -550,6 +573,7 @@ const form = reactive({
   nombre: '',
   descripcion: '',
   categoria_id: null,
+  lona_id: null,
   precio_minorista: 0,
   precio_mayorista: 0,
   min_cantidad_mayorista: 12,
@@ -568,6 +592,41 @@ const newVar = reactive({
   precio_extra: 0,
   descuento: 0
 })
+
+const handleColorInput = (event) => {
+  let val = event.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').toUpperCase()
+  newVar.color = val
+  
+  const colorMap = {
+    'AZUL': '#006eff',
+    'ROJO': '#ef4444',
+    'VERDE': '#10b981',
+    'NEGRO': '#000000',
+    'BLANCO': '#ffffff',
+    'GRIS': '#9ca3af',
+    'AMARILLO': '#eab308',
+    'NARANJA': '#f97316',
+    'MORADO': '#8b5cf6',
+    'ROSADO': '#ec4899',
+    'CAFE': '#8b4513',
+    'MARRON': '#8b4513',
+    'BEIGE': '#f5f5dc',
+    'VINO': '#800000',
+    'TURQUESA': '#40e0d0',
+    'CELESTE': '#87ceeb'
+  }
+
+  const isDefaultOrAuto = newVar.color_hex === '#000000' || Object.values(colorMap).includes(newVar.color_hex)
+  
+  if (isDefaultOrAuto) {
+    for (const [name, hex] of Object.entries(colorMap)) {
+      if (val.includes(name)) {
+        newVar.color_hex = hex
+        break
+      }
+    }
+  }
+}
 
 const newImg = reactive({
   file: null,
@@ -744,6 +803,7 @@ const openCreateDrawer = async () => {
   form.nombre = ''
   form.descripcion = ''
   form.categoria_id = null
+  form.lona_id = null
   form.precio_minorista = 0
   form.precio_mayorista = 0
   form.min_cantidad_mayorista = 12
@@ -809,11 +869,22 @@ const submitForm = async () => {
     saving.value = false
     return
   }
+  if (!form.categoria_id) {
+    errorMsg.value = 'La categoría es obligatoria.'
+    saving.value = false
+    return
+  }
+  if (!isEditMode.value && !form.lona_id) {
+    errorMsg.value = 'Debes seleccionar una lona inicial.'
+    saving.value = false
+    return
+  }
 
   const payload = {
     nombre: form.nombre,
     descripcion: form.descripcion,
     categoria_id: form.categoria_id,
+    lona_id: form.lona_id,
     precio_minorista: form.precio_minorista,
     precio_mayorista: form.precio_mayorista,
     min_cantidad_mayorista: form.min_cantidad_mayorista,
@@ -848,7 +919,11 @@ const submitForm = async () => {
     showDrawer.value = false
   } catch (error) {
     console.error('Error saving product:', error)
-    errorMsg.value = error.response?.data?.message || 'Error al guardar el producto'
+    if (error.response && error.response.data && error.response.data.message) {
+      errorMsg.value = error.response.data.message
+    } else {
+      errorMsg.value = 'Ocurrió un error al guardar el producto. Revisa los datos e intenta de nuevo.'
+    }
   } finally {
     saving.value = false
   }
@@ -884,31 +959,44 @@ const executeDelete = async () => {
 
 // Nested Variants Management
 const saveNewVariant = async () => {
-  errorMsg.value = ''
-  successMsg.value = ''
+  varErrorMsg.value = ''
+  varSuccessMsg.value = ''
   if (!newVar.sku || newVar.sku.trim() === '') {
-    errorMsg.value = 'El SKU es obligatorio.'
+    varErrorMsg.value = 'El SKU es obligatorio.'
     return
   }
   if (!newVar.color || newVar.color.trim() === '') {
-    errorMsg.value = 'El nombre del color es obligatorio.'
+    varErrorMsg.value = 'El nombre del color es obligatorio.'
     return
   }
   if (!newVar.talla || newVar.talla.trim() === '') {
-    errorMsg.value = 'Debes ingresar al menos una talla.'
+    varErrorMsg.value = 'Debes ingresar al menos una talla.'
     return
   }
   if (newVar.stock === null || newVar.stock === undefined || newVar.stock < 0) {
-    errorMsg.value = 'El stock inicial no puede ser negativo.'
+    varErrorMsg.value = 'El stock inicial no puede ser negativo.'
     return
   }
   if (newVar.precio_extra === null || newVar.precio_extra === undefined || newVar.precio_extra < 0) {
-    errorMsg.value = 'El precio extra no puede ser negativo.'
+    varErrorMsg.value = 'El precio extra no puede ser negativo.'
     return
   }
   if (newVar.descuento === null || newVar.descuento === undefined || newVar.descuento < 0 || newVar.descuento > 100) {
-    errorMsg.value = 'El descuento debe ser un porcentaje de 0 a 100.'
+    varErrorMsg.value = 'El descuento debe ser un porcentaje de 0 a 100.'
     return
+  }
+  if (!newVar.lona_id) {
+    varErrorMsg.value = 'Debes asignar obligatoriamente una lona a esta variable.'
+    return
+  }
+
+  // Validar color de la variante con el color de la lona
+  const selectedLona = lonas.value.find(l => l.id === newVar.lona_id)
+  if (selectedLona && selectedLona.color) {
+    if (newVar.color.trim().toLowerCase() !== selectedLona.color.trim().toLowerCase()) {
+      varErrorMsg.value = `El color de la variante ("${newVar.color}") no coincide con el color estricto de la Lona seleccionada ("${selectedLona.color}").`
+      return
+    }
   }
   
   const tallas = newVar.talla ? String(newVar.talla).split(',').map(t => t.trim()).filter(t => t) : ['']
@@ -968,10 +1056,11 @@ const saveNewVariant = async () => {
     newVar.descuento = 0
     editingVarId.value = null
     showAddVariantForm.value = false
-    successMsg.value = 'Variante guardada correctamente.'
+    varSuccessMsg.value = 'Variante guardada correctamente.'
+    setTimeout(() => { varSuccessMsg.value = '' }, 4000)
   } catch (error) {
     console.error('Error saving variant:', error)
-    errorMsg.value = error.response?.data?.message || 'Error al guardar la variante'
+    varErrorMsg.value = error.response?.data?.message || 'Error al guardar la variante'
   }
 }
 
@@ -979,16 +1068,19 @@ const updateVarStock = async (variant, change) => {
   errorMsg.value = ''
   successMsg.value = ''
   try {
-    if (variant.lona_id) {
-      errorMsg.value = 'Para modificar el stock de una lona, dirígete al módulo de Dotaciones.'
-      return
-    } else {
-      await axios.put(`${API_URL}/variantes/${variant.id}`, { stock: variant.stock + change })
-      await fetchProducts()
-    }
+    const newStock = variant.stock + change
+    if (newStock < 0) return
+
+    // Since we need lona_id for the backend capacity check logic, we pass it along 
+    // (though the backend will default to the existing one if not provided, it's safer)
+    await axios.put(`${API_URL}/variantes/${variant.id}`, { 
+      stock: newStock,
+      lona_id: variant.lona_id
+    })
+    await fetchProducts()
   } catch (error) {
     console.error('Error updating stock:', error)
-    errorMsg.value = 'Error al actualizar el stock'
+    errorMsg.value = error.response?.data?.message || 'Error al actualizar el stock'
   }
 }
 
@@ -1022,7 +1114,8 @@ const executeDeleteVar = async () => {
   try {
     await axios.delete(`${API_URL}/variantes/${varToDelete.value.id}`)
     await fetchProducts()
-    successMsg.value = 'Variante eliminada correctamente.'
+    varSuccessMsg.value = 'Variante eliminada correctamente.'
+    setTimeout(() => { varSuccessMsg.value = '' }, 4000)
     showDeleteVarModal.value = false
     varToDelete.value = null
   } catch (error) {

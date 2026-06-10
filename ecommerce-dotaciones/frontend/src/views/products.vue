@@ -174,7 +174,7 @@ export default {
           return {
             id: p.id,
             name: p.nombre,
-            category: p.categoria ? p.categoria.nombre : 'General', // O ajusta según lo que retorne tu API
+            category: p.categoria ? p.categoria.nombre : 'General',
             price: p.precio_minorista,
             originalPrice: null,
             badge: badge,
@@ -206,6 +206,18 @@ export default {
         currency: 'COP',
         minimumFractionDigits: 0
       }).format(value)
+    },
+    getColorHex(colorName) {
+      if (!colorName) return '#7a6a53'
+      const normalized = colorName.toLowerCase().trim()
+      const colors = {
+        'azul': '#3b82f6', 'blanco': '#f3f4f6', 'naranja': '#f97316',
+        'rojo': '#ef4444', 'negro': '#1f2937', 'gris': '#9ca3af',
+        'verde': '#22c55e', 'amarillo': '#eab308', 'morado': '#a855f7',
+        'rosado': '#ec4899', 'rosa': '#ec4899', 'cafe': '#8b5a2b',
+        'marrón': '#8b5a2b', 'marron': '#8b5a2b', 'beige': '#d5bdaf'
+      }
+      return colors[normalized] || '#7a6a53'
     }
   }
 }

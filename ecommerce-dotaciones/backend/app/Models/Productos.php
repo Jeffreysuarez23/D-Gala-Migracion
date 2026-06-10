@@ -1,11 +1,16 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\VarianteProducto;
 
 // MODELO DE PRODUCTOS
 class Productos extends Model
 {
+    use SoftDeletes;
+
+    const DELETED_AT = 'eliminado_en';
+
     protected $table = 'productos';
 
     public $timestamps = false;

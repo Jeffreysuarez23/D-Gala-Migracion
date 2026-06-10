@@ -19,11 +19,18 @@ class ProductController extends Controller
             'precio_minorista' => 'required|numeric|min:0',
             'precio_mayorista' => 'required|numeric|min:0',
             'min_cantidad_mayorista' => 'nullable|integer|min:1',
-            'categoria_id' => 'nullable|integer|exists:categorias,id',
+            'categoria_id' => 'required|integer|exists:categorias,id',
+            'lona_id' => 'required|integer|exists:lonas,id',
             'publicado' => 'nullable|boolean',
             'permitir_sin_stock' => 'nullable|boolean',
             'destacado' => 'nullable|boolean'
         ]);
+
+        $lona = \App\Models\Lona::findOrFail($request->lona_id);
+        $espacio_ocupado = \App\Models\VarianteProducto::where('lona_id', $lona->id)->count();
+        if ($lona->capacidad_maxima !== null && $espacio_ocupado >= $lona->capacidad_maxima) {
+            return response()->json(['message' => 'La lona seleccionada ha alcanzado su capacidad máxima ('.$lona->capacidad_maxima.' variables).'], 400);
+        }
 
         $producto = Productos::create([
             'nombre' => $request->nombre,
@@ -38,17 +45,26 @@ class ProductController extends Controller
             'permitir_sin_stock' => $request->has('permitir_sin_stock') ? $request->permitir_sin_stock : 1
         ]);
 
+        \App\Models\VarianteProducto::create([
+            'producto_id' => $producto->id,
+            'lona_id' => $request->lona_id,
+            'sku' => Str::upper(substr(Str::slug($request->nombre, ''), 0, 4)) . '-' . rand(1000, 9999),
+            'color' => 'Defecto',
+            'talla' => 'Única',
+            'stock' => 0
+        ]);
+
         return response()->json($producto, 201);
     }
  // LISTAR TODOS LOS PRODUCTOS
     public function index()
     {
-        return Productos::with(['variantes', 'imagenes', 'categoria'])->get();
+        return Productos::with(['variantes.lona.tallas', 'imagenes', 'categoria'])->get();
     }
  //  MOSTRAR UN PRODUCTO CON SUS VARIANTES E IMÁGENES
     public function show($id)
     {
-        $producto = Productos::with(['variantes', 'imagenes', 'categoria'])->findOrFail($id);
+        $producto = Productos::with(['variantes.lona.tallas', 'imagenes', 'categoria'])->findOrFail($id);
 
         return response()->json([
             'id' => $producto->id,
@@ -70,7 +86,11 @@ class ProductController extends Controller
                     'talla' => $v->talla,
                     'stock' => $v->stock,
                     'precio_extra' => $v->precio_extra,
-                    'descuento' => $v->descuento
+                    'descuento' => $v->descuento,
+                    'lona' => $v->lona ? [
+                        'color' => $v->lona->color,
+                        'tallas' => $v->lona->tallas
+                    ] : null
                 ];
             })
         ]);
@@ -109,7 +129,11 @@ public function update(Request $request, $id)
 public function destroy($id)
 {
     $producto = Productos::findOrFail($id);
+    
+    // Eliminar las variantes asociadas primero (Soft Delete)
+    $producto->variantes()->delete();
 
+    // Luego eliminar el producto principal (Soft Delete)
     $producto->delete();
 
     return response()->json([

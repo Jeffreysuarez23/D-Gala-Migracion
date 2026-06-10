@@ -98,7 +98,8 @@
                 :disabled="!size.inStock"
                 @click="selectedSize = size.label"
               >
-                {{ size.label }}
+                <span>{{ size.label }}</span>
+                <span v-if="size.stock !== undefined" class="size-btn__stock">{{ size.stock }} uds</span>
               </button>
             </div>
           </div>
@@ -250,11 +251,8 @@ export default {
     availableSizes() {
       if (!this.selectedColor) return this.product.sizes
       
-      const sizesForColor = this.product.rawVariants
-        .filter(v => v.color === this.selectedColor)
-        .map(v => ({ label: v.talla, inStock: v.stock > 0 }))
+      const sizesForColor = this.product.sizes.filter(s => s.color.toUpperCase() === this.selectedColor.toUpperCase())
       
-      // If no color-specific sizes, fallback to all sizes
       return sizesForColor.length > 0 ? sizesForColor : this.product.sizes
     }
   },
@@ -319,20 +317,28 @@ export default {
         }
         const colors = Object.values(colorsMap)
         
-        // Extract unique sizes from variantes
-        const sizesMap = {}
+        // Extract sizes from lona tallas or raw variants, deduplicating them
+        const sizesMapUnique = {}
         if (data.variantes) {
           data.variantes.forEach(v => {
-            if (v.talla) {
-              if (!sizesMap[v.talla]) {
-                sizesMap[v.talla] = { label: v.talla, inStock: v.stock > 0 }
-              } else if (v.stock > 0) {
-                 sizesMap[v.talla].inStock = true
+            const vColor = (v.color && v.color !== 'Defecto') ? v.color : (v.lona ? v.lona.color : v.color)
+            const vColorUpper = vColor ? vColor.toUpperCase() : 'DEFAULT'
+            if (v.lona && v.lona.tallas && v.lona.tallas.length > 0) {
+              v.lona.tallas.forEach(t => {
+                const key = `${vColorUpper}-${t.talla}`
+                if (!sizesMapUnique[key]) {
+                  sizesMapUnique[key] = { label: t.talla, color: vColor, stock: t.cantidad, inStock: t.cantidad > 0 }
+                }
+              })
+            } else if (v.talla) {
+              const key = `${vColorUpper}-${v.talla}`
+              if (!sizesMapUnique[key]) {
+                sizesMapUnique[key] = { label: v.talla, color: vColor, stock: v.stock, inStock: v.stock > 0 }
               }
             }
           })
         }
-        const sizes = Object.values(sizesMap)
+        const sizes = Object.values(sizesMapUnique)
         
         let coverIndex = 0
         if (data.imagenes && data.imagenes.length > 0) {
@@ -722,18 +728,26 @@ export default {
 }
 
 .size-btn {
-  min-width: 42px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   height: 38px;
   padding: 0 14px;
-  border: 1px solid #e0ddd8;
-  border-radius: 8px;
-  background: white;
+  border: 1px solid #e5e0d8;
+  border-radius: 6px;
+  background: #f5f3ef;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  font-weight: 500;
-  color: #444;
+  font-weight: 600;
+  color: #333;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.size-btn__stock {
+  font-weight: 400;
+  color: #888;
+  font-size: 11px;
 }
 
 .size-btn:hover:not(:disabled) {
@@ -748,10 +762,20 @@ export default {
   color: white;
 }
 
+.size-btn--active .size-btn__stock {
+  color: #aaa;
+}
+
 .size-btn--disabled {
-  opacity: 0.35;
+  opacity: 0.6;
   cursor: not-allowed;
-  text-decoration: line-through;
+  background: #fffafa;
+  border-color: #ffe5e5;
+  color: #c53030;
+}
+
+.size-btn--disabled .size-btn__stock {
+  color: #e53e3e;
 }
 
 /* Quantity */

@@ -24,11 +24,13 @@ class CategoriaController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'padre_id' => 'nullable|integer|exists:categorias,id',
-            'orden' => 'nullable|integer|min:0'
+            'orden' => 'nullable|integer|min:0',
+            'destacada' => 'nullable|boolean'
         ]);
 
         $validated['slug'] = Str::slug($validated['nombre']);
         $validated['orden'] = $validated['orden'] ?? 0;
+        $validated['destacada'] = $validated['destacada'] ? 1 : 0;
 
         $categoria = Categoria::create($validated);
 
@@ -54,11 +56,16 @@ class CategoriaController extends Controller
         $validated = $request->validate([
             'nombre' => 'sometimes|string|max:100',
             'padre_id' => 'nullable|integer|exists:categorias,id',
-            'orden' => 'nullable|integer|min:0'
+            'orden' => 'nullable|integer|min:0',
+            'destacada' => 'nullable|boolean'
         ]);
 
         if (isset($validated['nombre'])) {
             $validated['slug'] = Str::slug($validated['nombre']);
+        }
+        
+        if (isset($validated['destacada'])) {
+            $validated['destacada'] = $validated['destacada'] ? 1 : 0;
         }
 
         $categoria->update($validated);
@@ -86,5 +93,39 @@ class CategoriaController extends Controller
         return response()->json([
             'message' => 'Categoría eliminada'
         ]);
+    }
+
+    //  SUBIR IMAGEN
+    public function uploadImagen(Request $request, $id)
+    {
+        $categoria = Categoria::findOrFail($id);
+
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096'
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Eliminar imagen anterior si existe
+            if ($categoria->imagen_url) {
+                $oldPath = str_replace(url('/'), public_path(), $categoria->imagen_url);
+                if (file_exists($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+
+            $file = $request->file('image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('images/categorias'), $filename);
+            
+            $categoria->imagen_url = url('images/categorias/' . $filename);
+            $categoria->save();
+
+            return response()->json([
+                'message' => 'Imagen subida exitosamente',
+                'imagen_url' => $categoria->imagen_url
+            ]);
+        }
+
+        return response()->json(['message' => 'No se recibió ninguna imagen'], 400);
     }
 }

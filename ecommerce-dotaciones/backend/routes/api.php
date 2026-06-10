@@ -53,6 +53,7 @@ Route::get('/categorias', [CategoriaController::class, 'index']);
 Route::post('/categorias', [CategoriaController::class, 'store']);
 Route::get('/categorias/{id}', [CategoriaController::class, 'show']);
 Route::put('/categorias/{id}', [CategoriaController::class, 'update']);
+Route::post('/categorias/{id}/imagen', [CategoriaController::class, 'uploadImagen']);
 Route::delete('/categorias/{id}', [CategoriaController::class, 'destroy']);
 
 // DOTACIONES

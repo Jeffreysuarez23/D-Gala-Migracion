@@ -32,6 +32,7 @@
               <th>Nombre de la Categoría</th>
               <th>Nivel</th>
               <th>Orden</th>
+              <th>Destacada</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -45,6 +46,11 @@
                 </span>
               </td>
               <td>{{ cat.orden }}</td>
+              <td>
+                <span :class="['badge', cat.destacada ? 'badge--info' : 'badge--pending']">
+                  {{ cat.destacada ? 'Sí' : 'No' }}
+                </span>
+              </td>
               <td>
                 <div class="action-buttons">
                   <button class="btn-icon-action" title="Editar Categoría" @click="openEditDrawer(cat)">
@@ -136,6 +142,40 @@
             </div>
           </div>
 
+          <div class="checkbox-group" style="margin-top: 16px;">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="form.destacada" />
+              <span>Marcar como categoría destacada</span>
+            </label>
+          </div>
+
+          <!-- IMAGEN PANEL -->
+          <div class="variants-panel-wrap" style="margin-top: 15px; margin-bottom: 24px; padding-top: 15px; border-top: 1px solid var(--color-border);">
+            <div class="variants-panel__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Imagen de la Categoría</h3>
+              <button type="button" class="btn-text-action" :class="{ cancel: showAddImageForm }" @click="showAddImageForm = !showAddImageForm">
+                <svg v-if="!showAddImageForm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {{ showAddImageForm ? 'Cancelar' : (newImg.url ? 'Cambiar Imagen' : 'Agregar Imagen') }}
+              </button>
+            </div>
+
+            <div class="add-variant-box" v-if="showAddImageForm" style="background-color: var(--bg-sidebar); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
+              <div class="form-group">
+                <label>Seleccionar Imagen</label>
+                <input type="file" accept="image/*" class="input-file-styled" @change="onImageSelected" />
+              </div>
+            </div>
+
+            <div class="image-grid" style="display: flex; gap: 14px; margin-top: 12px;">
+              <div v-if="newImg.url" class="image-card" style="position: relative; width: 105px; height: 105px; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--color-border);">
+                <img :src="newImg.url" alt="Category Image" style="width: 100%; height: 100%; object-fit: cover;" />
+              </div>
+              <div v-else style="color: var(--text-muted); font-size: 13px; font-style: italic;">
+                Sin imagen asignada.
+              </div>
+            </div>
+          </div>
+
           <div v-if="successMsg" class="alert alert--success">{{ successMsg }}</div>
           <div v-if="errorMsg" class="alert alert--error">{{ errorMsg }}</div>
 
@@ -189,7 +229,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, markRaw } from 'vue'
 import axios from 'axios'
 
 const API_URL = 'http://localhost:8000/api'
@@ -206,12 +246,19 @@ const catToDelete = ref(null)
 const deleting = ref(false)
 const deleteError = ref('')
 
+const newImg = reactive({
+  file: null,
+  url: ''
+})
+const showAddImageForm = ref(false)
+
 // Form
 const emptyForm = () => ({
   id: null,
   nombre: '',
   padre_id: null,
-  orden: 0
+  orden: 0,
+  destacada: false
 })
 const form = reactive(emptyForm())
 
@@ -259,6 +306,9 @@ const openCreateDrawer = () => {
   errorMsg.value = ''
   successMsg.value = ''
   isEditMode.value = false
+  newImg.file = null
+  newImg.url = ''
+  showAddImageForm.value = false
   Object.assign(form, emptyForm())
   showDrawer.value = true
   document.body.style.overflow = 'hidden'
@@ -268,11 +318,15 @@ const openEditDrawer = (cat) => {
   errorMsg.value = ''
   successMsg.value = ''
   isEditMode.value = true
+  newImg.file = null
+  newImg.url = cat.imagen_url || ''
+  showAddImageForm.value = false
   Object.assign(form, {
     id: cat.id,
     nombre: cat.nombre,
     padre_id: cat.padre_id,
-    orden: cat.orden || 0
+    orden: cat.orden || 0,
+    destacada: cat.destacada === 1 || cat.destacada === true
   })
   showDrawer.value = true
   document.body.style.overflow = 'hidden'
@@ -281,6 +335,14 @@ const openEditDrawer = (cat) => {
 const closeDrawer = () => {
   showDrawer.value = false
   document.body.style.overflow = ''
+}
+
+const onImageSelected = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    newImg.file = markRaw(file)
+    newImg.url = URL.createObjectURL(file)
+  }
 }
 
 // Save (Create/Update)
@@ -318,15 +380,35 @@ const submitForm = async () => {
     const payload = {
       nombre: nombreLimpio,
       padre_id: form.padre_id || null,
-      orden: form.orden
+      orden: form.orden,
+      destacada: form.destacada
     }
     
     if (isEditMode.value) {
       await axios.put(`${API_URL}/categorias/${form.id}`, payload)
       successMsg.value = 'Categoría actualizada correctamente'
+      
+      if (newImg.file) {
+        const formData = new FormData()
+        formData.append('image', newImg.file)
+        await axios.post(`${API_URL}/categorias/${form.id}/imagen`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      }
     } else {
-      await axios.post(`${API_URL}/categorias`, payload)
+      const { data } = await axios.post(`${API_URL}/categorias`, payload)
       successMsg.value = 'Categoría creada correctamente'
+      
+      if (newImg.file) {
+        const formData = new FormData()
+        formData.append('image', newImg.file)
+        const newId = data.data?.id || data.id
+        if (newId) {
+          await axios.post(`${API_URL}/categorias/${newId}/imagen`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+        }
+      }
     }
     
     await fetchCategorias()
@@ -388,9 +470,90 @@ const executeDelete = async () => {
   vertical-align: middle;
 }
 
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  cursor: pointer;
+}
+
 .action-buttons {
   display: flex;
   gap: 8px;
+}
+
+.input-file-styled {
+  padding: 12px;
+  background-color: var(--bg-input);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  width: 100%;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input-file-styled:hover {
+  border-color: var(--color-accent);
+  background-color: rgba(99, 102, 241, 0.02);
+}
+
+.input-file-styled::file-selector-button {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  margin-right: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.input-file-styled::file-selector-button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background-color: var(--bg-input);
+}
+
+.btn-text-action {
+  background: none;
+  border: none;
+  color: var(--color-accent, #2563eb);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-text-action:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+.btn-text-action.cancel {
+  color: var(--text-secondary);
+}
+.btn-text-action.cancel:hover {
+  background-color: var(--bg-input);
 }
 
 .btn-icon-action {
@@ -551,5 +714,49 @@ const executeDelete = async () => {
 @keyframes modalPop {
   from { opacity: 0; transform: scale(0.85) translateY(20px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Alerts ─── */
+.alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.alert--success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Spinner */
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

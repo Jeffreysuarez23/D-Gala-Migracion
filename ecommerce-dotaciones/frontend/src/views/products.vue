@@ -100,6 +100,9 @@ export default {
     }
   },
   mounted() {
+    if (this.$route.query.category) {
+      this.activeCategory = this.$route.query.category
+    }
     this.fetchCategories()
     this.fetchProducts()
   },

@@ -13,7 +13,9 @@ class Categoria extends Model
         'nombre',
         'slug',
         'padre_id',
-        'orden'
+        'orden',
+        'destacada',
+        'imagen_url'
     ];
 
     

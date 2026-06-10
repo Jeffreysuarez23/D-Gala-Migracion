@@ -95,28 +95,28 @@
       </div>
     </section>
 
-    <!-- ─── EXPLORE COLLECTIONS ──────────────────────── -->
+    <!-- ─── EXPLORE CATEGORIES ──────────────────────── -->
     <section class="collections">
       <div class="section__inner">
         <div class="section__header section__header--simple">
           <p class="section__eyebrow">/ COMPRA POR CATEGORÍA</p>
           <h2 class="section__title">
             <strong>Explora</strong><br />
-            <span class="section__title--light">Colecciones</span>
+            <span class="section__title--light">Categorías Destacadas</span>
           </h2>
         </div>
 
         <div class="collections__grid">
           <div
-            v-for="col in collections"
-            :key="col.id"
+            v-for="cat in categoriasDestacadas"
+            :key="cat.id"
             class="collection-card"
           >
             <div class="collection-card__image-wrap">
-              <img :src="col.image" :alt="col.label" class="collection-card__image" />
+              <img :src="cat.image" :alt="cat.nombre" class="collection-card__image" />
               <div class="collection-card__overlay">
-                <span class="collection-card__label">{{ col.label }}</span>
-                <router-link :to="col.link" class="collection-card__btn">
+                <span class="collection-card__label">{{ cat.nombre }}</span>
+                <router-link :to="cat.link" class="collection-card__btn">
                   Comprar
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </router-link>
@@ -208,26 +208,7 @@ export default {
         }
       ],
       featuredProducts: [],
-      collections: [
-        {
-          id: 1,
-          label: 'Abrigos',
-          link: '/products?cat=outerwear',
-          image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=80'
-        },
-        {
-          id: 2,
-          label: 'Tejidos',
-          link: '/products?cat=knitwear',
-          image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=900&q=80'
-        },
-        {
-          id: 3,
-          label: 'Accesorios',
-          link: '/products?cat=accessories',
-          image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=900&q=80'
-        }
-      ],
+      categoriasDestacadas: [],
       stats: [
         { value: '12+', label: 'AÑOS DE EXPERIENCIA' },
         { value: '100%', label: 'FIBRAS NATURALES' },
@@ -238,6 +219,7 @@ export default {
   mounted() {
     this.startSlider()
     this.fetchFeaturedProducts()
+    this.fetchCategoriasDestacadas()
   },
   unmounted() {
     this.stopSlider()
@@ -283,6 +265,43 @@ export default {
         })
       } catch (error) {
         console.error('Error fetching featured products:', error)
+      }
+    },
+    async fetchCategoriasDestacadas() {
+      try {
+        const { data } = await axios.get('http://localhost:8000/api/categorias')
+        
+        // Flatten the categories to include subcategories easily
+        const flatCategories = []
+        const flatten = (cats) => {
+          cats.forEach(c => {
+            flatCategories.push(c)
+            if (c.hijos && c.hijos.length > 0) flatten(c.hijos)
+          })
+        }
+        flatten(data)
+
+        const destacadas = flatCategories.filter(c => c.destacada === 1 || c.destacada === true)
+        
+        // Default placeholder images for categories
+        const placeholderImages = [
+          'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=80',
+          'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=900&q=80',
+          'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=900&q=80',
+          'https://images.unsplash.com/photo-1560243563-062bfc001d68?w=900&q=80',
+          'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900&q=80'
+        ]
+
+        this.categoriasDestacadas = destacadas.map((c, index) => {
+          return {
+            id: c.id,
+            nombre: c.nombre,
+            link: '/products?category=' + encodeURIComponent(c.nombre),
+            image: c.imagen_url ? c.imagen_url : placeholderImages[index % placeholderImages.length]
+          }
+        })
+      } catch (error) {
+        console.error('Error fetching featured categories:', error)
       }
     }
   }
@@ -664,7 +683,7 @@ export default {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 1 / 1;
 }
 
 .collection-card__image {

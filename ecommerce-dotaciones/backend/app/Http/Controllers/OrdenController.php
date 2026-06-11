@@ -40,12 +40,35 @@ class OrdenController extends Controller
 
             $subtotal = 0;
 
+            // Validar stock antes de crear la orden
             foreach ($carrito->items as $item) {
-                $base = $item->variante->producto->precio_minorista + $item->variante->precio_extra;
-                $descuentoPorcentaje = intval($item->variante->descuento) ?? 0;
+                $variante = $item->variante;
+                $base = $variante->producto->precio_minorista + $variante->precio_extra;
+                $descuentoPorcentaje = intval($variante->descuento) ?? 0;
                 $precioFinal = $base * (1 - $descuentoPorcentaje / 100);
 
                 $subtotal += ($precioFinal * $item->cantidad);
+
+                // Verificar stock en lona_tallas si la variante tiene lona
+                if ($variante->lona_id) {
+                    $lonaTalla = DB::table('lona_tallas')
+                        ->where('lona_id', $variante->lona_id)
+                        ->where('talla', $variante->talla)
+                        ->first();
+
+                    if (!$lonaTalla) {
+                        return response()->json([
+                            'message' => "No hay stock registrado para {$variante->producto->nombre} (Talla: {$variante->talla}, Color: {$variante->color})"
+                        ], 422);
+                    }
+
+                    if ($lonaTalla->cantidad < $item->cantidad) {
+                        $disponible = $lonaTalla->cantidad;
+                        return response()->json([
+                            'message' => "Stock insuficiente para {$variante->producto->nombre} (Talla: {$variante->talla}, Color: {$variante->color}). Disponible: {$disponible}, Solicitado: {$item->cantidad}"
+                        ], 422);
+                    }
+                }
             }
 
             // Aplicar cupón si existe
@@ -126,6 +149,20 @@ class OrdenController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
+
+            \Illuminate\Support\Facades\Log::error('Error al crear orden: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            // Detectar errores de stock del trigger MySQL
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'Stock insuficiente') || str_contains($msg, 'stock para esa talla') || str_contains($msg, 'sin lona asociada')) {
+                return response()->json([
+                    'message' => 'Stock insuficiente para uno o más productos. Por favor, revisa tu carrito.'
+                ], 422);
+            }
 
             return response()->json([
                 'message' => 'Error al crear orden',

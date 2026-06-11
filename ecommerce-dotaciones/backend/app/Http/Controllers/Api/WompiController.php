@@ -36,7 +36,7 @@ class WompiController extends Controller
         $amountInCents = intval(round($orden->total * 100));
         $currency = 'COP';
         // Unique reference for Wompi
-        $reference = $orden->numero . '-' . time();
+        $reference = 'ORD-' . $orden->id . '-' . time();
 
         $integritySecret = env('WOMPI_INTEGRITY_SECRET');
         $publicKey = env('WOMPI_PUBLIC_KEY');
@@ -47,7 +47,16 @@ class WompiController extends Controller
 
         // Cadena a firmar: referencia + monto en centavos + moneda + secreto de integridad
         $cadena = $reference . $amountInCents . $currency . $integritySecret;
-        $signature = hash('sha256', $cadena);
+$signature = hash('sha256', $cadena);
+
+Log::info('Wompi firma debug', [
+    'reference' => $reference,
+    'amountInCents' => $amountInCents,
+    'currency' => $currency,
+    'secret_primeros_10' => substr($integritySecret, 0, 10),
+    'cadena_sin_secret' => $reference . $amountInCents . $currency,
+    'signature' => $signature,
+]);
 
         // Guardamos un pago inicial pendiente para tener el rastro de la referencia
         Pago::updateOrCreate(
@@ -97,7 +106,7 @@ class WompiController extends Controller
                 $cadenaParaFirma .= $data[$parts[1]];
             }
         }
-        $cadenaParaFirma .= $timestamp ?? $request->input('timestamp');
+        $cadenaParaFirma .= $request->input('timestamp');
         $cadenaParaFirma .= $eventsSecret;
 
         $miChecksum = hash('sha256', $cadenaParaFirma);

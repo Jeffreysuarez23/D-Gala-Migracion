@@ -22,7 +22,6 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\ContactoController;
 use App\Http\Controllers\Api\UsuarioController;
-use App\Http\Controllers\Api\MercadoPagoController;
 
 // PRODUCTOS
 Route::get('/productos', [ProductController::class, 'index']);
@@ -174,11 +173,9 @@ Route::put('/usuarios/{id}/rol', [UsuarioController::class, 'updateRole']);
 Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
 Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
 
-// MERCADO PAGO WEBHOOK (público - llamado por Mercado Pago)
-Route::post('/mercadopago/webhook', [MercadoPagoController::class, 'webhook']);
-
-// MERCADO PAGO RETORNO (público - redirección del usuario)
-Route::get('/mercadopago/retorno', [MercadoPagoController::class, 'retorno']);
+// MERCADO PAGO (deshabilitado - controlador pendiente de implementar)
+// Route::post('/mercadopago/webhook', [MercadoPagoController::class, 'webhook']);
+// Route::get('/mercadopago/retorno', [MercadoPagoController::class, 'retorno']);
 
 // TEST
 Route::get('/test', function () {

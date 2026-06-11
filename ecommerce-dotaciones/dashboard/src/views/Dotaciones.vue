@@ -539,13 +539,19 @@ const getGaugeColorClass = (dot) => {
 }
 
 const getLonaTallas = (lonaId) => {
-  return state.lona_tallas.filter(lt => lt.lona_id === lonaId)
+  const vars = state.variantes.filter(v => v.lona_id === lonaId)
+  const tallasMap = {}
+  vars.forEach(v => {
+    if (!tallasMap[v.talla]) tallasMap[v.talla] = 0
+    tallasMap[v.talla] += v.stock
+  })
+  return Object.keys(tallasMap).map(t => ({ id: t, talla: t, cantidad: tallasMap[t] }))
 }
 
 const getLonaTotalStock = (lonaId) => {
-  return state.lona_tallas
-    .filter(lt => lt.lona_id === lonaId)
-    .reduce((sum, lt) => sum + lt.cantidad, 0)
+  return state.variantes
+    .filter(v => v.lona_id === lonaId)
+    .reduce((sum, v) => sum + v.stock, 0)
 }
 
 const getLonaVariablesCount = (lonaId) => {

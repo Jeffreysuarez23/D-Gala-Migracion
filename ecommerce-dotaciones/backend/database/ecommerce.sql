@@ -559,6 +559,11 @@ CREATE TRIGGER `trg_descuento_stock_venta` BEFORE INSERT ON `orden_items` FOR EA
     WHERE lona_id = lona_ref
     AND talla = talla_ref;
 
+    -- NUEVO: Sincronizar descontando stock también en la variante_producto
+    UPDATE variantes_producto
+    SET stock = stock - NEW.cantidad
+    WHERE id = NEW.variante_id;
+
     -- Auditoría (SIN usar NEW.id para evitar problemas)
     INSERT INTO historial_lonas (
         lona_id,

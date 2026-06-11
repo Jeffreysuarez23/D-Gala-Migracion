@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wompi Test</title>
+  <script src="https://checkout.wompi.co/widget.js"></script>
+</head>
+<body>
+  <button id="pay">Pagar</button>
+  <script>
+    document.getElementById('pay').addEventListener('click', function() {
+      var checkout = new WidgetCheckout({
+        currency: 'COP',
+        amountInCents: 9180000,
+        reference: 'ORD-12345-' + Date.now(),
+        publicKey: 'pub_test_I4LObyH5PYQPEPg1jGXT8KM35dNTSsOt',
+        redirectUrl: 'http://localhost:5173/checkout?status=wompi_return'
+      });
+      checkout.open(function (result) {
+        console.log(result);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -16,23 +16,20 @@
     <!-- ─── STEPPER ── -->
     <div class="stepper-wrap" v-if="currentStep < 3">
       <div class="stepper">
-        <div
-          v-for="(s, i) in steps"
-          :key="i"
-          class="stepper__item"
-          :class="{
-            'stepper__item--active': currentStep === i,
-            'stepper__item--done': currentStep > i
-          }"
-        >
+        <div v-for="(s, i) in steps" :key="i" class="stepper__item" :class="{
+          'stepper__item--active': currentStep === i,
+          'stepper__item--done': currentStep > i
+        }">
           <div class="stepper__circle">
-            <svg v-if="currentStep > i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg v-if="currentStep > i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             <span v-else>{{ i + 1 }}</span>
           </div>
           <span class="stepper__label">{{ s }}</span>
-          <div v-if="i < steps.length - 1" class="stepper__line" :class="{ 'stepper__line--done': currentStep > i }"></div>
+          <div v-if="i < steps.length - 1" class="stepper__line" :class="{ 'stepper__line--done': currentStep > i }">
+          </div>
         </div>
       </div>
     </div>
@@ -88,7 +85,8 @@
 
             <div class="form-group">
               <label class="form-label">Notas del pedido <span class="optional">(opcional)</span></label>
-              <textarea class="form-textarea" v-model="notas_cliente" rows="3" placeholder="Instrucciones de entrega..."></textarea>
+              <textarea class="form-textarea" v-model="notas_cliente" rows="3"
+                placeholder="Instrucciones de entrega..."></textarea>
             </div>
 
             <div v-if="shippingError" class="form-error">{{ shippingError }}</div>
@@ -96,7 +94,8 @@
             <button class="next-btn" @click="nextStep">
               Continuar al Pago
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
               </svg>
             </button>
           </div>
@@ -106,12 +105,8 @@
             <h2 class="form-section__title">Método de Pago</h2>
 
             <div class="payment-methods">
-              <label
-                v-for="m in paymentMethods"
-                :key="m.id"
-                class="payment-card"
-                :class="{ 'payment-card--selected': payment.method === m.id }"
-              >
+              <label v-for="m in paymentMethods" :key="m.id" class="payment-card"
+                :class="{ 'payment-card--selected': payment.method === m.id }">
                 <input type="radio" :value="m.id" v-model="payment.method" class="payment-radio" />
                 <div class="payment-card__icon" v-html="m.icon"></div>
                 <div class="payment-card__info">
@@ -119,8 +114,9 @@
                   <p class="payment-card__desc">{{ m.desc }}</p>
                 </div>
                 <div class="payment-card__check">
-                  <svg v-if="payment.method === m.id" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
+                  <svg v-if="payment.method === m.id" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
               </label>
@@ -129,14 +125,16 @@
             <div class="form-actions">
               <button class="back-btn" @click="prevStep">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
                 </svg>
                 Atrás
               </button>
               <button class="next-btn" @click="nextStep">
                 Revisar Pedido
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
             </div>
@@ -190,15 +188,17 @@
             <div class="form-actions">
               <button class="back-btn" @click="prevStep">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
                 </svg>
                 Atrás
               </button>
               <button class="place-order-btn" @click="placeOrder" :disabled="placing">
                 <span v-if="!placing">Realizar Pedido</span>
                 <span v-else>Procesando...</span>
-                <svg v-if="!placing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg v-if="!placing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
             </div>
@@ -207,14 +207,16 @@
           <!-- STEP 3: Confirmation -->
           <div v-if="currentStep === 3" class="form-section confirmation">
             <div class="confirmation__icon" :class="{ 'confirmation__icon--error': confirmStatus === 'failure' }">
-              <svg v-if="confirmStatus !== 'failure'" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="16 8 10 16 7 13"/>
+              <svg v-if="confirmStatus !== 'failure'" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="16 8 10 16 7 13" />
               </svg>
-              <svg v-else width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+              <svg v-else width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
             </div>
             <h2 class="confirmation__title">{{ confirmTitle }}</h2>
@@ -225,7 +227,8 @@
               <router-link to="/mis-pedidos" class="confirmation__btn" v-if="confirmStatus !== 'failure'">
                 Ver Mis Pedidos
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </router-link>
               <router-link to="/products" class="confirmation__btn confirmation__btn--secondary">
@@ -273,7 +276,8 @@
 
             <div class="summary__secure">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
               <span>Pago seguro cifrado con SSL</span>
             </div>
@@ -533,13 +537,13 @@ const placeOrder = async () => {
         const openWompi = () => {
           const checkout = new window.WidgetCheckout({
             currency: data.currency,
-            amountInCents: data.amount_in_cents,
+            amountInCents: parseInt(data.amount_in_cents, 10),
             reference: data.reference,
             publicKey: data.public_key,
             signature: { integrity: data.signature },
             redirectUrl: data.redirect_url
           });
-          
+
           checkout.open(function (result) {
             // Callback en caso de que Wompi no redirija automáticamente
             window.location.href = data.redirect_url;
@@ -547,16 +551,29 @@ const placeOrder = async () => {
         };
 
         // Cargar script dinámicamente si no existe
-        if (window.WidgetCheckout) {
-          openWompi();
-        } else {
-          const script = document.createElement('script');
-          script.src = 'https://checkout.wompi.co/widget.js';
-          script.onload = openWompi;
-          document.body.appendChild(script);
-        }
+        // Cargar script de Wompi de forma confiable
+        const cargarWompiYAbrir = () => {
+          return new Promise((resolve) => {
+            if (window.WidgetCheckout) {
+              resolve();
+            } else {
+              // Remover script anterior si existe (evita duplicados)
+              const existing = document.querySelector('script[src*="wompi"]');
+              if (existing) existing.remove();
 
+              const script = document.createElement('script');
+              script.src = 'https://checkout.wompi.co/widget.js';
+              script.onload = () => resolve();
+              script.onerror = () => resolve(); // si falla, igual continuar
+              document.body.appendChild(script);
+            }
+          });
+        };
+
+        await cargarWompiYAbrir();
+        openWompi();
         await updateCartCount();
+        placing.value = false;
         return;
       } catch (wompiError) {
         console.error('Error con Wompi:', wompiError)
@@ -583,7 +600,15 @@ const placeOrder = async () => {
 
   } catch (error) {
     console.error('Error placing order:', error)
-    orderError.value = error.response?.data?.message || 'Error al procesar el pedido. Intenta de nuevo.'
+    if (error.response?.status === 401) {
+      // Token expirado o inválido, redirigir al login
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      orderError.value = 'Tu sesión ha expirado. Redirigiendo al login...'
+      setTimeout(() => router.push('/login'), 2000)
+    } else {
+      orderError.value = error.response?.data?.message || 'Error al procesar el pedido. Intenta de nuevo.'
+    }
   } finally {
     placing.value = false
   }
@@ -625,7 +650,7 @@ const placeOrder = async () => {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
   margin: 0 0 12px 0;
 }
@@ -701,8 +726,14 @@ const placeOrder = async () => {
   transition: color 0.3s ease;
 }
 
-.stepper__item--active .stepper__label { color: #1a1a1a; font-weight: 600; }
-.stepper__item--done .stepper__label { color: #7a9e7e; }
+.stepper__item--active .stepper__label {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.stepper__item--done .stepper__label {
+  color: #7a9e7e;
+}
 
 .stepper__line {
   width: 60px;
@@ -713,7 +744,9 @@ const placeOrder = async () => {
   transition: background 0.3s ease;
 }
 
-.stepper__line--done { background: #7a9e7e; }
+.stepper__line--done {
+  background: #7a9e7e;
+}
 
 /* ── Body ── */
 .checkout__body {
@@ -740,7 +773,7 @@ const placeOrder = async () => {
   background: white;
   border-radius: 16px;
   padding: 40px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
 }
 
 .form-section__title {
@@ -773,7 +806,9 @@ const placeOrder = async () => {
   gap: 4px;
 }
 
-.required { color: #c0392b; }
+.required {
+  color: #c0392b;
+}
 
 .optional {
   font-weight: 400;
@@ -803,7 +838,9 @@ const placeOrder = async () => {
 }
 
 .form-input::placeholder,
-.form-textarea::placeholder { color: #bbb; }
+.form-textarea::placeholder {
+  color: #bbb;
+}
 
 .form-textarea {
   resize: vertical;
@@ -906,7 +943,9 @@ const placeOrder = async () => {
   background: #fff;
 }
 
-.payment-card:hover { border-color: #bbb; }
+.payment-card:hover {
+  border-color: #bbb;
+}
 
 .payment-card--selected {
   border-color: #1a1a1a;
@@ -914,7 +953,9 @@ const placeOrder = async () => {
   box-shadow: 0 0 0 1px #1a1a1a;
 }
 
-.payment-radio { display: none; }
+.payment-radio {
+  display: none;
+}
 
 .payment-card__icon {
   width: 44px;
@@ -933,7 +974,9 @@ const placeOrder = async () => {
   color: white;
 }
 
-.payment-card__info { flex: 1; }
+.payment-card__info {
+  flex: 1;
+}
 
 .payment-card__name {
   font-family: 'Inter', sans-serif;
@@ -994,7 +1037,9 @@ const placeOrder = async () => {
   text-decoration: underline;
 }
 
-.review-block__edit:hover { color: #1a1a1a; }
+.review-block__edit:hover {
+  color: #1a1a1a;
+}
 
 .review-block__text {
   font-size: 15px;
@@ -1023,7 +1068,9 @@ const placeOrder = async () => {
   border-radius: 8px;
 }
 
-.review-item__info { flex: 1; }
+.review-item__info {
+  flex: 1;
+}
 
 .review-item__name {
   font-size: 15px;
@@ -1060,12 +1107,24 @@ const placeOrder = async () => {
   animation: confirmPop 0.5s ease;
 }
 
-.confirmation__icon--error { color: #c44a2c; }
+.confirmation__icon--error {
+  color: #c44a2c;
+}
 
 @keyframes confirmPop {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .confirmation__title {
@@ -1152,7 +1211,7 @@ const placeOrder = async () => {
   background: white;
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .summary__title {
@@ -1205,7 +1264,9 @@ const placeOrder = async () => {
   justify-content: center;
 }
 
-.summary__item-info { flex: 1; }
+.summary__item-info {
+  flex: 1;
+}
 
 .summary__item-name {
   font-size: 14px;
@@ -1278,7 +1339,9 @@ const placeOrder = async () => {
   color: #aaa;
 }
 
-.summary__secure svg { color: #7a9e7e; }
+.summary__secure svg {
+  color: #7a9e7e;
+}
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
@@ -1287,23 +1350,46 @@ const placeOrder = async () => {
     gap: 32px;
   }
 
-  .checkout__body { padding: 32px 20px 60px; }
-  .checkout__hero { padding: 60px 20px 40px; }
+  .checkout__body {
+    padding: 32px 20px 60px;
+  }
+
+  .checkout__hero {
+    padding: 60px 20px 40px;
+  }
 
   .stepper-wrap {
     padding: 20px 16px;
     overflow-x: auto;
   }
 
-  .stepper__line { width: 30px; margin: 0 6px; }
-  .stepper__label { font-size: 11px; }
+  .stepper__line {
+    width: 30px;
+    margin: 0 6px;
+  }
 
-  .form-section { padding: 28px 20px; }
-  .form-row { grid-template-columns: 1fr; }
-  .form-actions { flex-direction: column-reverse; }
+  .stepper__label {
+    font-size: 11px;
+  }
 
-  .checkout__sidebar { position: static; }
+  .form-section {
+    padding: 28px 20px;
+  }
 
-  .confirmation { padding: 40px 20px; }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .checkout__sidebar {
+    position: static;
+  }
+
+  .confirmation {
+    padding: 40px 20px;
+  }
 }
 </style>

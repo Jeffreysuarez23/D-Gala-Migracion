@@ -303,12 +303,29 @@ export default {
           // Errores de validación de Laravel (422)
           else if (error.response.status === 422 && error.response.data.errors) {
             const errors = error.response.data.errors
-            this.errorMsg = Object.values(errors).flat().join(' ')
+            let rawMsg = Object.values(errors).flat().join(' ')
+            
+            // Traducciones comunes de Laravel
+            const tr = {
+              'The email has already been taken.': 'Este correo ya está registrado.',
+              'The email must be a valid email address.': 'El correo debe ser válido.',
+              'The password field confirmation does not match.': 'Las contraseñas no coinciden.',
+              'The password confirmation does not match.': 'Las contraseñas no coinciden.',
+              'The password must be at least 6 characters.': 'La contraseña debe tener al menos 6 caracteres.',
+              'The login field is required.': 'El campo de email/nombre es obligatorio.'
+            }
+            Object.keys(tr).forEach(en => {
+              rawMsg = rawMsg.replace(new RegExp(en, 'gi'), tr[en])
+            })
+            
+            this.errorMsg = rawMsg
           } else {
-            this.errorMsg = error.response.data.message || 'Error en el servidor.'
+            let msg = error.response.data.message || 'Error en el servidor.'
+            if (msg === 'Too Many Attempts.') msg = 'Demasiados intentos. Por favor espera.'
+            this.errorMsg = msg
           }
         } else {
-          this.errorMsg = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.'
+          this.errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión.'
         }
       } finally {
         this.loading = false

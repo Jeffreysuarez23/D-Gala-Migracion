@@ -14,11 +14,12 @@ class Direccion extends Model
         'usuario_id',
         'nombre_recibe',
         'telefono',
+        'etiqueta',
         'departamento',
         'ciudad',
         'direccion',
         'referencia',
         'codigo_postal',
-        'principal'
+        'es_principal'
     ];
 }

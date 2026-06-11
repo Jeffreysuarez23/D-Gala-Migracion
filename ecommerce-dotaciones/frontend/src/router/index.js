@@ -10,6 +10,7 @@ import ForgotPassword from '../views/ForgotPassword.vue'
 import ResetPassword from '../views/ResetPassword.vue'
 import MyAccount from '../views/MyAccount.vue'
 import About from '../views/About.vue'
+import MisPedidos from '../views/MisPedidos.vue'
 
 const routes = [
   {
@@ -78,6 +79,11 @@ const routes = [
     path: '/my-account',
     name: 'MyAccount',
     component: MyAccount,
+  },
+  {
+    path: '/mis-pedidos',
+    name: 'MisPedidos',
+    component: MisPedidos,
   }
 ]
 

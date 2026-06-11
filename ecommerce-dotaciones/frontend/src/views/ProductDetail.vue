@@ -317,21 +317,16 @@ export default {
         }
         const colors = Object.values(colorsMap)
         
-        // Extract sizes from lona tallas or raw variants, deduplicating them
+        // Extract sizes from raw variants, using variante_producto stock ALWAYS
         const sizesMapUnique = {}
         if (data.variantes) {
           data.variantes.forEach(v => {
             const vColor = (v.color && v.color !== 'Defecto') ? v.color : (v.lona ? v.lona.color : v.color)
             const vColorUpper = vColor ? vColor.toUpperCase() : 'DEFAULT'
-            if (v.lona && v.lona.tallas && v.lona.tallas.length > 0) {
-              v.lona.tallas.forEach(t => {
-                const key = `${vColorUpper}-${t.talla}`
-                if (!sizesMapUnique[key]) {
-                  sizesMapUnique[key] = { label: t.talla, color: vColor, stock: t.cantidad, inStock: t.cantidad > 0 }
-                }
-              })
-            } else if (v.talla) {
+            
+            if (v.talla) {
               const key = `${vColorUpper}-${v.talla}`
+              // Siempre tomamos v.stock (de variante_producto) como pidió el usuario
               if (!sizesMapUnique[key]) {
                 sizesMapUnique[key] = { label: v.talla, color: vColor, stock: v.stock, inStock: v.stock > 0 }
               }

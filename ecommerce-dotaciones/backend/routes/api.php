@@ -22,6 +22,7 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\ContactoController;
 use App\Http\Controllers\Api\UsuarioController;
+use App\Http\Controllers\Api\MercadoPagoController;
 
 // PRODUCTOS
 Route::get('/productos', [ProductController::class, 'index']);
@@ -83,7 +84,7 @@ Route::get('/historial-lonas', [HistorialLonaController::class, 'index']);
 Route::post('/historial-lonas', [HistorialLonaController::class, 'store']);
 Route::get('/historial-lonas/{id}', [HistorialLonaController::class, 'show']);
 
-// CARRITO
+// CARRITO (público: permite usuarios no autenticados con session_id)
 Route::post('/carritos', [CarritoController::class, 'store']);
 Route::post('/carritos/{id}/items', [CarritoController::class, 'agregarItem']);
 Route::get('/carritos/{id}', [CarritoController::class, 'show']);
@@ -91,14 +92,40 @@ Route::put('/carrito-items/{id}', [CarritoController::class, 'updateItem']);
 Route::delete('/carrito-items/{id}', [CarritoController::class, 'destroyItem']);
 Route::delete('/carritos/{id}/vaciar', [CarritoController::class, 'vaciar']);
 
-// ORDENES
-Route::post('/ordenes/crear', [OrdenController::class, 'crearDesdeCarrito']);
-Route::get('/ordenes', [OrdenController::class, 'index']);
-Route::get('/ordenes/{id}', [OrdenController::class, 'show']);
-Route::put('/ordenes/{id}/estado', [OrdenController::class, 'cambiarEstado']);
-Route::put('/ordenes/{id}/cancelar', [OrdenController::class, 'cancelar']);
+// ─── RUTAS PROTEGIDAS (requieren autenticación) ───
+Route::middleware('auth:sanctum')->group(function () {
 
-// PAGOS
+    // ORDENES
+    Route::post('/ordenes/crear', [OrdenController::class, 'crearDesdeCarrito']);
+    Route::get('/mis-pedidos', [OrdenController::class, 'misPedidos']);
+    Route::get('/ordenes/{id}', [OrdenController::class, 'show']);
+    Route::put('/ordenes/{id}/cancelar', [OrdenController::class, 'cancelar']);
+
+    // DIRECCIONES (del usuario autenticado)
+    Route::get('/direcciones', [DireccionController::class, 'index']);
+    Route::post('/direcciones', [DireccionController::class, 'store']);
+    Route::get('/direcciones/{id}', [DireccionController::class, 'show']);
+    Route::put('/direcciones/{id}', [DireccionController::class, 'update']);
+    Route::delete('/direcciones/{id}', [DireccionController::class, 'destroy']);
+
+    // Rutas de Wompi
+    Route::post('/wompi/generar-firma', [App\Http\Controllers\Api\WompiController::class, 'generarFirma']);
+
+    // PERFIL
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::delete('/profile', [AuthController::class, 'deleteProfile']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+// Rutas públicas de Wompi
+Route::post('/wompi/webhook', [App\Http\Controllers\Api\WompiController::class, 'webhook']);
+
+// ORDENES (admin)
+Route::get('/ordenes', [OrdenController::class, 'index']);
+Route::put('/ordenes/{id}/estado', [OrdenController::class, 'cambiarEstado']);
+
+// PAGOS (admin)
 Route::get('/pagos', [PagoController::class, 'index']);
 Route::get('/pagos/{id}', [PagoController::class, 'show']);
 Route::post('/pagos', [PagoController::class, 'registrar']);
@@ -113,24 +140,13 @@ Route::get('/envios/{id}', [EnvioController::class, 'show']);
 Route::put('/envios/{id}/estado', [EnvioController::class, 'cambiarEstado']);
 Route::get('/tracking/{guia}', [EnvioController::class, 'tracking']);
 
-// DIRECCIONES
-Route::get('/direcciones', [DireccionController::class, 'index']);
-Route::post('/direcciones', [DireccionController::class, 'store']);
-Route::get('/direcciones/{id}', [DireccionController::class, 'show']);
-Route::put('/direcciones/{id}', [DireccionController::class, 'update']);
-Route::delete('/direcciones/{id}', [DireccionController::class, 'destroy']);
-
-// AUTENTICACIÓN
+// AUTENTICACIÓN (públicas)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('/verify-email/{id}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
 Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
-Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
-Route::middleware('auth:sanctum')->put('/profile', [AuthController::class, 'updateProfile']);
-Route::middleware('auth:sanctum')->delete('/profile', [AuthController::class, 'deleteProfile']);
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
 // DEVOLUCIONES
 Route::post('/devoluciones', [DevolucionController::class, 'store']);
@@ -157,6 +173,12 @@ Route::post('/usuarios', [UsuarioController::class, 'store']);
 Route::put('/usuarios/{id}/rol', [UsuarioController::class, 'updateRole']);
 Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
 Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+
+// MERCADO PAGO WEBHOOK (público - llamado por Mercado Pago)
+Route::post('/mercadopago/webhook', [MercadoPagoController::class, 'webhook']);
+
+// MERCADO PAGO RETORNO (público - redirección del usuario)
+Route::get('/mercadopago/retorno', [MercadoPagoController::class, 'retorno']);
 
 // TEST
 Route::get('/test', function () {

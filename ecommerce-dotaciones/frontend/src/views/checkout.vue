@@ -14,7 +14,7 @@
     </div>
 
     <!-- ─── STEPPER ── -->
-    <div class="stepper-wrap">
+    <div class="stepper-wrap" v-if="currentStep < 3">
       <div class="stepper">
         <div
           v-for="(s, i) in steps"
@@ -39,7 +39,7 @@
 
     <!-- ─── BODY ── -->
     <div class="checkout__body">
-      <div class="checkout__layout">
+      <div class="checkout__layout" :class="{ 'checkout__layout--centered': currentStep === 3 }">
 
         <!-- LEFT: Forms -->
         <div class="checkout__forms">
@@ -50,12 +50,12 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Nombre <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="shipping.firstName" placeholder="John" />
+                <label class="form-label">Nombre de quien recibe <span class="required">*</span></label>
+                <input type="text" class="form-input" v-model="shipping.nombre_recibe" placeholder="John Doe" />
               </div>
               <div class="form-group">
-                <label class="form-label">Apellido <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="shipping.lastName" placeholder="Doe" />
+                <label class="form-label">Teléfono</label>
+                <input type="tel" class="form-input" v-model="shipping.telefono" placeholder="+57 300 000 0000" />
               </div>
             </div>
 
@@ -78,18 +78,20 @@
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Código Postal</label>
-                <input type="text" class="form-input" v-model="shipping.codigoPostal" placeholder="080001" />
+                <input type="text" class="form-input" v-model="shipping.codigo_postal" placeholder="080001" />
               </div>
               <div class="form-group">
-                <label class="form-label">Teléfono</label>
-                <input type="tel" class="form-input" v-model="shipping.phone" placeholder="+57 300 000 0000" />
+                <label class="form-label">Referencia <span class="optional">(opcional)</span></label>
+                <input type="text" class="form-input" v-model="shipping.referencia" placeholder="Apto 302, Torre B" />
               </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Notas del pedido <span class="optional">(opcional)</span></label>
-              <textarea class="form-textarea" v-model="shipping.notas" rows="3" placeholder="Número de apartamento, instrucciones de entrega..."></textarea>
+              <textarea class="form-textarea" v-model="notas_cliente" rows="3" placeholder="Instrucciones de entrega..."></textarea>
             </div>
+
+            <div v-if="shippingError" class="form-error">{{ shippingError }}</div>
 
             <button class="next-btn" @click="nextStep">
               Continuar al Pago
@@ -124,38 +126,6 @@
               </label>
             </div>
 
-            <!-- Card details for credit card -->
-            <div v-if="payment.method === 'card'" class="card-details">
-              <div class="form-group">
-                <label class="form-label">Número de Tarjeta <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="payment.cardNumber" placeholder="4242 4242 4242 4242" maxlength="19" />
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Vencimiento <span class="required">*</span></label>
-                  <input type="text" class="form-input" v-model="payment.expiry" placeholder="MM/YY" maxlength="5" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">CVV <span class="required">*</span></label>
-                  <input type="text" class="form-input" v-model="payment.cvv" placeholder="123" maxlength="4" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Nombre del Titular <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="payment.cardholderName" placeholder="JOHN DOE" />
-              </div>
-            </div>
-
-            <!-- Nequi reference -->
-            <div v-if="payment.method === 'nequi'" class="card-details">
-              <div class="form-group">
-                <label class="form-label">Número de Teléfono Nequi <span class="required">*</span></label>
-                <input type="tel" class="form-input" v-model="payment.nequiPhone" placeholder="+57 300 000 0000" />
-              </div>
-            </div>
-
             <div class="form-actions">
               <button class="back-btn" @click="prevStep">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -183,9 +153,9 @@
                 <button class="review-block__edit" @click="currentStep = 0">Editar</button>
               </div>
               <p class="review-block__text">
-                {{ shipping.firstName }} {{ shipping.lastName }}<br />
+                {{ shipping.nombre_recibe }}<br />
                 {{ shipping.direccion }}<br />
-                {{ shipping.ciudad }}, {{ shipping.departamento }} {{ shipping.codigoPostal }}
+                {{ shipping.ciudad }}, {{ shipping.departamento }} {{ shipping.codigo_postal }}
               </p>
             </div>
 
@@ -210,10 +180,12 @@
                     <p class="review-item__name">{{ item.name }}</p>
                     <p class="review-item__meta">Cant: {{ item.quantity }}</p>
                   </div>
-                  <p class="review-item__price">${{ (item.price * item.quantity).toFixed(2) }}</p>
+                  <p class="review-item__price">{{ formatPrice(item.price * item.quantity) }}</p>
                 </div>
               </div>
             </div>
+
+            <div v-if="orderError" class="form-error">{{ orderError }}</div>
 
             <div class="form-actions">
               <button class="back-btn" @click="prevStep">
@@ -234,24 +206,32 @@
 
           <!-- STEP 3: Confirmation -->
           <div v-if="currentStep === 3" class="form-section confirmation">
-            <div class="confirmation__icon">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="confirmation__icon" :class="{ 'confirmation__icon--error': confirmStatus === 'failure' }">
+              <svg v-if="confirmStatus !== 'failure'" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="16 8 10 16 7 13"/>
               </svg>
-            </div>
-            <h2 class="confirmation__title">¡Pedido Confirmado!</h2>
-            <p class="confirmation__subtitle">Gracias por tu compra. Tu pedido se ha realizado con éxito.</p>
-            <p class="confirmation__order-number">Pedido #ORD-{{ orderNumber }}</p>
-            <p class="confirmation__message">
-              Se ha enviado un correo de confirmación a tu bandeja de entrada. Puedes hacer un seguimiento del estado de tu pedido desde tu cuenta.
-            </p>
-            <router-link to="/products" class="confirmation__btn">
-              Seguir Comprando
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              <svg v-else width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
-            </router-link>
+            </div>
+            <h2 class="confirmation__title">{{ confirmTitle }}</h2>
+            <p class="confirmation__subtitle">{{ confirmSubtitle }}</p>
+            <p v-if="orderNumber" class="confirmation__order-number">Pedido #{{ orderNumber }}</p>
+            <p class="confirmation__message">{{ confirmMessage }}</p>
+            <div class="confirmation__btns">
+              <router-link to="/mis-pedidos" class="confirmation__btn" v-if="confirmStatus !== 'failure'">
+                Ver Mis Pedidos
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </router-link>
+              <router-link to="/products" class="confirmation__btn confirmation__btn--secondary">
+                Seguir Comprando
+              </router-link>
+            </div>
           </div>
 
         </div>
@@ -271,7 +251,7 @@
                   <p class="summary__item-name">{{ item.name }}</p>
                   <p class="summary__item-category">{{ item.category }}</p>
                 </div>
-                <p class="summary__item-price">${{ (item.price * item.quantity).toFixed(2) }}</p>
+                <p class="summary__item-price">{{ formatPrice(item.price * item.quantity) }}</p>
               </div>
             </div>
 
@@ -279,16 +259,16 @@
 
             <div class="summary__row">
               <span>Subtotal</span>
-              <span>${{ subtotal.toFixed(2) }}</span>
+              <span>{{ formatPrice(subtotal) }}</span>
             </div>
             <div class="summary__row">
               <span>Envío</span>
-              <span v-if="subtotal > 200" class="shipping--free">Gratis</span>
-              <span v-else>$12.00</span>
+              <span v-if="subtotal > 200000" class="shipping--free">Gratis</span>
+              <span v-else>{{ formatPrice(15000) }}</span>
             </div>
             <div class="summary__row summary__row--total">
               <span>Total</span>
-              <span class="total-amount">${{ total.toFixed(2) }}</span>
+              <span class="total-amount">{{ formatPrice(total) }}</span>
             </div>
 
             <div class="summary__secure">
@@ -307,76 +287,136 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import axios from 'axios'
+import { updateCartCount } from '../cartState'
+
+const router = useRouter()
+const route = useRoute()
+
+const API = 'http://localhost:8000/api'
 
 const steps = ['Envío', 'Pago', 'Revisión']
 const currentStep = ref(0)
 const placing = ref(false)
 const orderNumber = ref('')
+const orderError = ref('')
+const shippingError = ref('')
+const confirmStatus = ref('success')
 
-// Sample cart data - would come from store in production
-const cartItems = ref([
-  {
-    id: 1,
-    name: 'Blazer Oversize de Lino',
-    category: 'ABRIGOS',
-    price: 189,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=400&q=80'
-  },
-  {
-    id: 2,
-    name: 'Suéter de Merino Acanalado',
-    category: 'TEJIDOS',
-    price: 134,
-    quantity: 2,
-    image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&q=80'
+// Cart data from API
+const cartItems = ref([])
+
+const fetchCart = async () => {
+  const cartId = localStorage.getItem('carrito_id')
+  if (!cartId) return
+
+  try {
+    const { data } = await axios.get(`${API}/carritos/${cartId}`)
+    if (data && data.items && data.items.length > 0) {
+      cartItems.value = data.items.map(item => {
+        const v = item.variante
+        const p = v.producto || {}
+
+        let extra = parseFloat(v.precio_extra) || 0
+        let base = parseFloat(p.precio_minorista || 0) + extra
+        let descuentoPorcentaje = parseInt(v.descuento) || 0
+        let precioFinal = base * (1 - descuentoPorcentaje / 100)
+
+        let image = 'https://via.placeholder.com/400'
+        if (p.imagenes && p.imagenes.length > 0) {
+          const cover = p.imagenes.find(img => img.es_portada === 1)
+          image = cover ? cover.url : p.imagenes[0].url
+        }
+
+        return {
+          id: item.id,
+          variante_id: item.variante_id,
+          name: `${p.nombre || 'Producto'} (${v.color} - ${v.talla})`,
+          category: p.categoria ? p.categoria.nombre : 'General',
+          price: precioFinal,
+          quantity: item.cantidad,
+          image: image
+        }
+      })
+    } else {
+      // Cart empty - redirect to cart
+      router.push('/cart')
+    }
+  } catch (error) {
+    console.error('Error fetching cart:', error)
   }
-])
+}
+
+onMounted(() => {
+  // Check if user is logged in
+  if (!localStorage.getItem('auth_token')) {
+    router.push('/login')
+    return
+  }
+
+  // Check if returning from Wompi
+  const status = route.query.id || route.query.env
+  if (route.query.status === 'wompi_return') {
+    handleWompiReturn()
+    return
+  }
+
+  fetchCart()
+})
+
+const handleWompiReturn = () => {
+  const ordenId = route.query.orden_id
+  currentStep.value = 3
+
+  // We show a generic pending or success view since the webhook confirms it definitively
+  confirmStatus.value = 'success'
+  orderNumber.value = ordenId ? `ORD-${ordenId}` : ''
+}
 
 const subtotal = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0))
-const shippingCost = computed(() => subtotal.value > 200 ? 0 : 12)
+const shippingCost = computed(() => subtotal.value > 200000 ? 0 : 15000)
 const total = computed(() => subtotal.value + shippingCost.value)
 
-// Shipping form (based on `direcciones` table)
+const formatPrice = (value) => {
+  if (value === undefined || value === null) return '$ 0'
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(value)
+}
+
+// Shipping form
 const shipping = ref({
-  firstName: '',
-  lastName: '',
+  nombre_recibe: '',
+  telefono: '',
   direccion: '',
   departamento: '',
   ciudad: '',
-  codigoPostal: '',
-  phone: '',
-  notas: ''
+  codigo_postal: '',
+  referencia: ''
 })
 
-// Payment form (based on `pagos` table methods)
+const notas_cliente = ref('')
+
+// Payment
 const payment = ref({
-  method: 'card',
-  cardNumber: '',
-  expiry: '',
-  cvv: '',
-  cardholderName: '',
-  nequiPhone: ''
+  method: 'wompi'
 })
 
 const paymentMethods = [
   {
-    id: 'card',
-    name: 'Tarjeta de Crédito / Débito',
-    desc: 'Visa, Mastercard, Amex',
+    id: 'wompi',
+    name: 'Pago en Línea (Wompi Bancolombia)',
+    desc: 'Nequi, PSE, Tarjetas, Corresponsal, Bancolombia',
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
   },
   {
-    id: 'nequi',
-    name: 'Nequi',
-    desc: 'Paga con tu cuenta Nequi',
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>'
-  },
-  {
-    id: 'transfer',
+    id: 'transferencia',
     name: 'Transferencia Bancaria',
-    desc: 'Transferencia bancaria directa',
+    desc: 'Transferencia directa (confirmación manual)',
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
   }
 ]
@@ -386,7 +426,47 @@ const selectedPaymentName = computed(() => {
   return m ? m.name : ''
 })
 
+const confirmTitle = computed(() => {
+  if (confirmStatus.value === 'success') return '¡Pedido Confirmado!'
+  if (confirmStatus.value === 'pending') return 'Pago Pendiente'
+  return 'Error en el Pago'
+})
+
+const confirmSubtitle = computed(() => {
+  if (confirmStatus.value === 'success') return 'Gracias por tu compra. Tu pedido se ha realizado con éxito.'
+  if (confirmStatus.value === 'pending') return 'Tu pago está siendo procesado. Te notificaremos cuando se confirme.'
+  return 'Hubo un problema con tu pago. Por favor, intenta de nuevo.'
+})
+
+const confirmMessage = computed(() => {
+  if (confirmStatus.value === 'success') return 'Se ha enviado un correo de confirmación a tu bandeja de entrada. Puedes hacer seguimiento desde Mis Pedidos.'
+  if (confirmStatus.value === 'pending') return 'Una vez confirmado el pago, recibirás un correo de confirmación.'
+  return 'Puedes intentar de nuevo o contactarnos si el problema persiste.'
+})
+
+const validateShipping = () => {
+  shippingError.value = ''
+  if (!shipping.value.nombre_recibe.trim()) {
+    shippingError.value = 'El nombre de quien recibe es obligatorio'
+    return false
+  }
+  if (!shipping.value.direccion.trim()) {
+    shippingError.value = 'La dirección es obligatoria'
+    return false
+  }
+  if (!shipping.value.departamento.trim()) {
+    shippingError.value = 'El departamento es obligatorio'
+    return false
+  }
+  if (!shipping.value.ciudad.trim()) {
+    shippingError.value = 'La ciudad es obligatoria'
+    return false
+  }
+  return true
+}
+
 const nextStep = () => {
+  if (currentStep.value === 0 && !validateShipping()) return
   if (currentStep.value < 2) currentStep.value++
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -396,14 +476,117 @@ const prevStep = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const placeOrder = () => {
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('auth_token')
+  return { headers: { Authorization: `Bearer ${token}` } }
+}
+
+const placeOrder = async () => {
   placing.value = true
-  setTimeout(() => {
+  orderError.value = ''
+
+  try {
+    const token = localStorage.getItem('auth_token')
+    const user = JSON.parse(localStorage.getItem('auth_user') || '{}')
+    const cartId = localStorage.getItem('carrito_id')
+
+    if (!token || !user.id || !cartId) {
+      orderError.value = 'Debes iniciar sesión para continuar'
+      placing.value = false
+      return
+    }
+
+    // 1. Crear dirección
+    const dirRes = await axios.post(`${API}/direcciones`, {
+      usuario_id: user.id,
+      nombre_recibe: shipping.value.nombre_recibe,
+      telefono: shipping.value.telefono,
+      departamento: shipping.value.departamento,
+      ciudad: shipping.value.ciudad,
+      direccion: shipping.value.direccion,
+      referencia: shipping.value.referencia,
+      codigo_postal: shipping.value.codigo_postal,
+    }, getAuthHeaders())
+
+    const direccionId = dirRes.data.data.id
+
+    // 2. Crear orden desde carrito
+    const ordenRes = await axios.post(`${API}/ordenes/crear`, {
+      carrito_id: parseInt(cartId),
+      direccion_id: direccionId,
+      notas_cliente: notas_cliente.value,
+    }, getAuthHeaders())
+
+    const orden = ordenRes.data.data
+    orderNumber.value = orden.numero
+
+    // 3. Según método de pago
+    if (payment.value.method === 'wompi') {
+      try {
+        const wompiRes = await axios.post(`${API}/wompi/generar-firma`, {
+          orden_id: orden.id
+        }, getAuthHeaders())
+
+        const data = wompiRes.data;
+
+        // Función para abrir el Widget
+        const openWompi = () => {
+          const checkout = new window.WidgetCheckout({
+            currency: data.currency,
+            amountInCents: data.amount_in_cents,
+            reference: data.reference,
+            publicKey: data.public_key,
+            signature: { integrity: data.signature },
+            redirectUrl: data.redirect_url
+          });
+          
+          checkout.open(function (result) {
+            // Callback en caso de que Wompi no redirija automáticamente
+            window.location.href = data.redirect_url;
+          });
+        };
+
+        // Cargar script dinámicamente si no existe
+        if (window.WidgetCheckout) {
+          openWompi();
+        } else {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.wompi.co/widget.js';
+          script.onload = openWompi;
+          document.body.appendChild(script);
+        }
+
+        await updateCartCount();
+        return;
+      } catch (wompiError) {
+        console.error('Error con Wompi:', wompiError)
+        await updateCartCount()
+        confirmStatus.value = 'pending'
+        currentStep.value = 3
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    } else {
+      // Transferencia bancaria - orden queda pendiente
+      // Registrar pago manual pendiente
+      await axios.post(`${API}/pagos`, {
+        orden_id: orden.id,
+        metodo: 'transferencia',
+        referencia_pasarela: null,
+        monto: orden.total
+      })
+
+      await updateCartCount()
+      confirmStatus.value = 'pending'
+      currentStep.value = 3
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+  } catch (error) {
+    console.error('Error placing order:', error)
+    orderError.value = error.response?.data?.message || 'Error al procesar el pedido. Intenta de nuevo.'
+  } finally {
     placing.value = false
-    orderNumber.value = Math.random().toString(36).substring(2, 10).toUpperCase()
-    currentStep.value = 3
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, 2000)
+  }
 }
 </script>
 
@@ -518,14 +701,8 @@ const placeOrder = () => {
   transition: color 0.3s ease;
 }
 
-.stepper__item--active .stepper__label {
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-.stepper__item--done .stepper__label {
-  color: #7a9e7e;
-}
+.stepper__item--active .stepper__label { color: #1a1a1a; font-weight: 600; }
+.stepper__item--done .stepper__label { color: #7a9e7e; }
 
 .stepper__line {
   width: 60px;
@@ -536,9 +713,7 @@ const placeOrder = () => {
   transition: background 0.3s ease;
 }
 
-.stepper__line--done {
-  background: #7a9e7e;
-}
+.stepper__line--done { background: #7a9e7e; }
 
 /* ── Body ── */
 .checkout__body {
@@ -552,6 +727,12 @@ const placeOrder = () => {
   grid-template-columns: 1fr 400px;
   gap: 60px;
   align-items: start;
+  transition: all 0.3s ease;
+}
+
+.checkout__layout--centered {
+  grid-template-columns: minmax(auto, 800px);
+  justify-content: center;
 }
 
 /* ── Form Section ── */
@@ -622,14 +803,23 @@ const placeOrder = () => {
 }
 
 .form-input::placeholder,
-.form-textarea::placeholder {
-  color: #bbb;
-}
+.form-textarea::placeholder { color: #bbb; }
 
 .form-textarea {
   resize: vertical;
   min-height: 80px;
   line-height: 1.6;
+}
+
+.form-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  margin-bottom: 16px;
 }
 
 /* ── Buttons ── */
@@ -716,9 +906,7 @@ const placeOrder = () => {
   background: #fff;
 }
 
-.payment-card:hover {
-  border-color: #bbb;
-}
+.payment-card:hover { border-color: #bbb; }
 
 .payment-card--selected {
   border-color: #1a1a1a;
@@ -726,9 +914,7 @@ const placeOrder = () => {
   box-shadow: 0 0 0 1px #1a1a1a;
 }
 
-.payment-radio {
-  display: none;
-}
+.payment-radio { display: none; }
 
 .payment-card__icon {
   width: 44px;
@@ -747,9 +933,7 @@ const placeOrder = () => {
   color: white;
 }
 
-.payment-card__info {
-  flex: 1;
-}
+.payment-card__info { flex: 1; }
 
 .payment-card__name {
   font-family: 'Inter', sans-serif;
@@ -773,17 +957,6 @@ const placeOrder = () => {
   align-items: center;
   justify-content: center;
   color: #7a9e7e;
-}
-
-.card-details {
-  background: #faf8f4;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 8px;
-}
-
-.card-details .form-group:last-child {
-  margin-bottom: 0;
 }
 
 /* ── Review ── */
@@ -821,9 +994,7 @@ const placeOrder = () => {
   text-decoration: underline;
 }
 
-.review-block__edit:hover {
-  color: #1a1a1a;
-}
+.review-block__edit:hover { color: #1a1a1a; }
 
 .review-block__text {
   font-size: 15px;
@@ -852,9 +1023,7 @@ const placeOrder = () => {
   border-radius: 8px;
 }
 
-.review-item__info {
-  flex: 1;
-}
+.review-item__info { flex: 1; }
 
 .review-item__name {
   font-size: 15px;
@@ -890,6 +1059,8 @@ const placeOrder = () => {
   margin-bottom: 24px;
   animation: confirmPop 0.5s ease;
 }
+
+.confirmation__icon--error { color: #c44a2c; }
 
 @keyframes confirmPop {
   0% { transform: scale(0.6); opacity: 0; }
@@ -931,6 +1102,13 @@ const placeOrder = () => {
   margin: 0 0 32px 0;
 }
 
+.confirmation__btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
 .confirmation__btn {
   display: inline-flex;
   align-items: center;
@@ -949,6 +1127,18 @@ const placeOrder = () => {
 .confirmation__btn:hover {
   background: #6b5f4e;
   gap: 14px;
+}
+
+.confirmation__btn--secondary {
+  background: transparent;
+  color: #6b5f4e;
+  border: 1px solid #e0d8cc;
+}
+
+.confirmation__btn--secondary:hover {
+  background: #faf8f4;
+  border-color: #1a1a1a;
+  color: #1a1a1a;
 }
 
 /* ── Sidebar: Summary ── */
@@ -1015,9 +1205,7 @@ const placeOrder = () => {
   justify-content: center;
 }
 
-.summary__item-info {
-  flex: 1;
-}
+.summary__item-info { flex: 1; }
 
 .summary__item-name {
   font-size: 14px;
@@ -1090,9 +1278,7 @@ const placeOrder = () => {
   color: #aaa;
 }
 
-.summary__secure svg {
-  color: #7a9e7e;
-}
+.summary__secure svg { color: #7a9e7e; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
@@ -1101,46 +1287,23 @@ const placeOrder = () => {
     gap: 32px;
   }
 
-  .checkout__body {
-    padding: 32px 20px 60px;
-  }
-
-  .checkout__hero {
-    padding: 60px 20px 40px;
-  }
+  .checkout__body { padding: 32px 20px 60px; }
+  .checkout__hero { padding: 60px 20px 40px; }
 
   .stepper-wrap {
     padding: 20px 16px;
     overflow-x: auto;
   }
 
-  .stepper__line {
-    width: 30px;
-    margin: 0 6px;
-  }
+  .stepper__line { width: 30px; margin: 0 6px; }
+  .stepper__label { font-size: 11px; }
 
-  .stepper__label {
-    font-size: 11px;
-  }
+  .form-section { padding: 28px 20px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-actions { flex-direction: column-reverse; }
 
-  .form-section {
-    padding: 28px 20px;
-  }
+  .checkout__sidebar { position: static; }
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions {
-    flex-direction: column-reverse;
-  }
-
-  .checkout__sidebar {
-    position: static;
-  }
-
-  .confirmation {
-    padding: 40px 20px;
-  }
+  .confirmation { padding: 40px 20px; }
 }
 </style>

@@ -18,6 +18,17 @@ class DireccionController extends Controller
     // Crear dirección
     public function store(Request $request)
     {
+        $request->validate([
+            'usuario_id' => 'required|exists:usuarios,id',
+            'nombre_recibe' => 'required|string|max:150',
+            'telefono' => 'nullable|string|max:20',
+            'departamento' => 'required|string|max:80',
+            'ciudad' => 'required|string|max:80',
+            'direccion' => 'required|string|max:250',
+            'referencia' => 'nullable|string|max:250',
+            'codigo_postal' => 'nullable|string|max:10',
+        ]);
+
         $direccion = Direccion::create([
             'usuario_id' => $request->usuario_id,
             'nombre_recibe' => $request->nombre_recibe,
@@ -27,7 +38,7 @@ class DireccionController extends Controller
             'direccion' => $request->direccion,
             'referencia' => $request->referencia,
             'codigo_postal' => $request->codigo_postal,
-            'principal' => $request->principal ?? 0
+            'es_principal' => $request->es_principal ?? 0
         ]);
 
         return response()->json([

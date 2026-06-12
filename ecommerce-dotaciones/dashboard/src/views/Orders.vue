@@ -27,6 +27,9 @@
       </button>
     </section>
 
+    <!-- GLOBAL ALERTS -->
+    <div v-if="errorMsg && !showDrawer" class="alert alert--error" style="margin-top: 24px; margin-bottom: 0;">{{ errorMsg }}</div>
+
     <!-- ORDERS TABLE -->
     <section class="card table-card">
       <div class="table-wrap">
@@ -47,11 +50,11 @@
             <tr v-for="order in filteredOrders" :key="order.id">
               <td style="font-weight: 700;">{{ order.numero }}</td>
               <td>{{ formatDateString(order.creado_en) }}</td>
-              <td>{{ getUserName(order.usuario_id) }}</td>
+              <td>{{ getUserName(order) }}</td>
               <td>
                 <span class="badge badge--info">{{ order.tipo_precio }}</span>
               </td>
-              <td>{{ getOrderItemsCount(order.id) }} uds</td>
+              <td>{{ getOrderItemsCount(order) }} uds</td>
               <td style="font-weight: 600;">${{ formatMoney(order.total) }}</td>
               <td>
                 <span :class="['badge', getStatusBadgeClass(order.estado)]">
@@ -79,7 +82,10 @@
     <div class="drawer" :class="{ active: showDrawer }">
       <div class="drawer__header" v-if="selectedOrder">
         <div>
-          <span class="badge badge--info" style="margin-bottom: 6px;">{{ selectedOrder.numero }}</span>
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+            <span class="badge badge--info">{{ selectedOrder.numero }}</span>
+            <span :class="['badge', getStatusBadgeClass(selectedOrder.estado)]" style="text-transform: capitalize;">{{ selectedOrder.estado }}</span>
+          </div>
           <h2 class="title-serif">Modificar Pedido</h2>
         </div>
         <button class="drawer__close" @click="showDrawer = false">
@@ -92,12 +98,21 @@
 
       <div class="drawer__body" v-if="selectedOrder">
         
+        <!-- DRAWER ALERTS -->
+        <div v-if="drawerErrorMsg" class="alert alert--error" style="margin-bottom: 16px;">
+          {{ drawerErrorMsg }}
+        </div>
+        <div v-if="drawerSuccessMsg" class="alert alert--success" style="margin-bottom: 16px;">
+          {{ drawerSuccessMsg }}
+        </div>
+
         <!-- STATUS UPDATE AREA -->
         <div class="drawer-section status-update-box">
           <h3>Cambiar Estado del Pedido</h3>
           <div class="form-group" style="margin-bottom: 0;">
             <select class="select-input" :value="selectedOrder.estado" @change="onStatusChange">
               <option value="pendiente">Pendiente (Por confirmar)</option>
+              <option value="pagado">Pagado (En fila)</option>
               <option value="procesando">Procesando (En fabricación)</option>
               <option value="enviado">Enviado (Despachado)</option>
               <option value="entregado">Entregado (Completado)</option>
@@ -132,15 +147,15 @@
           <div class="info-grid">
             <div class="info-row">
               <span class="info-label">Nombre:</span>
-              <span class="info-value">{{ getOrderUser(selectedOrder.usuario_id)?.nombre }}</span>
+              <span class="info-value">{{ selectedOrder.usuario?.nombre }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Email:</span>
-              <span class="info-value">{{ getOrderUser(selectedOrder.usuario_id)?.email }}</span>
+              <span class="info-value">{{ selectedOrder.usuario?.email }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Teléfono:</span>
-              <span class="info-value">{{ getOrderUser(selectedOrder.usuario_id)?.telefono || 'No registra' }}</span>
+              <span class="info-value">{{ selectedOrder.usuario?.telefono || 'No registra' }}</span>
             </div>
             <div class="info-row" v-if="selectedOrder.notas_cliente">
               <span class="info-label">Notas del Cliente:</span>
@@ -153,10 +168,13 @@
         <div class="drawer-section">
           <h3>Artículos del Pedido</h3>
           <div class="items-list">
-            <div v-for="item in getOrderItems(selectedOrder.id)" :key="item.id" class="item-row">
-              <div class="item-details">
-                <span class="item-name">{{ getVariantName(item.variante_id) }}</span>
-                <span class="item-meta">SKU: {{ getVariantSku(item.variante_id) }} | Cantidad: {{ item.cantidad }}</span>
+            <div v-for="item in selectedOrder.items" :key="item.id" class="item-row item-row--with-image">
+              <div class="item-image">
+                <img :src="getVariantImage(item)" alt="Imagen del producto" />
+              </div>
+              <div class="item-details" style="flex: 1;">
+                <span class="item-name">{{ getVariantName(item) }}</span>
+                <span class="item-meta">SKU: {{ getVariantSku(item) }} | Cantidad: {{ item.cantidad }}</span>
               </div>
               <span class="item-price">${{ formatMoney(item.total_linea) }}</span>
             </div>
@@ -184,24 +202,24 @@
         </div>
 
         <!-- SHIPMENT PREVIEW -->
-        <div class="drawer-section" v-if="getOrderShipment(selectedOrder.id) && !shippingFormVisible">
+        <div class="drawer-section" v-if="selectedOrder.envio && !shippingFormVisible">
           <h3>Estado del Envío</h3>
           <div class="info-grid">
             <div class="info-row">
               <span class="info-label">Transportadora:</span>
-              <span class="info-value">{{ getOrderShipment(selectedOrder.id).transportadora }}</span>
+              <span class="info-value">{{ selectedOrder.envio.transportadora }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Nº Guía:</span>
-              <span class="info-value font-mono">{{ getOrderShipment(selectedOrder.id).guia }}</span>
+              <span class="info-value font-mono">{{ selectedOrder.envio.guia }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Estado Envío:</span>
-              <span class="info-value text-capitalize">{{ getOrderShipment(selectedOrder.id).estado }}</span>
+              <span class="info-value text-capitalize">{{ selectedOrder.envio.estado }}</span>
             </div>
-            <div class="info-row" v-if="getOrderShipment(selectedOrder.id).entregado_en">
+            <div class="info-row" v-if="selectedOrder.envio.entregado_en">
               <span class="info-label">Entregado el:</span>
-              <span class="info-value">{{ getOrderShipment(selectedOrder.id).entregado_en }}</span>
+              <span class="info-value">{{ selectedOrder.envio.entregado_en }}</span>
             </div>
           </div>
         </div>
@@ -213,37 +231,94 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
-import { state, actions } from '../store/state.js'
+import { ref, computed, reactive, onMounted } from 'vue'
+import axios from 'axios'
 
-// Status Tab config
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api'
+})
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// State
+const orders = ref([])
+const loading = ref(true)
+
+// Alert States
+const errorMsg = ref('')
+const drawerErrorMsg = ref('')
+const drawerSuccessMsg = ref('')
+
+const showGlobalError = (msg) => {
+  errorMsg.value = msg
+  setTimeout(() => errorMsg.value = '', 5000)
+}
+
+const showDrawerError = (msg) => {
+  drawerErrorMsg.value = msg
+  drawerSuccessMsg.value = ''
+  setTimeout(() => drawerErrorMsg.value = '', 5000)
+}
+
+const showDrawerSuccess = (msg) => {
+  drawerSuccessMsg.value = msg
+  drawerErrorMsg.value = ''
+  setTimeout(() => drawerSuccessMsg.value = '', 5000)
+}
+
 const statusTabs = [
   { label: 'Todos', value: 'all', badgeColor: 'info' },
   { label: 'Pendientes', value: 'pendiente', badgeColor: 'pending' },
+  { label: 'Pagados', value: 'pagado', badgeColor: 'success' },
   { label: 'Fabricando', value: 'procesando', badgeColor: 'info' },
   { label: 'Enviados', value: 'enviado', badgeColor: 'success' },
   { label: 'Entregados', value: 'entregado', badgeColor: 'success' },
-  { label: 'Devueltos', value: 'devuelta', badgeColor: 'danger' }
+  { label: 'Devueltos', value: 'devuelta', badgeColor: 'danger' },
+  { label: 'Cancelados', value: 'cancelada', badgeColor: 'danger' }
 ]
 
 const activeTab = ref('all')
 
+// Fetch orders
+const fetchOrders = async () => {
+  loading.value = true
+  try {
+    const response = await api.get('/ordenes')
+    orders.value = response.data.data || []
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    showGlobalError('Hubo un error al cargar los pedidos.')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchOrders()
+})
+
 // Statistics computation
 const activeOrdersCount = computed(() => {
-  return state.ordenes.filter(o => o.estado === 'pendiente' || o.estado === 'procesando').length
+  return orders.value.filter(o => o.estado === 'pendiente' || o.estado === 'procesando').length
 })
 
 const getOrdersCountByStatus = (status) => {
-  if (status === 'all') return state.ordenes.length
-  return state.ordenes.filter(o => o.estado === status).length
+  if (status === 'all') return orders.value.length
+  return orders.value.filter(o => o.estado === status).length
 }
 
 // Order filter
 const filteredOrders = computed(() => {
   if (activeTab.value === 'all') {
-    return [...state.ordenes].sort((a, b) => b.id - a.id)
+    return [...orders.value].sort((a, b) => b.id - a.id)
   }
-  return [...state.ordenes]
+  return [...orders.value]
     .filter(o => o.estado === activeTab.value)
     .sort((a, b) => b.id - a.id)
 })
@@ -260,12 +335,14 @@ const shippingForm = reactive({
 
 const openOrderDetail = (order) => {
   selectedOrder.value = order
-  shippingFormVisible.value = order.estado === 'enviado' && !getOrderShipment(order.id)
+  drawerErrorMsg.value = ''
+  drawerSuccessMsg.value = ''
   
-  const shipment = getOrderShipment(order.id)
-  if (shipment) {
-    shippingForm.transportadora = shipment.transportadora
-    shippingForm.guia = shipment.guia
+  shippingFormVisible.value = order.estado === 'enviado' && !order.envio
+  
+  if (order.envio) {
+    shippingForm.transportadora = order.envio.transportadora
+    shippingForm.guia = order.envio.guia
   } else {
     shippingForm.transportadora = ''
     shippingForm.guia = ''
@@ -274,38 +351,78 @@ const openOrderDetail = (order) => {
   showDrawer.value = true
 }
 
-const onStatusChange = (event) => {
+const onStatusChange = async (event) => {
   const newStatus = event.target.value
-  actions.updateOrderStatus(selectedOrder.value.id, newStatus)
+  const orderId = selectedOrder.value.id
   
-  if (newStatus === 'enviado') {
-    shippingFormVisible.value = true
-  } else {
-    shippingFormVisible.value = false
-    // Update existing shipment status if it exists
-    const shipment = getOrderShipment(selectedOrder.value.id)
-    if (shipment) {
-      actions.updateOrderShipping(selectedOrder.value.id, {
-        transportadora: shipment.transportadora,
-        guia: shipment.guia,
-        estado: newStatus === 'entregado' ? 'entregado' : 'enviado'
-      })
+  try {
+    // Update order status via API
+    await api.put(`/ordenes/${orderId}/estado`, { estado: newStatus })
+    
+    // Update local state
+    const orderIndex = orders.value.findIndex(o => o.id === selectedOrder.value.id)
+    if (orderIndex !== -1) {
+      orders.value[orderIndex].estado = newStatus
+      selectedOrder.value.estado = newStatus
+      
+      // Update shipping form visibility if changed to or from "enviado"
+      shippingFormVisible.value = newStatus === 'enviado' && !selectedOrder.value.envio
+      
+      // If there is an existing shipment, update its status based on the new order status
+      if (selectedOrder.value.envio) {
+        let shipmentStatus = newStatus === 'entregado' ? 'entregado' : 'enviado'
+        if(newStatus === 'cancelada') shipmentStatus = 'fallido'
+        
+        await api.put(`/envios/${selectedOrder.value.envio.id}/estado`, {
+          estado: shipmentStatus
+        })
+        selectedOrder.value.envio.estado = shipmentStatus
+      }
     }
+    
+    showDrawerSuccess('Estado del pedido actualizado correctamente.')
+  } catch (error) {
+    console.error('Error updating order status:', error)
+    showDrawerError('Hubo un error al actualizar el estado.')
+    // Reset select value
+    event.target.value = selectedOrder.value.estado
   }
 }
 
-const saveShippingDetails = () => {
-  if (!shippingForm.transportadora || !shippingForm.guia) {
-    alert('Ingresa la transportadora y la guía de envío')
+const saveShippingDetails = async () => {
+  if (!shippingForm.transportadora) {
+    showDrawerError('Ingresa la transportadora de envío')
     return
   }
-  actions.updateOrderShipping(selectedOrder.value.id, {
-    transportadora: shippingForm.transportadora,
-    guia: shippingForm.guia,
-    estado: 'enviado'
-  })
-  shippingFormVisible.value = false
-  alert('Guía de despacho registrada exitosamente')
+  
+  try {
+    // Note: The backend EnvioController::store ignores the 'guia' parameter and auto-generates it
+    // But we still send transportadora
+    const response = await api.post('/envios', {
+      orden_id: selectedOrder.value.id,
+      transportadora: shippingForm.transportadora
+    })
+    
+    const newEnvio = response.data.data
+    
+    // Once created, the backend sets it to 'preparando'. 
+    // We should also change the envio state to 'enviado' since the order is shipped.
+    await api.put(`/envios/${newEnvio.id}/estado`, { estado: 'enviado' })
+    newEnvio.estado = 'enviado'
+    
+    // Update local state
+    const orderIndex = orders.value.findIndex(o => o.id === selectedOrder.value.id)
+    if (orderIndex !== -1) {
+      orders.value[orderIndex].envio = newEnvio
+      selectedOrder.value.envio = newEnvio
+    }
+    
+    shippingFormVisible.value = false
+    showDrawerSuccess(`Guía de despacho registrada exitosamente: ${newEnvio.guia}`)
+  } catch (error) {
+    console.error('Error saving shipping details:', error)
+    showDrawerError(error.response?.data?.message || 'Hubo un error al registrar el envío.')
+  }
 }
 
 // Helpers
@@ -314,55 +431,52 @@ const formatMoney = (amount) => {
 }
 
 const formatDateString = (dateStr) => {
+  if (!dateStr) return 'N/A'
   const date = new Date(dateStr)
   return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-const getUserName = (userId) => {
-  const user = state.usuarios.find(u => u.id === userId)
-  return user ? user.nombre : `Usuario #${userId}`
+const getUserName = (order) => {
+  return order.usuario ? order.usuario.nombre : `Usuario #${order.usuario_id}`
 }
 
-const getOrderUser = (userId) => {
-  return state.usuarios.find(u => u.id === userId)
+const getOrderItemsCount = (order) => {
+  return order.items ? order.items.reduce((sum, item) => sum + item.cantidad, 0) : 0
 }
 
-const getOrderItemsCount = (orderId) => {
-  return state.orden_items
-    .filter(oi => oi.orden_id === orderId)
-    .reduce((sum, oi) => sum + oi.cantidad, 0)
-}
-
-const getStatusBadgeClass = (status) => {
-  switch (status) {
-    case 'entregado': return 'badge--success'
-    case 'pendiente': return 'badge--pending'
-    case 'procesando': return 'badge--info'
-    case 'enviado': return 'badge--success'
-    case 'devuelta': return 'badge--danger'
-    case 'cancelada': return 'badge--danger'
-    default: return ''
+const getStatusBadgeClass = (estado) => {
+  const map = {
+    pendiente: 'badge--pending',
+    pagado: 'badge--success',
+    procesando: 'badge--info',
+    enviado: 'badge--info',
+    entregado: 'badge--success',
+    devuelta: 'badge--danger',
+    cancelada: 'badge--danger'
   }
+  return map[estado] || 'badge--pending'
 }
 
-const getOrderItems = (orderId) => {
-  return state.orden_items.filter(oi => oi.orden_id === orderId)
-}
-
-const getVariantName = (variantId) => {
-  const variant = state.variantes_producto.find(v => v.id === variantId)
+const getVariantName = (item) => {
+  const variant = item.variante
   if (!variant) return 'Producto Desconocido'
-  const product = state.productos.find(p => p.id === variant.producto_id)
-  return product ? `${product.nombre} (${variant.color} / Talla ${variant.talla})` : 'Producto Desconocido'
+  const product = variant.producto
+  const color = variant.color || 'N/A'
+  const talla = variant.talla || 'N/A'
+  return product ? `${product.nombre} (${color} / Talla ${talla})` : 'Producto Desconocido'
 }
 
-const getVariantSku = (variantId) => {
-  const variant = state.variantes_producto.find(v => v.id === variantId)
-  return variant ? variant.sku : 'N/A'
+const getVariantSku = (item) => {
+  return item.variante ? item.variante.sku : 'N/A'
 }
 
-const getOrderShipment = (orderId) => {
-  return state.envios.find(e => e.orden_id === orderId)
+const getVariantImage = (item) => {
+  const imagenes = item.variante?.producto?.imagenes
+  if (imagenes && imagenes.length > 0) {
+    const portada = imagenes.find(img => img.es_portada)
+    return portada ? portada.url : imagenes[0].url
+  }
+  return 'https://via.placeholder.com/80?text=No+Img'
 }
 </script>
 
@@ -437,19 +551,31 @@ const getOrderShipment = (orderId) => {
 }
 
 /* Detail Drawer row adjustments */
+.drawer-section {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.drawer-section:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
 .drawer-section h3 {
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .info-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .info-row {
@@ -475,7 +601,7 @@ const getOrderShipment = (orderId) => {
 .items-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .item-row {
@@ -486,10 +612,24 @@ const getOrderShipment = (orderId) => {
   padding: 8px 0;
 }
 
+.item-row--with-image {
+  gap: 14px;
+  align-items: center;
+}
+
+.item-image img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border);
+  display: block;
+}
+
 .item-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .item-name {

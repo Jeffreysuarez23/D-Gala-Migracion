@@ -196,7 +196,7 @@ class OrdenController extends Controller
     public function index()
     {
         $ordenes = Orden::with([
-            'items.variante.producto',
+            'items.variante.producto.imagenes',
             'direccion',
             'usuario',
             'envio'

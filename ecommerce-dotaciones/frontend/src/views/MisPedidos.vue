@@ -202,6 +202,7 @@ const formatDate = (dateStr) => {
 const estadoClass = (estado) => {
   const map = {
     pendiente: 'yellow',
+    pagado: 'green',
     confirmada: 'blue',
     procesando: 'blue',
     enviado: 'purple',
@@ -473,8 +474,8 @@ const getImage = (item) => {
   border-radius: 100px;
   font-family: 'Inter', sans-serif;
   font-size: 11px;
-  font-weight: 600;
-  text-transform: capitalize;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .badge--green { background: #ecfdf5; color: #065f46; }

@@ -107,8 +107,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/direcciones/{id}', [DireccionController::class, 'update']);
     Route::delete('/direcciones/{id}', [DireccionController::class, 'destroy']);
 
-    // Rutas de Wompi
-    Route::post('/wompi/generar-firma', [App\Http\Controllers\Api\WompiController::class, 'generarFirma']);
+    // Rutas de PayPal (protegidas)
+    Route::post('/paypal/create-order', [App\Http\Controllers\Api\PayPalController::class, 'createOrder']);
+    Route::post('/paypal/capture-order', [App\Http\Controllers\Api\PayPalController::class, 'captureOrder']);
 
     // PERFIL
     Route::get('/profile', [AuthController::class, 'profile']);
@@ -117,8 +118,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-// Rutas públicas de Wompi
-Route::post('/wompi/webhook', [App\Http\Controllers\Api\WompiController::class, 'webhook']);
+// Webhook de PayPal (público)
+Route::post('/paypal/webhook', [App\Http\Controllers\Api\PayPalController::class, 'webhook']);
 
 // ORDENES (admin)
 Route::get('/ordenes', [OrdenController::class, 'index']);

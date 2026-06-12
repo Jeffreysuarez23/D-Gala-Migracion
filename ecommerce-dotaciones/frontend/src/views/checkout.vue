@@ -193,7 +193,7 @@
                 </svg>
                 Atrás
               </button>
-              <button class="place-order-btn" @click="placeOrder" :disabled="placing">
+              <button v-if="payment.method !== 'paypal'" class="place-order-btn" @click="placeOrder" :disabled="placing">
                 <span v-if="!placing">Realizar Pedido</span>
                 <span v-else>Procesando...</span>
                 <svg v-if="!placing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -201,6 +201,8 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
+              
+              <div v-show="payment.method === 'paypal'" id="paypal-button-container" class="paypal-btn-wrap" :style="{ opacity: placing ? 0.5 : 1, pointerEvents: placing ? 'none' : 'auto' }"></div>
             </div>
           </div>
 
@@ -291,7 +293,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { updateCartCount } from '../cartState'
@@ -308,6 +310,7 @@ const orderNumber = ref('')
 const orderError = ref('')
 const shippingError = ref('')
 const confirmStatus = ref('success')
+const internalOrderId = ref(null)
 
 // Cart data from API
 const cartItems = ref([])
@@ -360,25 +363,114 @@ onMounted(() => {
     return
   }
 
-  // Check if returning from Wompi
-  const status = route.query.id || route.query.env
-  if (route.query.status === 'wompi_return') {
-    handleWompiReturn()
-    return
-  }
+
 
   fetchCart()
 })
 
-const handleWompiReturn = () => {
-  const ordenId = route.query.orden_id
-  currentStep.value = 3
-
-  // We show a generic pending or success view since the webhook confirms it definitively
-  confirmStatus.value = 'success'
-  orderNumber.value = ordenId ? `ORD-${ordenId}` : ''
+const loadPayPalScript = async () => {
+  await nextTick()
+  if (window.paypal) {
+    renderPayPalButtons()
+    return
+  }
+  const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test'
+  const script = document.createElement('script')
+  script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`
+  script.addEventListener('load', renderPayPalButtons)
+  document.body.appendChild(script)
 }
 
+const renderPayPalButtons = () => {
+  if (!window.paypal) return
+  
+  // Clear container to prevent duplicate buttons if re-rendered
+  const container = document.getElementById('paypal-button-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  window.paypal.Buttons({
+    createOrder: async (data, actions) => {
+      try {
+        orderError.value = ''
+        placing.value = true
+        
+        const token = localStorage.getItem('auth_token')
+        const user = JSON.parse(localStorage.getItem('auth_user') || '{}')
+        const cartId = localStorage.getItem('carrito_id')
+
+        // 1. Create Address
+        const dirRes = await axios.post(`${API}/direcciones`, {
+          usuario_id: user.id,
+          nombre_recibe: shipping.value.nombre_recibe,
+          telefono: shipping.value.telefono,
+          departamento: shipping.value.departamento,
+          ciudad: shipping.value.ciudad,
+          direccion: shipping.value.direccion,
+          referencia: shipping.value.referencia,
+          codigo_postal: shipping.value.codigo_postal,
+        }, getAuthHeaders())
+
+        // 2. Create internal Order
+        const ordenRes = await axios.post(`${API}/ordenes/crear`, {
+          carrito_id: parseInt(cartId),
+          direccion_id: dirRes.data.data.id,
+          notas_cliente: notas_cliente.value,
+        }, getAuthHeaders())
+
+        const orden = ordenRes.data.data
+        orderNumber.value = orden.numero
+        internalOrderId.value = orden.id
+
+        // 3. Request PayPal Order creation from backend
+        const paypalRes = await axios.post(`${API}/paypal/create-order`, {
+          orden_id: orden.id
+        }, getAuthHeaders())
+        
+        placing.value = false;
+        return paypalRes.data.id; // Return PayPal Order ID to SDK
+      } catch (err) {
+        placing.value = false;
+        console.error('Error creating PayPal order', err)
+        orderError.value = err.response?.data?.message || 'Error al inicializar el pago con PayPal'
+        throw err;
+      }
+    },
+    onApprove: async (data, actions) => {
+      placing.value = true;
+      try {
+        await axios.post(`${API}/paypal/capture-order`, {
+          paypal_order_id: data.orderID,
+          orden_id: internalOrderId.value
+        }, getAuthHeaders())
+
+        await updateCartCount()
+        confirmStatus.value = 'success'
+        currentStep.value = 3
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } catch (err) {
+        console.error('Error capturing PayPal order', err)
+        orderError.value = 'El pago no pudo ser procesado o fue rechazado.'
+        confirmStatus.value = 'failure'
+        currentStep.value = 3
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } finally {
+        placing.value = false;
+      }
+    },
+    onCancel: (data) => {
+      placing.value = false;
+      orderError.value = 'Has cancelado el proceso de pago en PayPal.'
+    },
+    onError: (err) => {
+      placing.value = false;
+      if (!orderError.value) {
+        orderError.value = 'Ocurrió un error con la pasarela de PayPal.'
+      }
+      console.error('PayPal Error:', err)
+    }
+  }).render('#paypal-button-container');
+}
 const subtotal = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0))
 const shippingCost = computed(() => subtotal.value > 200000 ? 0 : 15000)
 const total = computed(() => subtotal.value + shippingCost.value)
@@ -407,14 +499,32 @@ const notas_cliente = ref('')
 
 // Payment
 const payment = ref({
-  method: 'wompi'
+  method: 'paypal'
+})
+
+onMounted(() => {
+  if (payment.value.method === 'paypal') {
+    loadPayPalScript()
+  }
+})
+
+watch(() => payment.value.method, (newMethod) => {
+  if (newMethod === 'paypal' && currentStep.value === 2) {
+    loadPayPalScript()
+  }
+})
+
+watch(currentStep, (newStep) => {
+  if (newStep === 2 && payment.value.method === 'paypal') {
+    loadPayPalScript()
+  }
 })
 
 const paymentMethods = [
   {
-    id: 'wompi',
-    name: 'Pago en Línea (Wompi Bancolombia)',
-    desc: 'Nequi, PSE, Tarjetas, Corresponsal, Bancolombia',
+    id: 'paypal',
+    name: 'Pago Seguro con PayPal',
+    desc: 'Tarjetas de Crédito, Débito o Saldo PayPal',
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
   },
   {
@@ -525,63 +635,9 @@ const placeOrder = async () => {
     orderNumber.value = orden.numero
 
     // 3. Según método de pago
-    if (payment.value.method === 'wompi') {
-      try {
-        const wompiRes = await axios.post(`${API}/wompi/generar-firma`, {
-          orden_id: orden.id
-        }, getAuthHeaders())
-
-        const data = wompiRes.data;
-
-        // Función para abrir el Widget
-        const openWompi = () => {
-          const checkout = new window.WidgetCheckout({
-            currency: data.currency,
-            amountInCents: parseInt(data.amount_in_cents, 10),
-            reference: data.reference,
-            publicKey: data.public_key,
-            signature: { integrity: data.signature },
-            redirectUrl: data.redirect_url
-          });
-
-          checkout.open(function (result) {
-            // Callback en caso de que Wompi no redirija automáticamente
-            window.location.href = data.redirect_url;
-          });
-        };
-
-        // Cargar script dinámicamente si no existe
-        // Cargar script de Wompi de forma confiable
-        const cargarWompiYAbrir = () => {
-          return new Promise((resolve) => {
-            if (window.WidgetCheckout) {
-              resolve();
-            } else {
-              // Remover script anterior si existe (evita duplicados)
-              const existing = document.querySelector('script[src*="wompi"]');
-              if (existing) existing.remove();
-
-              const script = document.createElement('script');
-              script.src = 'https://checkout.wompi.co/widget.js';
-              script.onload = () => resolve();
-              script.onerror = () => resolve(); // si falla, igual continuar
-              document.body.appendChild(script);
-            }
-          });
-        };
-
-        await cargarWompiYAbrir();
-        openWompi();
-        await updateCartCount();
-        placing.value = false;
-        return;
-      } catch (wompiError) {
-        console.error('Error con Wompi:', wompiError)
-        await updateCartCount()
-        confirmStatus.value = 'pending'
-        currentStep.value = 3
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
+    if (payment.value.method === 'paypal') {
+      // The PayPal SDK handles this, so this block shouldn't be executed directly.
+      return;
     } else {
       // Transferencia bancaria - orden queda pendiente
       // Registrar pago manual pendiente

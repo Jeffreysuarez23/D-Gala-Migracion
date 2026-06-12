@@ -108,6 +108,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import { state, actions } from '../store/state.js'
 
 defineEmits(['toggle-sidebar'])
@@ -161,9 +162,24 @@ const closeProfileDropdown = () => {
   showProfileDropdown.value = false
 }
 
-const logoutAlert = () => {
-  alert('Cierre de sesión simulado. ¡Que tengas un gran día!')
-  showProfileDropdown.value = false
+const logoutAlert = async () => {
+  try {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      await axios.post('http://localhost:8000/api/logout', {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error logging out from backend', error)
+  } finally {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('auth_user')
+    showProfileDropdown.value = false
+    window.location.href = 'http://localhost:5173/login'
+  }
 }
 
 // Simple directive helper to click outside dropdowns

@@ -356,16 +356,30 @@ const fetchCart = async () => {
   }
 }
 
-onMounted(() => {
-  // Check if user is logged in
-  if (!localStorage.getItem('auth_token')) {
+const validateTokenAndLoad = async () => {
+  const token = localStorage.getItem('auth_token')
+  if (!token) {
     router.push('/login')
     return
   }
 
-
+  try {
+    // Verify the token is still valid by calling the profile endpoint
+    await axios.get(`${API}/profile`, getAuthHeaders())
+  } catch (err) {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      router.push('/login')
+      return
+    }
+  }
 
   fetchCart()
+}
+
+onMounted(() => {
+  validateTokenAndLoad()
 })
 
 const loadPayPalScript = async () => {
@@ -432,7 +446,14 @@ const renderPayPalButtons = () => {
       } catch (err) {
         placing.value = false;
         console.error('Error creating PayPal order', err)
-        orderError.value = err.response?.data?.message || 'Error al inicializar el pago con PayPal'
+        if (err.response?.status === 401) {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('auth_user')
+          orderError.value = 'Tu sesión ha expirado. Redirigiendo al login...'
+          setTimeout(() => router.push('/login'), 2000)
+        } else {
+          orderError.value = err.response?.data?.message || 'Error al inicializar el pago con PayPal'
+        }
         throw err;
       }
     },
@@ -592,7 +613,7 @@ const prevStep = () => {
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('auth_token')
-  return { headers: { Authorization: `Bearer ${token}` } }
+  return { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
 }
 
 const placeOrder = async () => {

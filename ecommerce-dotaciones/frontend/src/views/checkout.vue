@@ -185,14 +185,9 @@
 
             <div v-if="orderError" class="form-error">{{ orderError }}</div>
 
-            <div class="form-actions">
-              <button class="back-btn" @click="prevStep">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
-                Atrás
-              </button>
+            <div class="form-actions form-actions--stacked">
+              <div v-show="payment.method === 'paypal'" id="paypal-button-container" class="paypal-btn-wrap" :style="{ opacity: placing ? 0.5 : 1, pointerEvents: placing ? 'none' : 'auto' }"></div>
+
               <button v-if="payment.method !== 'paypal'" class="place-order-btn" @click="placeOrder" :disabled="placing">
                 <span v-if="!placing">Realizar Pedido</span>
                 <span v-else>Procesando...</span>
@@ -201,8 +196,16 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
-              
-              <div v-show="payment.method === 'paypal'" id="paypal-button-container" class="paypal-btn-wrap" :style="{ opacity: placing ? 0.5 : 1, pointerEvents: placing ? 'none' : 'auto' }"></div>
+
+              <div class="form-actions__divider"></div>
+
+              <button class="back-btn back-btn--full" @click="prevStep">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Volver al paso anterior
+              </button>
             </div>
           </div>
 
@@ -998,6 +1001,41 @@ const placeOrder = async () => {
 .form-actions .next-btn,
 .form-actions .place-order-btn {
   flex: 1;
+}
+
+.form-actions--stacked {
+  flex-direction: column;
+  gap: 0;
+}
+
+.form-actions__divider {
+  width: 100%;
+  height: 1px;
+  background: #ede8de;
+  margin: 16px 0;
+}
+
+.paypal-btn-wrap {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: opacity 0.25s ease;
+}
+
+.back-btn--full {
+  width: 100%;
+  justify-content: center;
+  padding: 16px 24px;
+  background: #faf8f4;
+  border-color: #e0d8cc;
+  font-size: 15px;
+}
+
+.back-btn--full:hover {
+  background: #f0ebe3;
+  border-color: #1a1a1a;
 }
 
 /* ── Payment Methods ── */

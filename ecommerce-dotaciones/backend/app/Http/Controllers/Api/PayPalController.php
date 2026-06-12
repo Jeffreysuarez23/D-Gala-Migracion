@@ -9,6 +9,8 @@ use App\Models\Orden;
 use App\Models\Pago;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmation;
 
 class PayPalController extends Controller
 {
@@ -79,6 +81,16 @@ class PayPalController extends Controller
                 $orden->save();
 
                 DB::commit();
+
+                // Enviar correo de confirmación al usuario
+                try {
+                    $orden->load(['usuario', 'direccion', 'items.variante.producto.imagenes', 'pago']);
+                    if ($orden->usuario && $orden->usuario->email) {
+                        Mail::to($orden->usuario->email)->send(new OrderConfirmation($orden));
+                    }
+                } catch (\Exception $mailError) {
+                    Log::warning('No se pudo enviar email de confirmación para orden ' . $orden->id . ': ' . $mailError->getMessage());
+                }
 
                 return response()->json([
                     'message' => 'Pago completado con éxito',

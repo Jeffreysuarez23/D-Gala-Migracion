@@ -40,7 +40,7 @@
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <span v-if="unreadNotificationsCount > 0" class="badge-dot"></span>
+          <span v-if="unreadNotificationsCount > 0" class="badge-counter">{{ unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount }}</span>
         </button>
         
         <!-- Notifications Quick Dropdown -->
@@ -60,10 +60,25 @@
               class="dropdown-item"
               @click="markAsRead(notif.id)"
             >
-              <span class="notif-dot" :class="`notif-dot--${notif.tipo}`"></span>
+              <!-- Icono dinámico según el tipo -->
+              <div class="notif-icon" :class="`notif-icon--${notif.tipo}`">
+                <!-- Icono para Órdenes -->
+                <svg v-if="notif.tipo === 'orden'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <!-- Icono para Stock Bajo -->
+                <svg v-else-if="notif.tipo === 'stock_bajo'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <!-- Icono por defecto (Sistema) -->
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
               <div class="notif-text">
                 <p class="notif-title">{{ notif.titulo }}</p>
                 <p class="notif-message">{{ notif.mensaje }}</p>
+                <span class="notif-time">{{ new Date(notif.creado_en).toLocaleString('es-CO', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) }}</span>
               </div>
             </div>
           </div>
@@ -107,11 +122,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { state, actions } from '../store/state.js'
 
 defineEmits(['toggle-sidebar'])
+
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api'
+})
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 const searchQuery = ref('')
 const showNotifDropdown = ref(false)
@@ -123,6 +150,17 @@ const authUser = ref({
   rol: 'Admin'
 })
 
+const unreadNotifications = ref([])
+
+const fetchNotifications = async () => {
+  try {
+    const { data } = await api.get('/notificaciones')
+    unreadNotifications.value = data.filter(n => !n.leido_en)
+  } catch (err) {
+    console.error('Error fetching notifications:', err)
+  }
+}
+
 onMounted(() => {
   const storedUser = localStorage.getItem('auth_user')
   if (storedUser) {
@@ -132,26 +170,40 @@ onMounted(() => {
       console.error('Error parsing auth_user', e)
     }
   }
+
+  fetchNotifications()
+  setInterval(fetchNotifications, 15000)
+  window.addEventListener('notifications-updated', fetchNotifications)
 })
 
-const unreadNotifications = computed(() => {
-  return state.notificaciones.filter(n => !n.leido_en)
+onUnmounted(() => {
+  window.removeEventListener('notifications-updated', fetchNotifications)
 })
 
 const unreadNotificationsCount = computed(() => unreadNotifications.value.length)
 
 const onSearch = () => {
-  // Bind simple global search value to central state
   state.globalSearch = searchQuery.value
 }
 
-const markAsRead = (id) => {
-  actions.markNotificationRead(id)
+const markAsRead = async (id) => {
+  try {
+    await api.put(`/notificaciones/${id}/leer`)
+    await fetchNotifications()
+  } catch (err) {
+    console.error('Error marking as read:', err)
+  }
 }
 
-const clearAllNotifs = () => {
-  actions.clearNotifications()
-  showNotifDropdown.value = false
+const clearAllNotifs = async () => {
+  try {
+    const promises = unreadNotifications.value.map(n => api.put(`/notificaciones/${n.id}/leer`))
+    await Promise.all(promises)
+    await fetchNotifications()
+    showNotifDropdown.value = false
+  } catch (err) {
+    console.error('Error clearing notifs:', err)
+  }
 }
 
 const closeNotifDropdown = () => {
@@ -304,15 +356,18 @@ const vClickOutside = {
   border-color: var(--color-border);
 }
 
-.badge-dot {
+.badge-counter {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-full);
+  top: 0;
+  right: -4px;
   background-color: var(--color-danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 10px;
   border: 1.5px solid var(--bg-card);
+  line-height: 1;
 }
 
 /* Header User Profile Badge */
@@ -447,34 +502,54 @@ const vClickOutside = {
   background-color: var(--bg-sidebar);
 }
 
-.notif-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  margin-top: 5px;
+.notif-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.notif-dot--stock_bajo { background-color: var(--color-danger); }
-.notif-dot--orden { background-color: var(--color-pending); }
-.notif-dot--sistema { background-color: var(--color-accent); }
+.notif-icon--stock_bajo { 
+  background-color: var(--color-danger-light, #fef2f2); 
+  color: var(--color-danger, #ef4444); 
+}
+.notif-icon--orden { 
+  background-color: #ecfdf5; 
+  color: #10b981; 
+}
+.notif-icon--sistema { 
+  background-color: var(--color-accent-light, #f0f4ff); 
+  color: var(--color-accent, #3b82f6); 
+}
 
 .notif-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
 }
 
 .notif-title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .notif-message {
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: 1.4;
+  margin: 0 0 4px 0;
+}
+
+.notif-time {
+  font-size: 10px;
+  color: var(--text-muted);
 }
 
 /* Profile Dropdown specific */

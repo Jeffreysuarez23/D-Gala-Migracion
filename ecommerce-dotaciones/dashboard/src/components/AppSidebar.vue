@@ -64,7 +64,7 @@
           </svg>
         </span>
         <span class="nav-item__label">Pedidos</span>
-        <span v-if="pendingOrdersCount > 0" class="nav-item__badge">{{ pendingOrdersCount }}</span>
+        <span v-if="totalOrdersCount > 0" class="nav-item__badge">{{ totalOrdersCount }}</span>
       </router-link>
 
       <router-link to="/dotaciones" class="nav-item" @click="$emit('close')">
@@ -106,8 +106,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { state, actions } from '../store/state.js'
+import axios from 'axios'
 
 defineProps({
   isOpen: {
@@ -118,8 +119,40 @@ defineProps({
 
 defineEmits(['close'])
 
-const pendingOrdersCount = computed(() => {
-  return state.ordenes.filter(o => o.estado === 'pendiente' || o.estado === 'procesando').length
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api'
+})
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+const totalOrdersCount = ref(0)
+
+const fetchTotalOrdersCount = async () => {
+  try {
+    const response = await api.get('/ordenes')
+    const allOrders = response.data.data || []
+    totalOrdersCount.value = allOrders.length
+  } catch (error) {
+    console.error('Error fetching orders count:', error)
+  }
+}
+
+onMounted(() => {
+  fetchTotalOrdersCount()
+  // Refrescar automáticamente cada 15 segundos para mantenerlo al día
+  setInterval(fetchTotalOrdersCount, 15000)
+
+  window.addEventListener('orders-updated', fetchTotalOrdersCount)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('orders-updated', fetchTotalOrdersCount)
 })
 
 const toggleTheme = () => {
@@ -183,9 +216,14 @@ const toggleTheme = () => {
   color: #FFFBF7 !important;
 }
 
+.nav-item.router-link-active .nav-item__badge {
+  background-color: #FFFBF7;
+  color: var(--color-accent);
+}
+
 .nav-item__badge {
   margin-left: auto;
-  background-color: var(--color-danger);
+  background-color: var(--color-accent);
   color: white;
   font-size: 10px;
   font-weight: 700;

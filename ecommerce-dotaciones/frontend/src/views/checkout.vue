@@ -46,46 +46,58 @@
             <h2 class="form-section__title">Dirección de Envío</h2>
 
             <div class="form-row">
-              <div class="form-group">
+              <div class="form-group" :class="{ 'form-group--error': errors.nombre_recibe }">
                 <label class="form-label">Nombre de quien recibe <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="shipping.nombre_recibe" placeholder="John Doe" />
+                <input type="text" class="form-input" v-model="shipping.nombre_recibe" @input="handleNameInput" placeholder="Ej: Juan Pérez" />
+                <span v-if="errors.nombre_recibe" class="field-error">{{ errors.nombre_recibe }}</span>
               </div>
-              <div class="form-group">
-                <label class="form-label">Teléfono</label>
-                <input type="tel" class="form-input" v-model="shipping.telefono" placeholder="+57 300 000 0000" />
+              <div class="form-group" :class="{ 'form-group--error': errors.telefono }">
+                <label class="form-label">Teléfono <span class="required">*</span></label>
+                <input type="tel" class="form-input" v-model="shipping.telefono" @input="handlePhoneInput" placeholder="Ej: 3001234567" maxlength="10" />
+                <span v-if="errors.telefono" class="field-error">{{ errors.telefono }}</span>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Dirección <span class="required">*</span></label>
-              <input type="text" class="form-input" v-model="shipping.direccion" placeholder="Calle 123 #45-67" />
+            <div class="form-group" :class="{ 'form-group--error': errors.direccion }">
+              <label class="form-label">Dirección de entrega <span class="required">*</span></label>
+              <input type="text" class="form-input" v-model="shipping.direccion" @input="handleAddressInput('direccion')" placeholder="Ej: Calle 123 #45-67" />
+              <span v-if="errors.direccion" class="field-error">{{ errors.direccion }}</span>
             </div>
 
             <div class="form-row">
-              <div class="form-group">
+              <div class="form-group" :class="{ 'form-group--error': errors.departamento }">
                 <label class="form-label">Departamento <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="shipping.departamento" placeholder="Atlántico" />
+                <select class="form-input form-select" v-model="shipping.departamento" @change="clearError('departamento')">
+                  <option value="" disabled>Selecciona un departamento</option>
+                  <option v-for="dept in departamentos" :key="dept" :value="dept">{{ dept }}</option>
+                </select>
+                <span v-if="errors.departamento" class="field-error">{{ errors.departamento }}</span>
               </div>
-              <div class="form-group">
+              <div class="form-group" :class="{ 'form-group--error': errors.ciudad }">
                 <label class="form-label">Ciudad <span class="required">*</span></label>
-                <input type="text" class="form-input" v-model="shipping.ciudad" placeholder="Barranquilla" />
+                <select class="form-input form-select" v-model="shipping.ciudad" @change="clearError('ciudad')" :disabled="!shipping.departamento">
+                  <option value="" disabled>Selecciona una ciudad</option>
+                  <option v-for="ciudad in ciudades" :key="ciudad" :value="ciudad">{{ ciudad }}</option>
+                </select>
+                <span v-if="errors.ciudad" class="field-error">{{ errors.ciudad }}</span>
               </div>
             </div>
 
             <div class="form-row">
-              <div class="form-group">
+              <div class="form-group" :class="{ 'form-group--error': errors.codigo_postal }">
                 <label class="form-label">Código Postal</label>
-                <input type="text" class="form-input" v-model="shipping.codigo_postal" placeholder="080001" />
+                <input type="text" class="form-input" v-model="shipping.codigo_postal" @input="handleZipCodeInput" placeholder="Ej: 080001" maxlength="6" />
+                <span v-if="errors.codigo_postal" class="field-error">{{ errors.codigo_postal }}</span>
               </div>
               <div class="form-group">
-                <label class="form-label">Referencia <span class="optional">(opcional)</span></label>
-                <input type="text" class="form-input" v-model="shipping.referencia" placeholder="Apto 302, Torre B" />
+                <label class="form-label">Referencia / Barrio <span class="optional">(opcional)</span></label>
+                <input type="text" class="form-input" v-model="shipping.referencia" @input="handleAddressInput('referencia')" placeholder="Ej: Apto 302, Torre B" />
               </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Notas del pedido <span class="optional">(opcional)</span></label>
-              <textarea class="form-textarea" v-model="notas_cliente" rows="3"
+              <textarea class="form-textarea" v-model="notas_cliente" @input="handleNotasInput" rows="3"
                 placeholder="Instrucciones de entrega..."></textarea>
             </div>
 
@@ -296,7 +308,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { updateCartCount } from '../cartState'
@@ -521,6 +533,114 @@ const shipping = ref({
 
 const notas_cliente = ref('')
 
+const colombiaData = {
+  "Amazonas": ["Leticia", "Puerto Nariño"],
+  "Antioquia": ["Medellín", "Bello", "Itagüí", "Envigado", "Apartadó", "Rionegro", "Turbo", "Caucasia"],
+  "Arauca": ["Arauca", "Tame", "Saravena"],
+  "Atlántico": ["Barranquilla", "Soledad", "Malambo", "Sabanagrande", "Baranoa"],
+  "Bolívar": ["Cartagena", "Magangué", "Turbaco", "El Carmen de Bolívar", "Arjona"],
+  "Boyacá": ["Tunja", "Sogamoso", "Duitama", "Chiquinquirá", "Puerto Boyacá"],
+  "Caldas": ["Manizales", "La Dorada", "Chinchiná", "Villamaría", "Riosucio"],
+  "Caquetá": ["Florencia", "San Vicente del Caguán", "Cartagena del Chairá"],
+  "Casanare": ["Yopal", "Aguazul", "Paz de Ariporo"],
+  "Cauca": ["Popayán", "Santander de Quilichao", "El Tambo", "Puerto Tejada"],
+  "Cesar": ["Valledupar", "Aguachica", "Agustín Codazzi", "Bosconia"],
+  "Chocó": ["Quibdó", "Istmina", "Tadó"],
+  "Córdoba": ["Montería", "Santa Cruz de Lorica", "Tierralta", "Cereté", "Sahagún"],
+  "Cundinamarca": ["Bogotá", "Soacha", "Chía", "Zipaquirá", "Facatativá", "Fusagasugá", "Mosquera", "Madrid", "Girardot", "Cajicá", "Tocancipá"],
+  "Guainía": ["Inírida"],
+  "Guaviare": ["San José del Guaviare"],
+  "Huila": ["Neiva", "Pitalito", "Garzón", "La Plata"],
+  "La Guajira": ["Riohacha", "Maicao", "Uribia", "San Juan del Cesar"],
+  "Magdalena": ["Santa Marta", "Ciénaga", "Zona Bananera", "Fundación"],
+  "Meta": ["Villavicencio", "Acacías", "Granada", "Puerto López"],
+  "Nariño": ["Pasto", "Tumaco", "Ipiales", "Samaniego"],
+  "Norte de Santander": ["Cúcuta", "Ocaña", "Villa del Rosario", "Los Patios", "Pamplona"],
+  "Putumayo": ["Mocoa", "Puerto Asís", "Orito", "Valle del Guamuez"],
+  "Quindío": ["Armenia", "Calarcá", "Montenegro", "La Tebaida", "Quimbaya"],
+  "Risaralda": ["Pereira", "Dosquebradas", "Santa Rosa de Cabal"],
+  "San Andrés y Providencia": ["San Andrés", "Providencia"],
+  "Santander": ["Bucaramanga", "Floridablanca", "Barrancabermeja", "Girón", "Piedecuesta", "San Gil"],
+  "Sucre": ["Sincelejo", "Corozal", "San Marcos", "Tolú"],
+  "Tolima": ["Ibagué", "Espinal", "Melgar", "Chaparral", "Honda"],
+  "Valle del Cauca": ["Cali", "Buenaventura", "Palmira", "Tuluá", "Yumbo", "Cartago", "Buga", "Jamundí"],
+  "Vaupés": ["Mitú"],
+  "Vichada": ["Puerto Carreño", "La Primavera"]
+};
+
+const departamentos = computed(() => Object.keys(colombiaData).sort());
+const ciudades = computed(() => {
+  if (shipping.value.departamento && colombiaData[shipping.value.departamento]) {
+    return [...colombiaData[shipping.value.departamento]].sort();
+  }
+  return [];
+});
+
+watch(() => shipping.value.departamento, () => {
+  shipping.value.ciudad = '';
+});
+
+const errors = reactive({
+  nombre_recibe: '',
+  telefono: '',
+  direccion: '',
+  departamento: '',
+  ciudad: '',
+  codigo_postal: ''
+});
+
+const clearError = (field) => {
+  if (errors[field]) {
+    errors[field] = '';
+  }
+  shippingError.value = '';
+};
+
+const handleNameInput = () => {
+  clearError('nombre_recibe');
+  let val = shipping.value.nombre_recibe;
+  if (!val) return;
+  val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+  val = val.replace(/^\s+/, '');
+  val = val.replace(/\s{2,}/g, ' ');
+  shipping.value.nombre_recibe = val;
+};
+
+const handlePhoneInput = () => {
+  clearError('telefono');
+  let val = shipping.value.telefono;
+  if (!val) return;
+  val = val.replace(/\D/g, '');
+  if (val.length > 10) val = val.substring(0, 10);
+  shipping.value.telefono = val;
+};
+
+const handleAddressInput = (field) => {
+  clearError(field);
+  let val = shipping.value[field];
+  if (!val) return;
+  val = val.replace(/^\s+/, '');
+  val = val.replace(/\s{2,}/g, ' ');
+  shipping.value[field] = val;
+};
+
+const handleZipCodeInput = () => {
+  clearError('codigo_postal');
+  let val = shipping.value.codigo_postal;
+  if (!val) return;
+  val = val.replace(/\D/g, '');
+  if (val.length > 6) val = val.substring(0, 6);
+  shipping.value.codigo_postal = val;
+};
+
+const handleNotasInput = () => {
+  let val = notas_cliente.value;
+  if (!val) return;
+  val = val.replace(/^\s+/, '');
+  val = val.replace(/\s{2,}/g, ' ');
+  notas_cliente.value = val;
+};
+
 // Payment
 const payment = ref({
   method: 'paypal'
@@ -551,12 +671,7 @@ const paymentMethods = [
     desc: 'Tarjetas de Crédito, Débito o Saldo PayPal',
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
   },
-  {
-    id: 'transferencia',
-    name: 'Transferencia Bancaria',
-    desc: 'Transferencia directa (confirmación manual)',
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
-  }
+
 ]
 
 const selectedPaymentName = computed(() => {
@@ -583,24 +698,47 @@ const confirmMessage = computed(() => {
 })
 
 const validateShipping = () => {
-  shippingError.value = ''
+  let isValid = true;
+  shippingError.value = '';
+  
+  Object.keys(errors).forEach(key => errors[key] = '');
+
   if (!shipping.value.nombre_recibe.trim()) {
-    shippingError.value = 'El nombre de quien recibe es obligatorio'
-    return false
+    errors.nombre_recibe = 'El nombre es obligatorio';
+    isValid = false;
+  } else if (shipping.value.nombre_recibe.trim().length < 3) {
+    errors.nombre_recibe = 'Debe tener al menos 3 caracteres';
+    isValid = false;
   }
+
+  if (!shipping.value.telefono.trim()) {
+    errors.telefono = 'El teléfono es obligatorio';
+    isValid = false;
+  } else if (shipping.value.telefono.length !== 10) {
+    errors.telefono = 'El teléfono debe tener exactamente 10 dígitos';
+    isValid = false;
+  }
+
   if (!shipping.value.direccion.trim()) {
-    shippingError.value = 'La dirección es obligatoria'
-    return false
+    errors.direccion = 'La dirección es obligatoria';
+    isValid = false;
   }
-  if (!shipping.value.departamento.trim()) {
-    shippingError.value = 'El departamento es obligatorio'
-    return false
+
+  if (!shipping.value.departamento) {
+    errors.departamento = 'Selecciona un departamento';
+    isValid = false;
   }
-  if (!shipping.value.ciudad.trim()) {
-    shippingError.value = 'La ciudad es obligatoria'
-    return false
+
+  if (!shipping.value.ciudad) {
+    errors.ciudad = 'Selecciona una ciudad';
+    isValid = false;
   }
-  return true
+
+  if (!isValid) {
+    shippingError.value = 'Por favor, completa correctamente los campos obligatorios resaltados en rojo.';
+  }
+
+  return isValid;
 }
 
 const nextStep = () => {
@@ -928,15 +1066,72 @@ const placeOrder = async () => {
   line-height: 1.6;
 }
 
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.form-select:disabled {
+  background-color: #faf8f4;
+  color: #aaa;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.form-group--error .form-input,
+.form-group--error .form-textarea,
+.form-group--error .form-select {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+  background-color: #fffafaf9;
+}
+
+.form-group--error .form-label {
+  color: #e53e3e;
+}
+
+.field-error {
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  color: #e53e3e;
+  font-weight: 500;
+  margin-top: 2px;
+  animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .form-error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #c53030;
+  border: 1px solid #fed7d7;
   padding: 12px 16px;
   border-radius: 10px;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+.form-error::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c53030' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='12' cy='12' r='10'%3e%3c/circle%3e%3cline x1='12' y1='8' x2='12' y2='12'%3e%3c/line%3e%3cline x1='12' y1='16' x2='12.01' y2='16'%3e%3c/line%3e%3c/svg%3e");
+  background-size: cover;
 }
 
 /* ── Buttons ── */

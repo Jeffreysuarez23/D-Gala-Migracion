@@ -29,7 +29,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nombre de la Categoría</th>
+              <th>Categoría</th>
               <th>Nivel</th>
               <th>Orden</th>
               <th>Destacada</th>
@@ -38,8 +38,18 @@
           </thead>
           <tbody>
             <tr v-for="cat in flatCategorias" :key="cat.id">
-              <td>#{{ cat.id }}</td>
-              <td style="font-weight: 600; color: var(--color-accent);">{{ cat.displayName }}</td>
+              <td style="font-weight: 600;">#{{ cat.id }}</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 44px; height: 44px; border-radius: 8px; overflow: hidden; background: var(--bg-input); flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                    <img v-if="cat.imagen_url" :src="cat.imagen_url" style="width: 100%; height: 100%; object-fit: cover;" alt="Categoría" />
+                    <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--color-border);">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    </div>
+                  </div>
+                  <span style="font-weight: 600; color: var(--color-accent);">{{ cat.displayName }}</span>
+                </div>
+              </td>
               <td>
                 <span :class="['badge', cat.isSub ? 'badge--info' : 'badge--success']">
                   {{ cat.isSub ? 'Subcategoría' : 'Principal' }}

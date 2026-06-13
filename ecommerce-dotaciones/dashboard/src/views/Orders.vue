@@ -157,9 +157,30 @@
               <span class="info-label">Teléfono:</span>
               <span class="info-value">{{ selectedOrder.usuario?.telefono || 'No registra' }}</span>
             </div>
-            <div class="info-row" v-if="selectedOrder.notas_cliente">
+            <template v-if="selectedOrder.direccion">
+              <div class="info-row" style="margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--color-border);">
+                <span class="info-label" style="font-weight: 700; color: var(--color-accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Datos de Envío</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Recibe:</span>
+                <span class="info-value">{{ selectedOrder.direccion.nombre_recibe || selectedOrder.usuario?.nombre }}</span>
+              </div>
+              <div class="info-row" v-if="selectedOrder.direccion.telefono">
+                <span class="info-label">Tel. Contacto:</span>
+                <span class="info-value">{{ selectedOrder.direccion.telefono }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Dirección:</span>
+                <span class="info-value" style="text-align: right;">{{ selectedOrder.direccion.direccion }}<br v-if="selectedOrder.direccion.referencia"><span v-if="selectedOrder.direccion.referencia" style="font-size: 11px; color: var(--text-muted);">({{ selectedOrder.direccion.referencia }})</span></span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Ubicación:</span>
+                <span class="info-value">{{ selectedOrder.direccion.ciudad }}, {{ selectedOrder.direccion.departamento }}<template v-if="selectedOrder.direccion.codigo_postal"> - {{ selectedOrder.direccion.codigo_postal }}</template></span>
+              </div>
+            </template>
+            <div class="info-row" v-if="selectedOrder.notas_cliente" :style="selectedOrder.direccion ? 'margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--color-border);' : ''">
               <span class="info-label">Notas del Cliente:</span>
-              <span class="info-value text-italic">"{{ selectedOrder.notas_cliente }}"</span>
+              <span class="info-value text-italic" style="text-align: right;">"{{ selectedOrder.notas_cliente }}"</span>
             </div>
           </div>
         </div>
@@ -381,6 +402,7 @@ const onStatusChange = async (event) => {
     }
     
     showDrawerSuccess('Estado del pedido actualizado correctamente.')
+    window.dispatchEvent(new Event('orders-updated'))
   } catch (error) {
     console.error('Error updating order status:', error)
     showDrawerError('Hubo un error al actualizar el estado.')
@@ -671,5 +693,32 @@ const getVariantImage = (item) => {
 
 .font-mono {
   font-family: monospace;
+}
+
+/* Alertas de estilo */
+.alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.alert--success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

@@ -138,6 +138,33 @@ class OrdenController extends Controller
 
             DB::commit();
 
+            // Verificar el stock restante para notificar si se agotó
+            foreach ($carrito->items as $item) {
+                $variante = $item->variante;
+                if ($variante && $variante->lona_id) {
+                    $stockRestante = DB::table('lona_tallas')
+                        ->where('lona_id', $variante->lona_id)
+                        ->where('talla', $variante->talla)
+                        ->value('cantidad');
+
+                    if ($stockRestante !== null && $stockRestante <= 0) {
+                        Notificacion::create([
+                            'usuario_id' => null,
+                            'tipo' => 'stock_bajo',
+                            'titulo' => 'Producto Agotado',
+                            'mensaje' => "El producto {$variante->producto->nombre} (Talla: {$variante->talla}, Color: {$variante->color}) se ha quedado sin stock (0 unidades)."
+                        ]);
+                    } elseif ($stockRestante !== null && $stockRestante <= 5) {
+                        Notificacion::create([
+                            'usuario_id' => null,
+                            'tipo' => 'stock_bajo',
+                            'titulo' => 'Stock Crítico',
+                            'mensaje' => "El producto {$variante->producto->nombre} (Talla: {$variante->talla}, Color: {$variante->color}) tiene stock bajo ({$stockRestante} unidades)."
+                        ]);
+                    }
+                }
+            }
+
             // Cargar relaciones para la respuesta
             $orden->load(['items.variante.producto.imagenes', 'direccion', 'usuario']);
 
@@ -243,7 +270,7 @@ class OrdenController extends Controller
     public function cambiarEstado(Request $request, $id)
     {
         $request->validate([
-           'estado' => 'required|in:pendiente,confirmada,procesando,enviado,entregado,cancelada,devuelta'
+           'estado' => 'required|in:pendiente,pagado,confirmada,procesando,enviado,entregado,cancelada,devuelta'
         ]);
 
         $orden = Orden::find($id);

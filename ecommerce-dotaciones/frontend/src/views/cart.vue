@@ -135,6 +135,18 @@
           </svg>
         </router-link>
       </div>
+
+      <!-- Alerta global de stock -->
+      <transition name="fade-slide">
+        <div v-if="stockAlertMsg" class="stock-alert-toast">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ stockAlertMsg }}</span>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -148,6 +160,16 @@ import { updateCartCount } from '../cartState'
 const router = useRouter()
 
 const cartItems = ref([])
+const stockAlertMsg = ref('')
+const stockAlertTimeout = ref(null)
+
+const showStockAlert = (msg) => {
+  stockAlertMsg.value = msg
+  if (stockAlertTimeout.value) clearTimeout(stockAlertTimeout.value)
+  stockAlertTimeout.value = setTimeout(() => {
+    stockAlertMsg.value = ''
+  }, 4000)
+}
 
 const fetchCart = async () => {
   const cartId = localStorage.getItem('carrito_id')
@@ -177,6 +199,7 @@ const fetchCart = async () => {
           category: p.categoria ? p.categoria.nombre : 'General',
           price: finalPrice,
           quantity: item.cantidad,
+          stock: v.stock || 0,
           image: image
         }
       })
@@ -216,6 +239,11 @@ const updateQuantity = async (id, newQuantity) => {
   if (newQuantity < 1) return
   const item = cartItems.value.find(i => i.id === id)
   if (item) {
+    if (newQuantity > item.stock) {
+      showStockAlert(`Solo quedan ${item.stock} unidades disponibles de "${item.name}".`)
+      return
+    }
+    
     item.quantity = newQuantity
     try {
       await axios.put(`http://localhost:8000/api/carrito-items/${id}`, { cantidad: newQuantity })
@@ -633,5 +661,41 @@ const goToLogin = () => {
     align-items: center;
     width: 100%;
   }
+}
+
+/* Alerta de Límite de Stock */
+.stock-alert-toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.stock-alert-toast svg {
+  color: #ef4444;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 20px);
 }
 </style>

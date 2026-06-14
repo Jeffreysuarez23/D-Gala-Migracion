@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="cart__inner">
+    <div class="cart__inner" v-reveal>
       <!-- Lista de productos -->
       <div v-if="cartItems.length" class="cart__layout">
         <div class="cart__items">

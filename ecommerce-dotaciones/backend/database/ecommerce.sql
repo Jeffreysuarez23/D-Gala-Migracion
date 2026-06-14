@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 12-06-2026 a las 22:23:36
+-- Tiempo de generación: 14-06-2026 a las 17:31:57
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -123,15 +123,6 @@ CREATE TABLE `categorias` (
   `destacada` tinyint(1) DEFAULT 0,
   `imagen_url` varchar(500) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `categorias`
---
-
-INSERT INTO `categorias` (`id`, `nombre`, `slug`, `padre_id`, `orden`, `destacada`, `imagen_url`) VALUES
-(28, 'Camisas', 'camisas', NULL, 3, 1, 'http://localhost:8000/images/categorias/1781126962_6a29d732587bb.png'),
-(29, 'Pantalones', 'pantalones', NULL, 2, 1, 'http://localhost:8000/images/categorias/1781126980_6a29d744edf0b.png'),
-(30, 'Zapatos', 'zapatos', NULL, 1, 1, 'http://localhost:8000/images/categorias/1781126995_6a29d7538718b.JPEG');
 
 -- --------------------------------------------------------
 
@@ -276,7 +267,13 @@ INSERT INTO `direcciones` (`id`, `usuario_id`, `nombre_recibe`, `telefono`, `eti
 (38, 7, 'sdfds', 'dsfdfsf', 'Casa', 'dsfds', 'fdsfsd', 'fdsfdsfds', 'dfsfdsfds', 'fdsfds', 0, NULL),
 (39, 7, 'dfdfsd', 'sfdsfdfsd', 'Casa', 'dsfdfssfd', 'fdssfd', 'dfsfdsfds', 'ddfsdfsfds', 'dfsdfs', 0, NULL),
 (40, 7, 'John Doe', '+573000000000', 'Casa', 'Atlantico', 'Barranquilla', 'Calle 123 #45-67', NULL, '080001', 0, NULL),
-(41, 7, 'dfssdfdfs', 'dfsdfsfds', 'Casa', 'dfsfds', 'dfsdfs', 'fdssfdfds', 'dfsdsf', 'sfdfds', 0, NULL);
+(41, 7, 'dfssdfdfs', 'dfsdfsfds', 'Casa', 'dfsfds', 'dfsdfs', 'fdssfdfds', 'dfsdsf', 'sfdfds', 0, NULL),
+(42, 7, 'ewrrew', 'rewrewrew', 'Casa', 'rewerw', 'rewerw', 'rewrewwer', 'rewerw', 'erwerw', 0, NULL),
+(43, 7, 'jeffrey suarez', '3233338603', 'Casa', 'Antioquia', 'Medellín', 'calle 34fds', 'fdsfdsfds', '423432', 0, NULL),
+(44, 7, 'jeffrey', '3423423423', 'Casa', 'Guainía', 'Inírida', 'scsdffdsf', 'wwer', '233243', 0, NULL),
+(45, 7, 'fdsfdsfds', '2343424324', 'Casa', 'Amazonas', 'Leticia', 'fdsdsfdfssdf', 'fdsdfsdfs', '343232', 0, NULL),
+(46, 7, 'fdsfdsfds', '2343424324', 'Casa', 'Amazonas', 'Leticia', 'fdsdsfdfssdf', 'fdsdfsdfs', '343232', 0, NULL),
+(47, 7, 'sdsdffd', '3244323422', 'Casa', 'Antioquia', 'Apartadó', '3dfsdfsfds', 'fdsfds', '324342', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -336,60 +333,6 @@ CREATE TABLE `historial_lonas` (
   `creado_por` bigint(20) UNSIGNED DEFAULT NULL,
   `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `historial_lonas`
---
-
-INSERT INTO `historial_lonas` (`id`, `lona_id`, `orden_item_id`, `accion`, `talla`, `cantidad_cambio`, `cantidad_restante`, `snapshot_json`, `notas`, `creado_por`, `creado_en`) VALUES
-(15, 3, NULL, 'ingreso', 'S', 10, NULL, NULL, 'Variable reubicada a esta lona/talla (SKU: CAMI-6574)', NULL, '2026-06-10 21:57:40'),
-(16, 3, NULL, 'ingreso', 'M', 20, NULL, NULL, 'Creación de nueva variable de producto (SKU: POLO-004)', NULL, '2026-06-10 22:00:57'),
-(17, 4, NULL, 'ingreso', 'M', 13, NULL, NULL, 'Creación de nueva variable de producto (SKU: CAMISA)', NULL, '2026-06-10 22:13:41'),
-(18, 3, NULL, 'descuento', 'M', -1, 19, NULL, 'Venta Orden #2 | Variante 25', NULL, '2026-06-11 00:42:24'),
-(19, 3, NULL, 'descuento', 'S', -1, 9, NULL, 'Venta Orden #2 | Variante 24', NULL, '2026-06-11 00:42:24'),
-(20, 3, NULL, 'descuento', 'S', -1, 8, NULL, 'Venta Orden #3 | Variante 24', NULL, '2026-06-11 00:49:32'),
-(21, 3, NULL, 'descuento', 'M', -1, 18, NULL, 'Venta Orden #3 | Variante 25', NULL, '2026-06-11 00:49:32'),
-(22, 3, NULL, 'descuento', 'S', -1, 7, NULL, 'Venta Orden #4 | Variante 24', NULL, '2026-06-11 00:57:11'),
-(23, 4, NULL, 'descuento', 'M', -1, 12, NULL, 'Venta Orden #4 | Variante 26', NULL, '2026-06-11 00:57:11'),
-(24, 3, NULL, 'descuento', 'S', -1, 6, NULL, 'Venta Orden #5 | Variante 24', NULL, '2026-06-11 00:58:45'),
-(25, 3, NULL, 'descuento', 'S', -1, 5, NULL, 'Venta Orden #6 | Variante 24', NULL, '2026-06-11 01:04:51'),
-(26, 4, NULL, 'descuento', 'M', -8, 4, NULL, 'Venta Orden #7 | Variante 26', NULL, '2026-06-11 01:14:15'),
-(27, 3, NULL, 'descuento', 'S', -1, 4, NULL, 'Venta Orden #8 | Variante 24', NULL, '2026-06-11 01:16:25'),
-(28, 3, NULL, 'descuento', 'S', -1, 3, NULL, 'Venta Orden #9 | Variante 24', NULL, '2026-06-11 01:34:10'),
-(29, 3, NULL, 'descuento', 'S', -1, 2, NULL, 'Venta Orden #10 | Variante 24', NULL, '2026-06-11 01:49:30'),
-(30, 3, NULL, 'descuento', 'S', -1, 1, NULL, 'Venta Orden #11 | Variante 24', NULL, '2026-06-11 01:51:19'),
-(31, 3, NULL, 'descuento', 'S', -1, 0, NULL, 'Venta Orden #12 | Variante 24', NULL, '2026-06-11 01:52:52'),
-(32, 3, NULL, 'descuento', 'M', -1, 17, NULL, 'Venta Orden #13 | Variante 25', NULL, '2026-06-11 01:55:45'),
-(33, 3, NULL, 'descuento', 'M', -1, 16, NULL, 'Venta Orden #14 | Variante 25', NULL, '2026-06-11 01:58:02'),
-(34, 3, NULL, 'descuento', 'M', -1, 15, NULL, 'Venta Orden #15 | Variante 25', NULL, '2026-06-11 02:01:12'),
-(35, 3, NULL, 'descuento', 'M', -1, 14, NULL, 'Venta Orden #16 | Variante 25', NULL, '2026-06-11 02:04:59'),
-(36, 3, NULL, 'descuento', 'M', -1, 13, NULL, 'Venta Orden #17 | Variante 25', NULL, '2026-06-11 02:06:56'),
-(37, 3, NULL, 'descuento', 'M', -1, 12, NULL, 'Venta Orden #18 | Variante 25', NULL, '2026-06-11 02:08:41'),
-(38, 3, NULL, 'descuento', 'M', -1, 11, NULL, 'Venta Orden #19 | Variante 25', NULL, '2026-06-11 02:10:25'),
-(39, 3, NULL, 'descuento', 'M', -1, 10, NULL, 'Venta Orden #20 | Variante 25', NULL, '2026-06-11 02:11:47'),
-(40, 3, NULL, 'descuento', 'S', -1, 0, NULL, 'Venta Orden #23 | Variante 24', NULL, '2026-06-11 20:59:13'),
-(41, 4, NULL, 'ingreso', 'XS', 10, NULL, NULL, 'Creación de nueva variable de producto (SKU: CAMISADEPORTIVA)', NULL, '2026-06-11 21:05:19'),
-(42, 3, NULL, 'descuento', 'S', -1, 9, NULL, 'Venta Orden #24 | Variante 24', NULL, '2026-06-11 21:16:18'),
-(43, 3, NULL, 'descuento', 'S', -1, 8, NULL, 'Venta Orden #25 | Variante 24', NULL, '2026-06-11 21:31:35'),
-(44, 3, NULL, 'descuento', 'S', -1, 7, NULL, 'Venta Orden #26 | Variante 24', NULL, '2026-06-11 21:57:57'),
-(45, 3, NULL, 'descuento', 'S', -1, 6, NULL, 'Venta Orden #27 | Variante 24', NULL, '2026-06-11 22:09:19'),
-(46, 3, NULL, 'descuento', 'S', -1, 5, NULL, 'Venta Orden #28 | Variante 24', NULL, '2026-06-11 22:10:18'),
-(47, 3, NULL, 'descuento', 'S', -1, 4, NULL, 'Venta Orden #29 | Variante 24', NULL, '2026-06-11 22:15:23'),
-(48, 3, NULL, 'descuento', 'S', -1, 3, NULL, 'Venta Orden #30 | Variante 24', NULL, '2026-06-11 22:17:17'),
-(49, 4, NULL, 'ingreso', 'Única', 10, NULL, NULL, 'Actualización de stock desde el producto (SKU: PRUE-5349)', NULL, '2026-06-12 00:30:24'),
-(50, 4, NULL, 'descuento', 'Única', -1, 9, NULL, 'Venta Orden #31 | Variante 28', NULL, '2026-06-12 00:39:24'),
-(51, 3, NULL, 'descuento', 'M', -1, 233, NULL, 'Venta Orden #32 | Variante 25', NULL, '2026-06-12 00:44:30'),
-(52, 3, NULL, 'descuento', 'S', -1, 2, NULL, 'Venta Orden #33 | Variante 24', NULL, '2026-06-12 00:46:26'),
-(53, 4, NULL, 'descuento', 'XS', -1, 9, NULL, 'Venta Orden #34 | Variante 27', NULL, '2026-06-12 00:50:59'),
-(54, 4, NULL, 'descuento', 'Única', -1, 8, NULL, 'Venta Orden #35 | Variante 28', NULL, '2026-06-12 00:56:58'),
-(55, 3, NULL, 'descuento', 'S', -1, 1, NULL, 'Venta Orden #36 | Variante 24', NULL, '2026-06-12 18:30:11'),
-(56, 3, NULL, 'descuento', 'M', -1, 232, NULL, 'Venta Orden #37 | Variante 25', NULL, '2026-06-12 18:39:40'),
-(57, 4, NULL, 'descuento', 'Única', -1, 7, NULL, 'Venta Orden #38 | Variante 28', NULL, '2026-06-12 19:51:40'),
-(58, 3, NULL, 'descuento', 'M', -1, 231, NULL, 'Venta Orden #38 | Variante 25', NULL, '2026-06-12 19:51:40'),
-(59, 4, NULL, 'descuento', 'XS', -1, 8, NULL, 'Venta Orden #38 | Variante 27', NULL, '2026-06-12 19:51:40'),
-(60, 3, NULL, 'descuento', 'M', -1, 230, NULL, 'Venta Orden #39 | Variante 25', NULL, '2026-06-12 19:59:10'),
-(61, 3, NULL, 'descuento', 'S', -1, 0, NULL, 'Venta Orden #40 | Variante 24', NULL, '2026-06-12 20:04:24'),
-(62, 3, NULL, 'descuento', 'M', -1, 229, NULL, 'Venta Orden #41 | Variante 25', NULL, '2026-06-12 20:07:10');
 
 -- --------------------------------------------------------
 
@@ -468,14 +411,6 @@ CREATE TABLE `lonas` (
   `capacidad_maxima` int(11) NOT NULL DEFAULT 50
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `lonas`
---
-
-INSERT INTO `lonas` (`id`, `dotacion_id`, `codigo`, `tipo_producto`, `categoria_id`, `color`, `estado`, `activa`, `creado_en`, `capacidad_maxima`) VALUES
-(3, 12, 'LONA-001', 'Camisas', 28, 'VERDE', 'nuevo', 1, '2026-06-10 21:57:22', 1000),
-(4, 12, 'LONA-002', 'Camisas', 28, 'Rojo', 'nuevo', 1, '2026-06-10 22:12:47', 1000);
-
 -- --------------------------------------------------------
 
 --
@@ -488,17 +423,6 @@ CREATE TABLE `lona_tallas` (
   `talla` varchar(10) NOT NULL,
   `cantidad` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `lona_tallas`
---
-
-INSERT INTO `lona_tallas` (`id`, `lona_id`, `talla`, `cantidad`) VALUES
-(11, 3, 'S', 0),
-(12, 3, 'M', 229),
-(13, 4, 'M', 13),
-(14, 4, 'XS', 8),
-(15, 4, 'Única', 7);
 
 -- --------------------------------------------------------
 
@@ -546,44 +470,52 @@ CREATE TABLE `notificaciones` (
 --
 
 INSERT INTO `notificaciones` (`id`, `usuario_id`, `tipo`, `titulo`, `mensaje`, `leido_en`, `confirmado_por`, `creado_en`) VALUES
-(1, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781138544 por $204,000 COP', NULL, NULL, '2026-06-11 05:42:24'),
-(2, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781138972 por $198,600 COP', NULL, NULL, '2026-06-11 05:49:32'),
-(3, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781139431 por $178,900 COP', NULL, NULL, '2026-06-11 05:57:11'),
-(4, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781139525 por $106,800 COP', NULL, NULL, '2026-06-11 05:58:45'),
-(5, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781139891 por $106,800 COP', NULL, NULL, '2026-06-11 06:04:51'),
-(6, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781140455 por $576,800 COP', NULL, NULL, '2026-06-11 06:14:15'),
-(7, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781140585 por $106,800 COP', NULL, NULL, '2026-06-11 06:16:25'),
-(8, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781141650 por $106,800 COP', NULL, NULL, '2026-06-11 06:34:10'),
-(9, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142570 por $106,800 COP', NULL, NULL, '2026-06-11 06:49:30'),
-(10, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142679 por $106,800 COP', NULL, NULL, '2026-06-11 06:51:19'),
-(11, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142772 por $106,800 COP', NULL, NULL, '2026-06-11 06:52:52'),
-(12, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142945 por $106,800 COP', NULL, NULL, '2026-06-11 06:55:45'),
-(13, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143082 por $106,800 COP', NULL, NULL, '2026-06-11 06:58:02'),
-(14, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143272 por $106,800 COP', NULL, NULL, '2026-06-11 07:01:12'),
-(15, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143499 por $106,800 COP', NULL, NULL, '2026-06-11 07:04:59'),
-(16, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143616 por $106,800 COP', NULL, NULL, '2026-06-11 07:06:56'),
-(17, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143721 por $106,800 COP', NULL, NULL, '2026-06-11 07:08:41'),
-(18, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143825 por $106,800 COP', NULL, NULL, '2026-06-11 07:10:25'),
-(19, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143907 por $106,800 COP', NULL, NULL, '2026-06-11 07:11:47'),
-(20, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781211553 por $106,800 COP', NULL, NULL, '2026-06-12 01:59:13'),
-(21, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781212578 por $106,800 COP', NULL, NULL, '2026-06-12 02:16:18'),
-(22, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781213495 por $106,800 COP', NULL, NULL, '2026-06-12 02:31:35'),
-(23, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781215077 por $106,800 COP', NULL, NULL, '2026-06-12 02:57:57'),
-(24, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781215759 por $106,800 COP', NULL, NULL, '2026-06-12 03:09:19'),
-(25, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781215818 por $106,800 COP', NULL, NULL, '2026-06-12 03:10:18'),
-(26, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781216123 por $106,800 COP', NULL, NULL, '2026-06-12 03:15:23'),
-(27, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781216237 por $106,800 COP', NULL, NULL, '2026-06-12 03:17:17'),
-(28, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781224764 por $215,000 COP', NULL, NULL, '2026-06-12 05:39:24'),
-(29, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225070 por $106,800 COP', NULL, NULL, '2026-06-12 05:44:30'),
-(30, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225186 por $106,800 COP', NULL, NULL, '2026-06-12 05:46:26'),
-(31, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225459 por $110,950 COP', NULL, NULL, '2026-06-12 05:50:59'),
-(32, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225818 por $215,000 COP', NULL, NULL, '2026-06-12 05:56:58'),
-(33, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781289011 por $106,800 COP', NULL, NULL, '2026-06-12 23:30:11'),
-(34, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781289580 por $106,800 COP', NULL, NULL, '2026-06-12 23:39:40'),
-(35, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781293900 por $387,750 COP', NULL, NULL, '2026-06-13 00:51:41'),
-(36, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781294350 por $106,800 COP', NULL, NULL, '2026-06-13 00:59:10'),
-(37, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781294664 por $106,800 COP', NULL, NULL, '2026-06-13 01:04:24'),
-(38, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781294830 por $106,800 COP', NULL, NULL, '2026-06-13 01:07:10');
+(1, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781138544 por $204,000 COP', '2026-06-13 05:46:16', NULL, '2026-06-11 05:42:24'),
+(2, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781138972 por $198,600 COP', '2026-06-13 05:46:15', NULL, '2026-06-11 05:49:32'),
+(3, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781139431 por $178,900 COP', '2026-06-13 05:46:14', NULL, '2026-06-11 05:57:11'),
+(4, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781139525 por $106,800 COP', '2026-06-13 05:46:13', NULL, '2026-06-11 05:58:45'),
+(5, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781139891 por $106,800 COP', '2026-06-13 05:46:12', NULL, '2026-06-11 06:04:51'),
+(6, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781140455 por $576,800 COP', '2026-06-13 05:46:10', NULL, '2026-06-11 06:14:15'),
+(7, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781140585 por $106,800 COP', '2026-06-13 05:46:09', NULL, '2026-06-11 06:16:25'),
+(8, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781141650 por $106,800 COP', '2026-06-13 05:46:08', NULL, '2026-06-11 06:34:10'),
+(9, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142570 por $106,800 COP', '2026-06-13 05:46:07', NULL, '2026-06-11 06:49:30'),
+(10, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142679 por $106,800 COP', '2026-06-13 05:46:05', NULL, '2026-06-11 06:51:19'),
+(11, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142772 por $106,800 COP', '2026-06-13 05:46:04', NULL, '2026-06-11 06:52:52'),
+(12, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781142945 por $106,800 COP', '2026-06-13 05:46:02', NULL, '2026-06-11 06:55:45'),
+(13, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143082 por $106,800 COP', '2026-06-13 05:46:01', NULL, '2026-06-11 06:58:02'),
+(14, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143272 por $106,800 COP', '2026-06-13 05:46:00', NULL, '2026-06-11 07:01:12'),
+(15, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143499 por $106,800 COP', '2026-06-13 05:45:59', NULL, '2026-06-11 07:04:59'),
+(16, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143616 por $106,800 COP', '2026-06-13 05:45:57', NULL, '2026-06-11 07:06:56'),
+(17, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143721 por $106,800 COP', '2026-06-13 05:45:56', NULL, '2026-06-11 07:08:41'),
+(18, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143825 por $106,800 COP', '2026-06-13 05:45:55', NULL, '2026-06-11 07:10:25'),
+(19, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781143907 por $106,800 COP', '2026-06-13 05:45:54', NULL, '2026-06-11 07:11:47'),
+(20, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781211553 por $106,800 COP', '2026-06-13 05:45:53', NULL, '2026-06-12 01:59:13'),
+(21, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781212578 por $106,800 COP', '2026-06-13 05:45:51', NULL, '2026-06-12 02:16:18'),
+(22, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781213495 por $106,800 COP', '2026-06-13 05:45:50', NULL, '2026-06-12 02:31:35'),
+(23, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781215077 por $106,800 COP', '2026-06-13 05:45:49', NULL, '2026-06-12 02:57:57'),
+(24, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781215759 por $106,800 COP', '2026-06-13 05:45:48', NULL, '2026-06-12 03:09:19'),
+(25, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781215818 por $106,800 COP', '2026-06-13 05:45:46', NULL, '2026-06-12 03:10:18'),
+(26, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781216123 por $106,800 COP', '2026-06-13 05:45:45', NULL, '2026-06-12 03:15:23'),
+(27, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781216237 por $106,800 COP', '2026-06-13 05:45:44', NULL, '2026-06-12 03:17:17'),
+(28, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781224764 por $215,000 COP', '2026-06-13 05:45:43', NULL, '2026-06-12 05:39:24'),
+(29, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225070 por $106,800 COP', '2026-06-13 05:45:42', NULL, '2026-06-12 05:44:30'),
+(30, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225186 por $106,800 COP', '2026-06-13 05:45:41', NULL, '2026-06-12 05:46:26'),
+(31, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225459 por $110,950 COP', '2026-06-13 05:45:39', NULL, '2026-06-12 05:50:59'),
+(32, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781225818 por $215,000 COP', '2026-06-13 05:45:38', NULL, '2026-06-12 05:56:58'),
+(33, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781289011 por $106,800 COP', '2026-06-13 05:45:36', NULL, '2026-06-12 23:30:11'),
+(34, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781289580 por $106,800 COP', '2026-06-13 05:45:34', NULL, '2026-06-12 23:39:40'),
+(35, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781293900 por $387,750 COP', '2026-06-13 05:45:29', NULL, '2026-06-13 00:51:41'),
+(36, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781294350 por $106,800 COP', '2026-06-13 05:45:27', NULL, '2026-06-13 00:59:10'),
+(37, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781294664 por $106,800 COP', '2026-06-13 05:45:26', NULL, '2026-06-13 01:04:24'),
+(38, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781294830 por $106,800 COP', '2026-06-13 05:45:35', NULL, '2026-06-13 01:07:10'),
+(39, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781300698 por $551,850 COP', '2026-06-13 05:45:34', NULL, '2026-06-13 02:44:58'),
+(40, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781310013 por $198,600 COP', '2026-06-13 05:45:17', NULL, '2026-06-13 05:20:13'),
+(41, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781311877 por $287,850 COP', '2026-06-13 05:52:12', NULL, '2026-06-13 05:51:17'),
+(42, NULL, 'stock_bajo', 'Producto Agotado', 'El producto Camisa Sena (Talla: XS, Color: ROJO) se ha quedado sin stock (0 unidades).', '2026-06-13 06:00:16', NULL, '2026-06-13 05:51:17'),
+(43, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781312309 por $865,200 COP', '2026-06-13 06:00:15', NULL, '2026-06-13 05:58:29'),
+(44, NULL, 'stock_bajo', 'Producto Agotado', 'El producto Camisa Sena (Talla: M, Color: ROJO) se ha quedado sin stock (0 unidades).', '2026-06-13 06:00:14', NULL, '2026-06-13 05:58:29'),
+(45, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781312369 por $1,400,000 COP', '2026-06-13 06:00:11', NULL, '2026-06-13 05:59:29'),
+(46, NULL, 'stock_bajo', 'Producto Agotado', 'El producto prueba (Talla: Única, Color: ROJO) se ha quedado sin stock (0 unidades).', '2026-06-13 06:00:10', NULL, '2026-06-13 05:59:29');
 
 -- --------------------------------------------------------
 
@@ -607,18 +539,6 @@ CREATE TABLE `ordenes` (
   `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `ordenes`
---
-
-INSERT INTO `ordenes` (`id`, `usuario_id`, `direccion_id`, `cupon_id`, `numero`, `estado`, `tipo_precio`, `subtotal`, `descuento`, `envio_costo`, `total`, `notas_cliente`, `creado_en`) VALUES
-(36, 7, 36, NULL, 'ORD-1781289011', 'pendiente', 'minorista', 91800.00, 0.00, 15000.00, 106800.00, 'dfsfdsfds', '2026-06-12 18:30:11'),
-(37, 7, 37, NULL, 'ORD-1781289580', 'pagado', 'minorista', 91800.00, 0.00, 15000.00, 106800.00, 'dfsfdsfdsfds', '2026-06-12 18:39:40'),
-(38, 7, 38, NULL, 'ORD-1781293900', 'pagado', 'minorista', 387750.00, 0.00, 0.00, 387750.00, 'fdsfdsfdsfds', '2026-06-12 19:51:40'),
-(39, 7, 39, NULL, 'ORD-1781294350', 'pendiente', 'minorista', 91800.00, 0.00, 15000.00, 106800.00, 'dfsdfssfd', '2026-06-12 19:59:10'),
-(40, 7, 40, NULL, 'ORD-1781294664', 'pagado', 'minorista', 91800.00, 0.00, 15000.00, 106800.00, NULL, '2026-06-12 20:04:24'),
-(41, 7, 41, NULL, 'ORD-1781294830', 'pagado', 'minorista', 91800.00, 0.00, 15000.00, 106800.00, 'sdffdsfds', '2026-06-12 20:07:10');
-
 -- --------------------------------------------------------
 
 --
@@ -634,20 +554,6 @@ CREATE TABLE `orden_items` (
   `precio_unitario` decimal(10,2) NOT NULL,
   `total_linea` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `orden_items`
---
-
-INSERT INTO `orden_items` (`id`, `orden_id`, `variante_id`, `lona_id_snapshot`, `cantidad`, `precio_unitario`, `total_linea`) VALUES
-(37, 36, 24, NULL, 1, 91800.00, 91800.00),
-(38, 37, 25, NULL, 1, 91800.00, 91800.00),
-(39, 38, 28, NULL, 1, 200000.00, 200000.00),
-(40, 38, 25, NULL, 1, 91800.00, 91800.00),
-(41, 38, 27, NULL, 1, 95950.00, 95950.00),
-(42, 39, 25, NULL, 1, 91800.00, 91800.00),
-(43, 40, 24, NULL, 1, 91800.00, 91800.00),
-(44, 41, 25, NULL, 1, 91800.00, 91800.00);
 
 --
 -- Disparadores `orden_items`
@@ -741,16 +647,6 @@ CREATE TABLE `pagos` (
   `pagado_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `pagos`
---
-
-INSERT INTO `pagos` (`id`, `orden_id`, `metodo`, `referencia_pasarela`, `estado`, `monto`, `pagado_en`) VALUES
-(26, 37, 'paypal', '8M939928975584536', 'aprobado', 106800.00, NULL),
-(27, 38, 'paypal', '00C85085E8045210C', 'aprobado', 387750.00, NULL),
-(28, 40, 'paypal', '57H59342U9280220B', 'aprobado', 106800.00, NULL),
-(29, 41, 'paypal', '13362088D8191291V', 'aprobado', 106800.00, NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -810,7 +706,7 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (49, 'App\\Models\\Usuario', 7, 'auth_token', 'd836f1c82b3e5b2c944406ff5877f8f58128fd35240caa9bd0be9c9dcfe9ff98', '[\"*\"]', NULL, NULL, '2026-06-12 06:13:19', '2026-06-12 06:13:19'),
 (52, 'App\\Models\\Usuario', 7, 'auth_token', '13088d145e03031b5bfde3aac19a93fb3260d84bad5aa0757b438052792e1968', '[\"*\"]', '2026-06-13 01:04:45', NULL, '2026-06-12 23:39:09', '2026-06-13 01:04:45'),
 (53, 'App\\Models\\Usuario', 7, 'auth_token', 'bd03a2b0ad0bbcddf062a85a0123943c182af43bed7245b07e99a794b0bf35a2', '[\"*\"]', '2026-06-13 00:59:21', NULL, '2026-06-13 00:49:29', '2026-06-13 00:59:21'),
-(54, 'App\\Models\\Usuario', 7, 'auth_token', 'd6a2a8387e315e2399fbf12a05cc1330a171a278d89f4ec79f940ababa94b515', '[\"*\"]', '2026-06-13 01:07:24', NULL, '2026-06-13 00:59:55', '2026-06-13 01:07:24');
+(54, 'App\\Models\\Usuario', 7, 'auth_token', 'd6a2a8387e315e2399fbf12a05cc1330a171a278d89f4ec79f940ababa94b515', '[\"*\"]', '2026-06-14 20:05:19', NULL, '2026-06-13 00:59:55', '2026-06-14 20:05:19');
 
 -- --------------------------------------------------------
 
@@ -839,8 +735,8 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`id`, `categoria_id`, `nombre`, `slug`, `descripcion`, `precio_minorista`, `precio_mayorista`, `min_cantidad_mayorista`, `publicado`, `permitir_sin_stock`, `eliminado_en`, `creado_en`, `destacado`) VALUES
-(16, 28, 'Camisa Sena', 'camisa-sena', NULL, 100000.00, 150000.00, 12, 1, 1, NULL, '2026-06-10 21:54:02', 1),
-(17, 29, 'prueba', 'prueba', 'ojala funcione', 200000.00, 0.00, 12, 1, 1, NULL, '2026-06-12 00:28:55', 1);
+(16, NULL, 'Camisa Sena', 'camisa-sena', NULL, 100000.00, 150000.00, 12, 1, 1, '2026-06-14 20:29:59', '2026-06-10 21:54:02', 1),
+(17, NULL, 'prueba', 'prueba', 'ojala funcione', 200000.00, 0.00, 12, 1, 1, '2026-06-14 20:30:03', '2026-06-12 00:28:55', 1);
 
 -- --------------------------------------------------------
 
@@ -924,11 +820,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `google_id`, `rol`, `telefono`, `avatar_url`, `email_verificado_en`, `remember_token`, `eliminado_en`, `creado_en`, `actualizado_en`) VALUES
 (1, 'Alejandro', 'test@gmail.com', '$2y$12$jaaZNDO.XKDO432O90tRG.WWoSqjdPgBa1OgSetWo89.otsoER6DG', NULL, 'cliente', NULL, NULL, NULL, NULL, NULL, '2026-04-24 19:10:54', '2026-04-24 19:10:54'),
-(7, 'Jeffrey hermoso hola', 'jeffrey232008suarez@gmail.com', '$2y$12$y7hNmzOV43ks7URJgmKWBO6znmC9O2mU2EzBWsUZmuR9fm7FH/K2K', NULL, 'super_admin', '111111', NULL, '2026-06-11 00:59:16', NULL, NULL, '2026-06-08 20:10:14', '2026-06-10 19:59:16'),
-(8, 'GABO', 'GAB@GMAIL.COM', '$2y$12$LE8.EjDkoAZ/W7a61EBw.Oe0T7kszClt5M0J0kZ95RE6cPquJ12vq', NULL, 'cliente', '111122222', NULL, NULL, NULL, NULL, '2026-06-08 22:46:00', '2026-06-08 22:46:00'),
-(9, 'evelyn', 'edfssdf@gmail.com', '$2y$12$eHOvT4NPCL2bXPtf5dghluQ/dFYRp38gNqdZqRzmqEq0rxdpm63jm', NULL, 'cliente', '324324324', NULL, NULL, NULL, NULL, '2026-06-08 22:52:16', '2026-06-08 22:52:16'),
-(14, 'beatriz', 'beatrizcatano0121@gmail.com', '$2y$12$2yB74Wz9o8arcPTqRdc1dOLOHl/Kvgtiy2Z/k4HnGPIMIe19wNVT2', NULL, 'cliente', '342432324', NULL, '2026-06-09 04:10:39', NULL, NULL, '2026-06-08 23:10:10', '2026-06-08 23:10:39'),
-(19, 'jader perna', 'jaderperna@gmail.com', '$2y$12$8jF/FLtmmxnPpHH5mOgNLO.w9POSIqRcpcWN3KvMrIgC8TDehvBKe', NULL, 'cliente', '3234243234', NULL, NULL, NULL, NULL, '2026-06-10 23:51:04', '2026-06-10 23:51:04');
+(7, 'Jeffrey hermoso hola', 'jeffrey232008suarez@gmail.com', '$2y$12$y7hNmzOV43ks7URJgmKWBO6znmC9O2mU2EzBWsUZmuR9fm7FH/K2K', NULL, 'super_admin', '111111', NULL, '2026-06-11 00:59:16', NULL, NULL, '2026-06-08 20:10:14', '2026-06-10 19:59:16');
 
 -- --------------------------------------------------------
 
@@ -949,17 +841,6 @@ CREATE TABLE `variantes_producto` (
   `descuento` int(11) DEFAULT 0,
   `eliminado_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `variantes_producto`
---
-
-INSERT INTO `variantes_producto` (`id`, `producto_id`, `lona_id`, `sku`, `color`, `color_hex`, `talla`, `stock`, `precio_extra`, `descuento`, `eliminado_en`) VALUES
-(24, 16, 3, 'CAMI-6574', 'VERDE', '#10b981', 'S', 0, 2000.00, 10, NULL),
-(25, 16, 3, 'POLO-004', 'VERDE', '#10b981', 'M', 229, 2000.00, 10, NULL),
-(26, 16, 4, 'CAMISA', 'ROJO', '#ef4444', 'M', 13, 3000.00, 30, NULL),
-(27, 16, 4, 'CAMISADEPORTIVA', 'ROJO', '#f50000', 'XS', 8, 1000.00, 5, NULL),
-(28, 17, 4, 'PRUE-5349', 'ROJO', '#ef4444', 'Única', 7, 0.00, 0, NULL);
 
 --
 -- Índices para tablas volcadas
@@ -1224,7 +1105,7 @@ ALTER TABLE `carritos`
 -- AUTO_INCREMENT de la tabla `carrito_items`
 --
 ALTER TABLE `carrito_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT de la tabla `categorias`
@@ -1260,7 +1141,7 @@ ALTER TABLE `devoluciones`
 -- AUTO_INCREMENT de la tabla `direcciones`
 --
 ALTER TABLE `direcciones`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT de la tabla `dotaciones`
@@ -1272,13 +1153,13 @@ ALTER TABLE `dotaciones`
 -- AUTO_INCREMENT de la tabla `envios`
 --
 ALTER TABLE `envios`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_lonas`
 --
 ALTER TABLE `historial_lonas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT de la tabla `imagenes_producto`
@@ -1314,25 +1195,25 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT de la tabla `ordenes`
 --
 ALTER TABLE `ordenes`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_items`
 --
 ALTER TABLE `orden_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`

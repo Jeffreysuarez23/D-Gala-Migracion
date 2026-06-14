@@ -35,7 +35,7 @@
     </div>
 
     <!-- ─── BODY ── -->
-    <div class="checkout__body">
+    <div class="checkout__body" v-reveal>
       <div class="checkout__layout" :class="{ 'checkout__layout--centered': currentStep === 3 }">
 
         <!-- LEFT: Forms -->

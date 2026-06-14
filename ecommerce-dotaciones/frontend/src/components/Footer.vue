@@ -176,6 +176,7 @@ export default {
 .footer__social-link {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 

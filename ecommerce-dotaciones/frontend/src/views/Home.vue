@@ -55,7 +55,7 @@
     </section>
 
     <!-- ─── FEATURED PIECES ───────────────────────────── -->
-    <section class="featured">
+    <section class="featured" v-reveal>
       <div class="section__inner">
         <div class="section__header">
           <div>
@@ -96,7 +96,7 @@
     </section>
 
     <!-- ─── EXPLORE CATEGORIES ──────────────────────── -->
-    <section class="collections">
+    <section class="collections" v-reveal>
       <div class="section__inner">
         <div class="section__header section__header--simple">
           <p class="section__eyebrow">/ COMPRA POR CATEGORÍA</p>
@@ -128,11 +128,11 @@
     </section>
 
     <!-- ─── OUR PHILOSOPHY ───────────────────────────── -->
-    <section class="philosophy">
+    <section class="philosophy" v-reveal>
       <div class="section__inner philosophy__layout">
         <div class="philosophy__images">
           <img
-            src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=900&q=80"
+            src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=900&q=80"
             alt="Crafted with intention"
             class="philosophy__main-img"
           />
@@ -185,7 +185,7 @@ export default {
           title1: 'Usa lo que',
           title2: 'Importa',
           subtitle: 'Piezas atemporales creadas con intención. Calidad sobre<br />cantidad, siempre.',
-          image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1800&q=80',
+          image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1800&q=80',
           link: '/products'
         },
         {
@@ -194,7 +194,7 @@ export default {
           title1: 'Diseños que',
           title2: 'Inspiran',
           subtitle: 'Expresa tu personalidad a través de cortes modernos y<br />detalles únicos.',
-          image: 'https://images.unsplash.com/photo-1485230895905-efd54c86cc10?w=1800&q=80',
+          image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1800&q=80',
           link: '/products'
         },
         {
@@ -203,7 +203,7 @@ export default {
           title1: 'Viste tu',
           title2: 'Esencia',
           subtitle: 'Combinaciones perfectas para destacar en cualquier<br />ocasión.',
-          image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1800&q=80',
+          image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1800&q=80',
           link: '/products'
         }
       ],
@@ -283,13 +283,12 @@ export default {
 
         const destacadas = flatCategories.filter(c => c.destacada === 1 || c.destacada === true)
         
-        // Default placeholder images for categories
         const placeholderImages = [
-          'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=80',
-          'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=900&q=80',
-          'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=900&q=80',
-          'https://images.unsplash.com/photo-1560243563-062bfc001d68?w=900&q=80',
-          'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900&q=80'
+          'https://images.unsplash.com/photo-1544717305-2782549b5136?w=900&q=80',
+          'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=900&q=80',
+          'https://images.unsplash.com/photo-1525921429624-479b6a26d84d?w=900&q=80',
+          'https://images.unsplash.com/photo-1519330377309-951c841407bf?w=900&q=80',
+          'https://images.unsplash.com/photo-1608681285094-1a3b934b5722?w=900&q=80'
         ]
 
         this.categoriasDestacadas = destacadas.map((c, index) => {
@@ -411,7 +410,7 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
 }
 
 .fade-enter-active, .fade-leave-active {
@@ -761,8 +760,7 @@ export default {
 
 .philosophy__main-img {
   width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
+  height: auto;
   border-radius: 12px;
   display: block;
 }

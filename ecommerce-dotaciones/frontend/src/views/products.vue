@@ -1,6 +1,6 @@
 <template>
   <div class="products-page">
-    <div class="products__inner">
+    <div class="products__inner" v-reveal>
 
       <!-- ─── HEADER ── -->
       <div class="products__header">

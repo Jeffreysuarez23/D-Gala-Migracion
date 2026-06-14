@@ -4,7 +4,7 @@
         <!-- ─── HERO ─── -->
         <section class="about-hero">
             <div class="about-hero__bg">
-                <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1800&q=80" alt="D'gala Historia"
+                <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1800&q=80" alt="D'gala Historia"
                     class="about-hero__img" />
                 <div class="about-hero__overlay"></div>
             </div>
@@ -26,10 +26,10 @@
         </section>
 
         <!-- ─── MISIÓN / VISIÓN ─── -->
-        <section class="about-mission">
+        <section class="about-mission" v-reveal>
             <div class="section__inner about-mission__layout">
                 <div class="about-mission__image-wrap">
-                    <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=900&q=80"
+                    <img src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=900&q=80"
                         alt="Taller D'gala" class="about-mission__img" />
                     <div class="about-mission__img-accent"></div>
                 </div>
@@ -61,7 +61,7 @@
         </section>
 
         <!-- ─── VALORES ─── -->
-        <section class="about-values">
+        <section class="about-values" v-reveal>
             <div class="section__inner">
                 <div class="about-values__header">
                     <p class="section__eyebrow">/ LO QUE NOS MUEVE</p>
@@ -81,7 +81,7 @@
         </section>
 
         <!-- ─── HISTORIA / TIMELINE ─── -->
-        <section class="about-timeline">
+        <section class="about-timeline" v-reveal>
             <div class="section__inner">
                 <p class="section__eyebrow">/ CÓMO LLEGAMOS AQUÍ</p>
                 <h2 class="section__title" style="margin-bottom: 56px;">
@@ -103,7 +103,7 @@
         </section>
 
         <!-- ─── PROPUESTA DE VALOR ─── -->
-        <section class="about-proposal">
+        <section class="about-proposal" v-reveal>
             <div class="section__inner">
                 <div class="about-proposal__layout">
                     <div class="about-proposal__content">
@@ -136,7 +136,7 @@
                         </router-link>
                     </div>
                     <div class="about-proposal__images">
-                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=900&q=80"
+                        <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&q=80"
                             alt="D'gala plataforma" class="about-proposal__img" />
                     </div>
                 </div>
@@ -144,7 +144,7 @@
         </section>
 
         <!-- ─── CTA FINAL ─── -->
-        <section class="about-cta">
+        <section class="about-cta" v-reveal>
             <div class="section__inner about-cta__inner">
                 <h2 class="about-cta__title">
                     ¿Listo para vestir<br />
@@ -369,7 +369,7 @@ export default {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 30%;
+    object-position: center;
 }
 
 .about-hero__overlay {
@@ -477,8 +477,7 @@ export default {
 
 .about-mission__img {
     width: 100%;
-    aspect-ratio: 4 / 5;
-    object-fit: cover;
+    height: auto;
     border-radius: 12px;
     display: block;
 }
@@ -734,8 +733,7 @@ export default {
 
 .about-proposal__img {
     width: 100%;
-    aspect-ratio: 4 / 5;
-    object-fit: cover;
+    height: auto;
     border-radius: 16px;
     display: block;
 }

@@ -235,7 +235,7 @@ class AuthController extends Controller
         </head>
         <body>
             <div class="card">
-                <p class="logo">Ecommerce Dotaciones</p>
+                <p class="logo">Dgala Ecommerce</p>
                 <p class="subtitle">Recuperación de contraseña</p>
                 <h2>Hola, ' . htmlspecialchars($user->nombre) . '</h2>
                 <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para cambiarla:</p>
@@ -249,7 +249,7 @@ class AuthController extends Controller
 
         Mail::html($html, function ($message) use ($request) {
             $message->to($request->email)
-                    ->subject('Restablece tu contraseña - Ecommerce Dotaciones');
+                    ->subject('Restablece tu contraseña - Dgala Ecommerce');
         });
 
         return response()->json(['message' => 'Enlace de recuperación enviado al correo.']);
@@ -309,7 +309,7 @@ class AuthController extends Controller
         </head>
         <body>
             <div class="card">
-                <p class="logo">Ecommerce Dotaciones</p>
+                <p class="logo">Dgala Ecommerce</p>
                 <p class="subtitle">Verificación de cuenta</p>
                 <h2>¡Hola, ' . htmlspecialchars($user->nombre) . '!</h2>
                 <p>Gracias por registrarte. Para activar tu cuenta, haz clic en el siguiente botón:</p>

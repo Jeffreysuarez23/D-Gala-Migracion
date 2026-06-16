@@ -67,7 +67,7 @@
 
             <div class="form-group">
               <label class="form-label">Teléfono</label>
-              <input type="tel" class="form-input" v-model="form.telefono" @input="sanitizePhone('telefono', form)" placeholder="+57 300 0000000" />
+              <input type="tel" class="form-input" v-model="form.telefono" @input="sanitizePhone('telefono', form)" placeholder="3000000000" maxlength="10" />
             </div>
 
             <div class="form-group">
@@ -207,10 +207,10 @@ export default {
       obj[field] = val
     },
     sanitizePhone(field, obj) {
-      let val = obj[field].replace(/^\s+/, '')
-      val = val.replace(/[^\+0-9\s]/g, '') // Solo números, + y espacios
-      val = val.replace(/(?!^\+)\+/g, '') // + solo al inicio
-      val = val.replace(/\s{2,}/g, ' ')
+      let val = obj[field].replace(/\D/g, '') // Solo números
+      if (val.length > 10) {
+        val = val.slice(0, 10)
+      }
       obj[field] = val
     },
     sanitizeNoSpaces(field, obj) {
@@ -251,6 +251,13 @@ export default {
         if (!this.form.nombre || !this.form.email || !this.form.password) {
           this.errorMsg = 'Por favor completa todos los campos obligatorios.'
           return
+        }
+        if (this.form.telefono) {
+          const digits = this.form.telefono.replace(/\D/g, '')
+          if (digits.length !== 10) {
+            this.errorMsg = 'El teléfono debe tener exactamente 10 números.'
+            return
+          }
         }
         if (this.form.password.length < 6) {
           this.errorMsg = 'La contraseña debe tener al menos 6 caracteres.'

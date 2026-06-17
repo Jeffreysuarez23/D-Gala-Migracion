@@ -68,7 +68,7 @@
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
-              <td colspan="8" class="text-center text-muted" style="padding: 40px 0;">
+              <td colspan="8" class="text-center text-muted" style="text-align: center; padding: 40px 20px;">
                 No se encontraron pedidos en esta sección.
               </td>
             </tr>

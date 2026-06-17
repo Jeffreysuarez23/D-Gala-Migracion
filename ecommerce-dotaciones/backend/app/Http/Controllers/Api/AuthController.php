@@ -219,31 +219,62 @@ class AuthController extends Controller
 
         $html = '
         <!DOCTYPE html>
-        <html>
+        <html lang="es">
         <head>
-            <meta charset="utf-8">
-            <style>
-                body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 40px 0; }
-                .card { max-width: 480px; margin: 0 auto; background: white; border-radius: 16px; padding: 48px 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-                .logo { text-align: center; font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
-                .subtitle { text-align: center; font-size: 14px; color: #999; margin-bottom: 32px; }
-                h2 { font-size: 22px; color: #1a1a1a; margin: 0 0 16px 0; }
-                p { font-size: 15px; color: #555; line-height: 1.6; margin: 0 0 24px 0; }
-                .btn { display: inline-block; padding: 16px 40px; background: #1a1a1a; color: white !important; text-decoration: none; border-radius: 100px; font-size: 15px; font-weight: 600; }
-                .btn-wrap { text-align: center; margin: 32px 0; }
-            </style>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Recuperación de contraseña</title>
         </head>
-        <body>
-            <div class="card">
-                <p class="logo">Dgala Ecommerce</p>
-                <p class="subtitle">Recuperación de contraseña</p>
-                <h2>Hola, ' . htmlspecialchars($user->nombre) . '</h2>
-                <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para cambiarla:</p>
-                <div class="btn-wrap">
-                    <a href="' . $resetUrl . '" class="btn">Restablecer Contraseña</a>
-                </div>
-                <p>Si no solicitaste este cambio, ignora este correo.</p>
-            </div>
+        <body style="margin:0;padding:0;background-color:#f5f3ef;font-family:\'Segoe UI\',\'Helvetica Neue\',Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f3ef;padding:40px 0;">
+                <tr>
+                    <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                            <tr>
+                                <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:40px 40px 32px;text-align:center;">
+                                    <h1 style="margin:0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
+                                        Recuperación de contraseña
+                                    </h1>
+                                    <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.65);">
+                                        Hola, ' . htmlspecialchars($user->nombre) . '
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:40px 40px 0;text-align:center;">
+                                    <p style="margin:0;font-size:16px;color:#1a1a1a;line-height:1.6;">
+                                        Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para cambiarla:
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:32px 40px;text-align:center;">
+                                    <a href="' . $resetUrl . '" style="display:inline-block;background-color:#1a1a1a;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.02em;">
+                                        Restablecer Contraseña →
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:0 40px 32px;text-align:center;">
+                                    <p style="margin:0;font-size:14px;color:#666;">
+                                        Si no solicitaste este cambio, ignora este correo.
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#faf8f4;padding:24px 40px;border-top:1px solid #ede8de;text-align:center;">
+                                    <p style="margin:0;font-size:12px;color:#aaa;">
+                                        Este correo fue enviado automáticamente. Si tienes alguna duda, contáctanos.
+                                    </p>
+                                    <p style="margin:8px 0 0;font-size:12px;color:#ccc;">
+                                        © ' . date('Y') . ' Dgala Ecommerce. Todos los derechos reservados.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </body>
         </html>';
 
@@ -292,33 +323,63 @@ class AuthController extends Controller
 
         $html = '
         <!DOCTYPE html>
-        <html>
+        <html lang="es">
         <head>
-            <meta charset="utf-8">
-            <style>
-                body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 40px 0; }
-                .card { max-width: 480px; margin: 0 auto; background: white; border-radius: 16px; padding: 48px 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-                .logo { text-align: center; font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
-                .subtitle { text-align: center; font-size: 14px; color: #999; margin-bottom: 32px; }
-                h2 { font-size: 22px; color: #1a1a1a; margin: 0 0 16px 0; }
-                p { font-size: 15px; color: #555; line-height: 1.6; margin: 0 0 24px 0; }
-                .btn { display: inline-block; padding: 16px 40px; background: #1a1a1a; color: white !important; text-decoration: none; border-radius: 100px; font-size: 15px; font-weight: 600; }
-                .btn-wrap { text-align: center; margin: 32px 0; }
-                .footer { text-align: center; font-size: 12px; color: #bbb; margin-top: 32px; }
-            </style>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verificación de cuenta</title>
         </head>
-        <body>
-            <div class="card">
-                <p class="logo">Dgala Ecommerce</p>
-                <p class="subtitle">Verificación de cuenta</p>
-                <h2>¡Hola, ' . htmlspecialchars($user->nombre) . '!</h2>
-                <p>Gracias por registrarte. Para activar tu cuenta, haz clic en el siguiente botón:</p>
-                <div class="btn-wrap">
-                    <a href="' . $verificationUrl . '" class="btn">Verificar mi correo</a>
-                </div>
-                <p>Si no creaste esta cuenta, puedes ignorar este correo.</p>
-                <p class="footer">Este enlace expira en 24 horas.</p>
-            </div>
+        <body style="margin:0;padding:0;background-color:#f5f3ef;font-family:\'Segoe UI\',\'Helvetica Neue\',Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f3ef;padding:40px 0;">
+                <tr>
+                    <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                            <tr>
+                                <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:40px 40px 32px;text-align:center;">
+                                    <h1 style="margin:0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
+                                        Verificación de cuenta
+                                    </h1>
+                                    <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.65);">
+                                        ¡Hola, ' . htmlspecialchars($user->nombre) . '!
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:40px 40px 0;text-align:center;">
+                                    <p style="margin:0;font-size:16px;color:#1a1a1a;line-height:1.6;">
+                                        Gracias por registrarte. Para activar tu cuenta, haz clic en el siguiente botón:
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:32px 40px;text-align:center;">
+                                    <a href="' . $verificationUrl . '" style="display:inline-block;background-color:#1a1a1a;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.02em;">
+                                        Verificar mi correo →
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:0 40px 32px;text-align:center;">
+                                    <p style="margin:0;font-size:14px;color:#666;">
+                                        Si no creaste esta cuenta, puedes ignorar este correo.<br>
+                                        <span style="font-size:12px;color:#aaa;display:block;margin-top:8px;">Este enlace expira en 24 horas.</span>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color:#faf8f4;padding:24px 40px;border-top:1px solid #ede8de;text-align:center;">
+                                    <p style="margin:0;font-size:12px;color:#aaa;">
+                                        Este correo fue enviado automáticamente. Si tienes alguna duda, contáctanos.
+                                    </p>
+                                    <p style="margin:8px 0 0;font-size:12px;color:#ccc;">
+                                        © ' . date('Y') . ' Dgala Ecommerce. Todos los derechos reservados.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </body>
         </html>';
 

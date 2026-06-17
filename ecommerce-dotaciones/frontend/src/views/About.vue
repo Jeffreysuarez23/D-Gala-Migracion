@@ -72,7 +72,7 @@
                 </div>
                 <div class="about-values__grid">
                     <div class="value-card" v-for="v in values" :key="v.title">
-                        <div class="value-card__icon">{{ v.icon }}</div>
+                        <div class="value-card__icon" v-html="v.icon"></div>
                         <h3 class="value-card__title">{{ v.title }}</h3>
                         <p class="value-card__text">{{ v.text }}</p>
                     </div>
@@ -183,32 +183,32 @@ export default {
             ],
             values: [
                 {
-                    icon: '🎯',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
                     title: 'Calidad sobre cantidad',
                     text: 'Seleccionamos cada prenda con rigor técnico. Priorizamos materiales que duren, abriguen y representen bien a cada empresa.'
                 },
                 {
-                    icon: '🔍',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
                     title: 'Transparencia total',
                     text: 'Desde la cotización hasta la entrega, el cliente sabe exactamente en qué etapa está su pedido y por qué.'
                 },
                 {
-                    icon: '🤝',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
                     title: 'Alianzas reales',
                     text: 'No somos solo proveedores. Somos socios estratégicos que acompañan a cada empresa en su imagen corporativa.'
                 },
                 {
-                    icon: '⚡',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>',
                     title: 'Agilidad operativa',
                     text: 'Procesos digitales que eliminan los cuellos de botella tradicionales en cotizaciones, aprobaciones y despachos.'
                 },
                 {
-                    icon: '🌿',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
                     title: 'Responsabilidad',
                     text: 'Trabajamos con fábricas certificadas que respetan normativas laborales y prácticas sostenibles.'
                 },
                 {
-                    icon: '♿',
+                    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="4" r="1"/><path d="m18 19 1-7-6 1"/><path d="m5 8 3-3 5.5 3-2.36 3.5"/><path d="M4.24 14.5a5 5 0 0 0 6.88 6"/><path d="M13.76 17.5a5 5 0 0 0-6.88-6"/></svg>',
                     title: 'Accesibilidad',
                     text: 'Plataforma diseñada para ser usada por cualquier persona, independientemente de su nivel digital.'
                 }
@@ -571,8 +571,11 @@ export default {
 }
 
 .value-card__icon {
-    font-size: 32px;
     margin-bottom: 16px;
+    display: block;
+    color: #1a1a1a;
+}
+.value-card__icon svg {
     display: block;
 }
 

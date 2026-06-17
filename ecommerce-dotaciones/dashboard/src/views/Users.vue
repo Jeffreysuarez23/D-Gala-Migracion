@@ -91,7 +91,7 @@
               </td>
             </tr>
             <tr v-if="usuarios.length === 0">
-              <td colspan="7" class="text-center text-muted" style="padding: 40px 0;">
+              <td colspan="8" class="text-center text-muted" style="text-align: center; padding: 40px 20px;">
                 No hay usuarios registrados
               </td>
             </tr>

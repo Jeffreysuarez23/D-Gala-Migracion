@@ -151,7 +151,7 @@
               </td>
             </tr>
             <tr v-if="filteredProducts.length === 0">
-              <td colspan="10" class="text-center text-muted" style="padding: 40px 0;">
+              <td colspan="10" class="text-center text-muted" style="text-align: center; padding: 40px 20px;">
                 No se encontraron productos con los filtros seleccionados
               </td>
             </tr>
@@ -179,13 +179,13 @@
           <!-- Nombre -->
           <div class="form-group">
             <label>Nombre del Producto *</label>
-            <input type="text" class="input-text" v-model="form.nombre" required />
+            <input type="text" class="input-text" v-model="form.nombre" @input="form.nombre = (form.nombre || '').replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')" required />
           </div>
 
           <!-- Descripción -->
           <div class="form-group">
             <label>Descripción</label>
-            <textarea class="textarea-input" v-model="form.descripcion"></textarea>
+            <textarea class="textarea-input" v-model="form.descripcion" @input="form.descripcion = (form.descripcion || '').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\.,&()\-]/g, '')"></textarea>
           </div>
 
           <!-- Categoría -->
@@ -805,28 +805,44 @@ const submitForm = async () => {
   successMsg.value = ''
   saving.value = true
 
-  if (!form.nombre || form.nombre.trim() === '') {
+  const nombreLimpio = form.nombre ? form.nombre.trim() : ''
+  if (!nombreLimpio) {
     errorMsg.value = 'El nombre del producto es obligatorio.'
     saving.value = false
     return
   }
-  if (!form.precio_minorista || form.precio_minorista <= 0) {
-    errorMsg.value = 'El precio detal debe ser mayor a 0.'
+  if (nombreLimpio.length < 3) {
+    errorMsg.value = 'El nombre debe tener al menos 3 caracteres.'
     saving.value = false
     return
   }
-  if (form.precio_mayorista < 0) {
-    errorMsg.value = 'El precio mayorista no puede ser negativo.'
+  if (nombreLimpio.length > 60) {
+    errorMsg.value = 'El nombre es muy largo (máximo 60 caracteres).'
     saving.value = false
     return
   }
-  if (form.precio_mayorista > 0 && (!form.min_cantidad_mayorista || form.min_cantidad_mayorista < 1)) {
-    errorMsg.value = 'Si hay precio mayorista, la cantidad mínima debe ser al menos 1.'
+  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreLimpio)) {
+    errorMsg.value = 'El nombre del producto solo puede contener letras y espacios.'
     saving.value = false
     return
   }
-  if (form.min_cantidad_mayorista < 0) {
-    errorMsg.value = 'La cantidad mínima mayorista no puede ser negativa.'
+  if (form.descripcion && form.descripcion.length > 500) {
+    errorMsg.value = 'La descripción no puede exceder los 500 caracteres.'
+    saving.value = false
+    return
+  }
+  if (!form.precio_minorista || form.precio_minorista <= 0 || isNaN(form.precio_minorista)) {
+    errorMsg.value = 'El precio detal debe ser un número válido mayor a 0.'
+    saving.value = false
+    return
+  }
+  if (form.precio_mayorista !== null && form.precio_mayorista !== '' && (isNaN(form.precio_mayorista) || form.precio_mayorista < 0)) {
+    errorMsg.value = 'El precio mayorista debe ser un número válido igual o mayor a 0.'
+    saving.value = false
+    return
+  }
+  if (form.precio_mayorista > 0 && (!form.min_cantidad_mayorista || form.min_cantidad_mayorista < 1 || isNaN(form.min_cantidad_mayorista))) {
+    errorMsg.value = 'Si hay precio mayorista, la cantidad mínima debe ser al menos 1 unidad.'
     saving.value = false
     return
   }
@@ -836,7 +852,12 @@ const submitForm = async () => {
     return
   }
   if (!isEditMode.value && !form.lona_id) {
-    errorMsg.value = 'Debes seleccionar una lona inicial.'
+    errorMsg.value = 'Debes seleccionar una lona inicial (ubicación).'
+    saving.value = false
+    return
+  }
+  if (!isEditMode.value && localImages.value.length === 0) {
+    errorMsg.value = 'Es obligatorio agregar al menos una imagen para el nuevo producto.'
     saving.value = false
     return
   }

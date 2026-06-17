@@ -119,6 +119,11 @@
                 </button>
               </td>
             </tr>
+            <tr v-if="state.lonas.length === 0">
+              <td colspan="8" class="text-center text-muted" style="text-align: center; padding: 40px 20px;">
+                No hay lonas registradas
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -227,6 +232,7 @@
           <div class="form-group">
             <label>Dotación Asociada *</label>
             <select class="select-input" v-model="lonaForm.dotacion_id" required>
+              <option :value="null" disabled>Seleccionar Dotación</option>
               <option v-for="d in state.dotaciones" :key="d.id" :value="d.id">{{ d.nombre }}</option>
             </select>
           </div>
@@ -238,7 +244,7 @@
             <div class="form-group">
               <label>Categoría Oficial</label>
               <select class="input-text" v-model="lonaForm.categoria_id">
-                <option :value="null">-- Seleccionar Categoría --</option>
+                <option :value="null" disabled>Seleccionar Categoría</option>
                 <option v-for="cat in state.categorias" :key="cat.id" :value="cat.id">
                   {{ cat.nombre }}
                 </option>

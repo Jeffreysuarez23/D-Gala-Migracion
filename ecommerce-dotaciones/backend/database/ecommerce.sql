@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-06-2026 a las 17:31:57
+-- Tiempo de generación: 17-06-2026 a las 21:56:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -123,6 +123,14 @@ CREATE TABLE `categorias` (
   `destacada` tinyint(1) DEFAULT 0,
   `imagen_url` varchar(500) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `categorias`
+--
+
+INSERT INTO `categorias` (`id`, `nombre`, `slug`, `padre_id`, `orden`, `destacada`, `imagen_url`) VALUES
+(32, 'Camisetas', 'camisetas', NULL, 1, 1, 'http://localhost:8000/images/categorias/1781633436_6a31919c5f269.jpg'),
+(33, 'pantalones', 'pantalones', NULL, 1, 1, 'http://localhost:8000/images/categorias/1781635438_6a31996ee0970.webp');
 
 -- --------------------------------------------------------
 
@@ -273,7 +281,10 @@ INSERT INTO `direcciones` (`id`, `usuario_id`, `nombre_recibe`, `telefono`, `eti
 (44, 7, 'jeffrey', '3423423423', 'Casa', 'Guainía', 'Inírida', 'scsdffdsf', 'wwer', '233243', 0, NULL),
 (45, 7, 'fdsfdsfds', '2343424324', 'Casa', 'Amazonas', 'Leticia', 'fdsdsfdfssdf', 'fdsdfsdfs', '343232', 0, NULL),
 (46, 7, 'fdsfdsfds', '2343424324', 'Casa', 'Amazonas', 'Leticia', 'fdsdsfdfssdf', 'fdsdfsdfs', '343232', 0, NULL),
-(47, 7, 'sdsdffd', '3244323422', 'Casa', 'Antioquia', 'Apartadó', '3dfsdfsfds', 'fdsfds', '324342', 0, NULL);
+(47, 7, 'sdsdffd', '3244323422', 'Casa', 'Antioquia', 'Apartadó', '3dfsdfsfds', 'fdsfds', '324342', 0, NULL),
+(48, 7, 'dfsdfsdfs', '2433242343', 'Casa', 'Guainía', 'Inírida', 'rerewwer', 'erwererwerw', '234342', 0, NULL),
+(49, 7, 'fewrrewwer', '3244323421', 'Casa', 'Caquetá', 'Florencia', 'fsdfdsfds', 'dfsfdsfds', '323243', 0, NULL),
+(50, 7, 'JFDSNFD', '3422342434', 'Casa', 'Atlántico', 'Malambo', 'DFSDSFFDS', 'FSDSDFDFS', '324432', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -296,7 +307,8 @@ CREATE TABLE `dotaciones` (
 --
 
 INSERT INTO `dotaciones` (`id`, `nombre`, `descripcion`, `min_lonas`, `max_lonas`, `lonas_activas`, `alerta_enviada_en`) VALUES
-(12, 'Camisas', 'Las mejores camisas.', 1, 10, 0, NULL);
+(16, 'Camisas', NULL, 1, 10, 0, NULL),
+(17, 'zapatos', 'fjfjhfjf', 1, 10, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -348,14 +360,6 @@ CREATE TABLE `imagenes_producto` (
   `es_portada` tinyint(1) DEFAULT 0,
   `orden` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `imagenes_producto`
---
-
-INSERT INTO `imagenes_producto` (`id`, `producto_id`, `variante_id`, `url`, `es_portada`, `orden`) VALUES
-(11, 16, NULL, 'http://localhost:8000/images/productos/1781128443_6a29dcfbca2c6.png', 1, 0),
-(14, 17, NULL, 'http://localhost:8000/images/productos/1781224196_6a2b5304a989e.png', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -514,7 +518,12 @@ INSERT INTO `notificaciones` (`id`, `usuario_id`, `tipo`, `titulo`, `mensaje`, `
 (43, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781312309 por $865,200 COP', '2026-06-13 06:00:15', NULL, '2026-06-13 05:58:29'),
 (44, NULL, 'stock_bajo', 'Producto Agotado', 'El producto Camisa Sena (Talla: M, Color: ROJO) se ha quedado sin stock (0 unidades).', '2026-06-13 06:00:14', NULL, '2026-06-13 05:58:29'),
 (45, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781312369 por $1,400,000 COP', '2026-06-13 06:00:11', NULL, '2026-06-13 05:59:29'),
-(46, NULL, 'stock_bajo', 'Producto Agotado', 'El producto prueba (Talla: Única, Color: ROJO) se ha quedado sin stock (0 unidades).', '2026-06-13 06:00:10', NULL, '2026-06-13 05:59:29');
+(46, NULL, 'stock_bajo', 'Producto Agotado', 'El producto prueba (Talla: Única, Color: ROJO) se ha quedado sin stock (0 unidades).', '2026-06-13 06:00:10', NULL, '2026-06-13 05:59:29'),
+(47, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781633992 por $200,400 COP', '2026-06-17 22:51:35', NULL, '2026-06-16 23:19:52'),
+(48, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781634265 por $9,180,000 COP', '2026-06-17 22:51:34', NULL, '2026-06-16 23:24:25'),
+(49, NULL, 'stock_bajo', 'Producto Agotado', 'El producto camisa (Talla: S, Color: AZUL) se ha quedado sin stock (0 unidades).', '2026-06-17 22:51:33', NULL, '2026-06-16 23:24:25'),
+(50, NULL, 'orden', 'Nueva orden recibida', 'Se ha creado la orden ORD-1781636224 por $105,900 COP', '2026-06-17 22:51:32', NULL, '2026-06-16 23:57:04'),
+(51, NULL, 'stock_bajo', 'Stock Crítico', 'El producto Pantalones negros (Talla: XS, Color: NEGRO) tiene stock bajo (3 unidades).', '2026-06-17 22:51:32', NULL, '2026-06-16 23:57:04');
 
 -- --------------------------------------------------------
 
@@ -537,6 +546,15 @@ CREATE TABLE `ordenes` (
   `notas_cliente` text DEFAULT NULL,
   `creado_en` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `ordenes`
+--
+
+INSERT INTO `ordenes` (`id`, `usuario_id`, `direccion_id`, `cupon_id`, `numero`, `estado`, `tipo_precio`, `subtotal`, `descuento`, `envio_costo`, `total`, `notas_cliente`, `creado_en`) VALUES
+(47, 7, 48, NULL, 'ORD-1781633992', 'pagado', 'minorista', 185400.00, 0.00, 15000.00, 200400.00, 'fdsdfsfsd', '2026-06-16 18:19:52'),
+(48, 7, 49, NULL, 'ORD-1781634265', 'pagado', 'minorista', 9180000.00, 0.00, 0.00, 9180000.00, 'fdsdfsdfsdfs', '2026-06-16 18:24:25'),
+(49, 7, 50, NULL, 'ORD-1781636224', 'pagado', 'minorista', 90900.00, 0.00, 15000.00, 105900.00, 'DFSDFSDFS', '2026-06-16 18:57:04');
 
 -- --------------------------------------------------------
 
@@ -646,6 +664,15 @@ CREATE TABLE `pagos` (
   `pagado_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `pagos`
+--
+
+INSERT INTO `pagos` (`id`, `orden_id`, `metodo`, `referencia_pasarela`, `estado`, `monto`, `pagado_en`) VALUES
+(34, 47, 'paypal', '55H99214F9160612A', 'aprobado', 200400.00, NULL),
+(35, 48, 'paypal', '4SN2573143867344S', 'aprobado', 9180000.00, NULL),
+(36, 49, 'paypal', '8GT51441YF5338340', 'aprobado', 105900.00, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -705,7 +732,9 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (49, 'App\\Models\\Usuario', 7, 'auth_token', 'd836f1c82b3e5b2c944406ff5877f8f58128fd35240caa9bd0be9c9dcfe9ff98', '[\"*\"]', NULL, NULL, '2026-06-12 06:13:19', '2026-06-12 06:13:19'),
 (52, 'App\\Models\\Usuario', 7, 'auth_token', '13088d145e03031b5bfde3aac19a93fb3260d84bad5aa0757b438052792e1968', '[\"*\"]', '2026-06-13 01:04:45', NULL, '2026-06-12 23:39:09', '2026-06-13 01:04:45'),
 (53, 'App\\Models\\Usuario', 7, 'auth_token', 'bd03a2b0ad0bbcddf062a85a0123943c182af43bed7245b07e99a794b0bf35a2', '[\"*\"]', '2026-06-13 00:59:21', NULL, '2026-06-13 00:49:29', '2026-06-13 00:59:21'),
-(54, 'App\\Models\\Usuario', 7, 'auth_token', 'd6a2a8387e315e2399fbf12a05cc1330a171a278d89f4ec79f940ababa94b515', '[\"*\"]', '2026-06-14 20:05:19', NULL, '2026-06-13 00:59:55', '2026-06-14 20:05:19');
+(54, 'App\\Models\\Usuario', 7, 'auth_token', 'd6a2a8387e315e2399fbf12a05cc1330a171a278d89f4ec79f940ababa94b515', '[\"*\"]', '2026-06-14 20:05:19', NULL, '2026-06-13 00:59:55', '2026-06-14 20:05:19'),
+(59, 'App\\Models\\Usuario', 7, 'auth_token', '07dec50e066777c7858296c20606a28a2b9a5498cb2991973f3911292c809594', '[\"*\"]', '2026-06-16 23:58:59', NULL, '2026-06-16 23:42:17', '2026-06-16 23:58:59'),
+(61, 'App\\Models\\Usuario', 7, 'auth_token', '6cef922b17a5fb54b581b9d80fec3910c31715c181b4357d1e5b3ef9d8200bc1', '[\"*\"]', NULL, NULL, '2026-06-18 00:52:38', '2026-06-18 00:52:38');
 
 -- --------------------------------------------------------
 
@@ -728,14 +757,6 @@ CREATE TABLE `productos` (
   `creado_en` timestamp NULL DEFAULT current_timestamp(),
   `destacado` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `productos`
---
-
-INSERT INTO `productos` (`id`, `categoria_id`, `nombre`, `slug`, `descripcion`, `precio_minorista`, `precio_mayorista`, `min_cantidad_mayorista`, `publicado`, `permitir_sin_stock`, `eliminado_en`, `creado_en`, `destacado`) VALUES
-(16, NULL, 'Camisa Sena', 'camisa-sena', NULL, 100000.00, 150000.00, 12, 1, 1, '2026-06-14 20:29:59', '2026-06-10 21:54:02', 1),
-(17, NULL, 'prueba', 'prueba', 'ojala funcione', 200000.00, 0.00, 12, 1, 1, '2026-06-14 20:30:03', '2026-06-12 00:28:55', 1);
 
 -- --------------------------------------------------------
 
@@ -819,7 +840,10 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `google_id`, `rol`, `telefono`, `avatar_url`, `email_verificado_en`, `remember_token`, `eliminado_en`, `creado_en`, `actualizado_en`) VALUES
 (1, 'Alejandro', 'test@gmail.com', '$2y$12$jaaZNDO.XKDO432O90tRG.WWoSqjdPgBa1OgSetWo89.otsoER6DG', NULL, 'cliente', NULL, NULL, NULL, NULL, NULL, '2026-04-24 19:10:54', '2026-04-24 19:10:54'),
-(7, 'Jeffrey hermoso hola', 'jeffrey232008suarez@gmail.com', '$2y$12$y7hNmzOV43ks7URJgmKWBO6znmC9O2mU2EzBWsUZmuR9fm7FH/K2K', NULL, 'super_admin', '111111', NULL, '2026-06-11 00:59:16', NULL, NULL, '2026-06-08 20:10:14', '2026-06-10 19:59:16');
+(7, 'Jeffrey hermoso hola', 'jeffrey232008suarez@gmail.com', '$2y$12$uvy3tni7IJBiTpd33tIXh.xvKToSWLpkSs3lwuTMwwg75KGCpG/4m', NULL, 'super_admin', '111111', NULL, '2026-06-11 00:59:16', NULL, NULL, '2026-06-08 20:10:14', '2026-06-17 19:52:26'),
+(22, 'isa', 'isaromera750@gmai.com', '$2y$12$CXKtZqhHp0LU/a97zSLrfuq4rJkj9yu5YhxXlzYSTCNhFPY3efHYy', NULL, 'cliente', '3243244342', NULL, NULL, NULL, NULL, '2026-06-16 18:02:24', '2026-06-16 18:02:24'),
+(23, 'miguelito', 'miguelito3er@gmail.com', '$2y$12$Ry3dJneyrJv77NjA6.MOi.UqwOb8vDcyV.rOgMMwxehXozn2NY7AW', NULL, 'cliente', '2324342342', NULL, NULL, NULL, NULL, '2026-06-16 18:26:04', '2026-06-16 18:26:04'),
+(24, 'hector', 'hmaya10@hotmail.com', '$2y$12$4/GNv5DM4GTirQLqjv8X0OKfEhFC/CAjqDVPwigs4E3OnRe6jEgYO', NULL, 'cliente', '3434243243', NULL, '2026-06-16 18:40:54', NULL, NULL, '2026-06-16 18:38:53', '2026-06-16 18:40:59');
 
 -- --------------------------------------------------------
 
@@ -1104,13 +1128,13 @@ ALTER TABLE `carritos`
 -- AUTO_INCREMENT de la tabla `carrito_items`
 --
 ALTER TABLE `carrito_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `configuraciones_cms`
@@ -1140,13 +1164,13 @@ ALTER TABLE `devoluciones`
 -- AUTO_INCREMENT de la tabla `direcciones`
 --
 ALTER TABLE `direcciones`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT de la tabla `dotaciones`
 --
 ALTER TABLE `dotaciones`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `envios`
@@ -1158,13 +1182,13 @@ ALTER TABLE `envios`
 -- AUTO_INCREMENT de la tabla `historial_lonas`
 --
 ALTER TABLE `historial_lonas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT de la tabla `imagenes_producto`
 --
 ALTER TABLE `imagenes_producto`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `jobs`
@@ -1176,13 +1200,13 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT de la tabla `lonas`
 --
 ALTER TABLE `lonas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `lona_tallas`
 --
 ALTER TABLE `lona_tallas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de la tabla `migrations`
@@ -1194,37 +1218,37 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT de la tabla `ordenes`
 --
 ALTER TABLE `ordenes`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_items`
 --
 ALTER TABLE `orden_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `tokens_restablecimiento_password`
@@ -1236,13 +1260,13 @@ ALTER TABLE `tokens_restablecimiento_password`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `variantes_producto`
 --
 ALTER TABLE `variantes_producto`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- Restricciones para tablas volcadas

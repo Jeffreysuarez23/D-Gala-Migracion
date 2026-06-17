@@ -79,7 +79,7 @@
               </td>
             </tr>
             <tr v-if="flatCategorias.length === 0">
-              <td colspan="5" class="text-center text-muted" style="padding: 40px 0;">
+              <td colspan="6" class="text-center text-muted" style="text-align: center; padding: 40px 20px;">
                 No hay categorías registradas
               </td>
             </tr>
@@ -382,6 +382,11 @@ const submitForm = async () => {
   const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/
   if (!regex.test(nombreLimpio)) {
     errorMsg.value = 'El nombre contiene caracteres inválidos.'
+    return
+  }
+  
+  if (!isEditMode.value && !newImg.file) {
+    errorMsg.value = 'Es obligatorio seleccionar una imagen para la nueva categoría.'
     return
   }
   

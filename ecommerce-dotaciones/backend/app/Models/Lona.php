@@ -29,7 +29,6 @@ class Lona extends Model
         'codigo',
         'tipo_producto',
         'categoria_id',
-        'color',
         'estado',
         'activa',
         'capacidad_maxima'

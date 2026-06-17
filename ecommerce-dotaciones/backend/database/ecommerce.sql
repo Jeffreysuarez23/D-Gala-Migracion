@@ -404,7 +404,6 @@ CREATE TABLE `lonas` (
   `codigo` varchar(50) NOT NULL,
   `tipo_producto` varchar(80) DEFAULT NULL,
   `categoria_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `color` varchar(50) DEFAULT NULL,
   `estado` enum('nuevo','usado') DEFAULT 'nuevo',
   `activa` tinyint(1) DEFAULT 1,
   `creado_en` timestamp NULL DEFAULT current_timestamp(),

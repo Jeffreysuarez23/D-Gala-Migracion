@@ -203,7 +203,7 @@
             <select class="select-input" v-model="form.lona_id" required>
               <option :value="null">Seleccione una lona para el producto</option>
               <option v-for="l in lonas" :key="l.id" :value="l.id">
-                {{ l.codigo }} - {{ l.tipo_producto }} ({{ l.color }})
+                {{ l.codigo }} - {{ l.tipo_producto }}
               </option>
             </select>
           </div>
@@ -255,7 +255,7 @@
 
             <div class="variants-panel__header">
               <h3>Variantes & Stock</h3>
-              <button type="button" class="btn-text-action" :class="{ cancel: showAddVariantForm }" @click="showAddVariantForm = !showAddVariantForm; if(!showAddVariantForm) editingVarId = null; if(showAddVariantForm && !editingVarId) { newVar.sku=''; newVar.color=''; newVar.color_hex='#000000'; newVar.talla=''; newVar.stock=0; newVar.lona_id=null; newVar.precio_extra=0; }">
+              <button type="button" class="btn-text-action" :class="{ cancel: showAddVariantForm }" @click="showAddVariantForm = !showAddVariantForm; if(!showAddVariantForm) editingVarId = null; if(showAddVariantForm && !editingVarId) { newVar.sku=''; newVar.color='#000000'; newVar.color_hex='#000000'; newVar.talla=''; newVar.stock=0; newVar.lona_id=null; newVar.precio_extra=0; }">
                 <svg v-if="!showAddVariantForm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 {{ showAddVariantForm ? 'Cancelar' : 'Agregar Variante' }}
               </button>
@@ -270,18 +270,14 @@
                   <input type="text" class="input-text" placeholder="Ej: POLO-004" v-model="newVar.sku" @input="newVar.sku = newVar.sku.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase()" />
                 </div>
                 <div class="form-group">
-                  <label>Nombre del Color</label>
-                  <input type="text" class="input-text" placeholder="Ej: Azul Marino" v-model="newVar.color" @input="handleColorInput" />
+                  <label>Código de Color (Hex)</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="color" v-model="newVar.color_hex" @input="newVar.color = newVar.color_hex" style="width: 42px; height: 42px; padding: 0; border: 1px solid var(--color-border); border-radius: 4px; cursor: pointer; flex-shrink: 0;" title="Selector de color" />
+                    <input type="text" class="input-text" v-model="newVar.color_hex" @input="newVar.color = newVar.color_hex" placeholder="#000000" style="font-family: monospace; text-transform: uppercase;" title="Pega aquí el código Hex (Ej: #FF5733)" maxlength="7" />
+                  </div>
                 </div>
               </div>
               <div class="grid-2">
-                <div class="form-group">
-                  <label>Tono del Color</label>
-                  <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="color" v-model="newVar.color_hex" style="width: 42px; height: 42px; padding: 0; border: 1px solid var(--color-border); border-radius: 4px; cursor: pointer;" />
-                    <span style="font-family: monospace; color: var(--text-secondary);">{{ newVar.color_hex }}</span>
-                  </div>
-                </div>
                 <div class="form-group">
                   <label>Talla (Separa con comas para varias)</label>
                   <input type="text" class="input-text" placeholder="Ej: S, M, L" :value="newVar.talla" @input="formatTallasInput($event, newVar, 'talla')" />
@@ -303,7 +299,7 @@
                   <select class="select-input" v-model="newVar.lona_id">
                     <option :value="null">Ninguna lona</option>
                     <option v-for="l in lonas" :key="l.id" :value="l.id">
-                      {{ l.codigo }} - {{ l.tipo_producto }} ({{ l.color }})
+                      {{ l.codigo }} - {{ l.tipo_producto }}
                     </option>
                   </select>
                 </div>
@@ -584,7 +580,7 @@ const form = reactive({
 
 const newVar = reactive({
   sku: '',
-  color: '',
+  color: '#000000',
   color_hex: '#000000',
   talla: '',
   stock: 0,
@@ -592,41 +588,6 @@ const newVar = reactive({
   precio_extra: 0,
   descuento: 0
 })
-
-const handleColorInput = (event) => {
-  let val = event.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').toUpperCase()
-  newVar.color = val
-  
-  const colorMap = {
-    'AZUL': '#006eff',
-    'ROJO': '#ef4444',
-    'VERDE': '#10b981',
-    'NEGRO': '#000000',
-    'BLANCO': '#ffffff',
-    'GRIS': '#9ca3af',
-    'AMARILLO': '#eab308',
-    'NARANJA': '#f97316',
-    'MORADO': '#8b5cf6',
-    'ROSADO': '#ec4899',
-    'CAFE': '#8b4513',
-    'MARRON': '#8b4513',
-    'BEIGE': '#f5f5dc',
-    'VINO': '#800000',
-    'TURQUESA': '#40e0d0',
-    'CELESTE': '#87ceeb'
-  }
-
-  const isDefaultOrAuto = newVar.color_hex === '#000000' || Object.values(colorMap).includes(newVar.color_hex)
-  
-  if (isDefaultOrAuto) {
-    for (const [name, hex] of Object.entries(colorMap)) {
-      if (val.includes(name)) {
-        newVar.color_hex = hex
-        break
-      }
-    }
-  }
-}
 
 const newImg = reactive({
   file: null,
@@ -990,14 +951,6 @@ const saveNewVariant = async () => {
     return
   }
 
-  // Validar color de la variante con el color de la lona
-  const selectedLona = lonas.value.find(l => l.id === newVar.lona_id)
-  if (selectedLona && selectedLona.color) {
-    if (newVar.color.trim().toLowerCase() !== selectedLona.color.trim().toLowerCase()) {
-      varErrorMsg.value = `El color de la variante ("${newVar.color}") no coincide con el color estricto de la Lona seleccionada ("${selectedLona.color}").`
-      return
-    }
-  }
   
   const tallas = newVar.talla ? String(newVar.talla).split(',').map(t => t.trim()).filter(t => t) : ['']
   if (tallas.length === 0) tallas.push('')
@@ -1047,7 +1000,7 @@ const saveNewVariant = async () => {
     await fetchProducts()
     
     newVar.sku = ''
-    newVar.color = ''
+    newVar.color = '#000000'
     newVar.color_hex = '#000000'
     newVar.talla = ''
     newVar.stock = 0

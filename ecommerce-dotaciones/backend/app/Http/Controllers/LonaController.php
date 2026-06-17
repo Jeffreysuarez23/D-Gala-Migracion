@@ -26,7 +26,6 @@ class LonaController extends Controller
             'codigo' => 'required|string|max:50|unique:lonas,codigo',
             'tipo_producto' => 'nullable|string|max:80',
             'categoria_id' => 'nullable|exists:categorias,id',
-            'color' => 'nullable|string|max:50',
             'estado' => 'nullable|in:nuevo,usado',
             'capacidad_maxima' => 'nullable|integer|min:1'
         ]);
@@ -58,7 +57,6 @@ class LonaController extends Controller
         $validated = $request->validate([
             'tipo_producto' => 'nullable|string|max:80',
             'categoria' => 'nullable|string|max:80',
-            'color' => 'nullable|string|max:50',
             'estado' => 'nullable|in:nuevo,usado',
             'capacidad_maxima' => 'nullable|integer|min:1'
         ]);

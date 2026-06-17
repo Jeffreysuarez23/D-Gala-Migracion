@@ -64,9 +64,8 @@
               <th>Código Lona</th>
               <th>Dotación Relacionada</th>
               <th>Prenda / Categoría</th>
-              <th>Color</th>
               <th>Estado Físico</th>
-              <th>Tallas & Cantidades</th>
+              <th>Tallas, Cantidades & Colores</th>
               <th>Total Stock</th>
               <th>Capacidad</th>
               <th>Acciones</th>
@@ -83,12 +82,6 @@
                 </div>
               </td>
               <td>
-                <div class="color-indicator-wrap">
-                  <span class="color-badge" :style="{ backgroundColor: getColorHex(lona.color) }"></span>
-                  <span>{{ lona.color }}</span>
-                </div>
-              </td>
-              <td>
                 <span :class="['badge', lona.estado === 'nuevo' ? 'badge--success' : 'badge--pending']">
                   {{ lona.estado }}
                 </span>
@@ -96,7 +89,8 @@
               <td>
                 <!-- Sizes Grid details -->
                 <div class="sizes-badges">
-                  <div v-for="lt in getLonaTallas(lona.id)" :key="lt.id" class="size-pill">
+                  <div v-for="lt in getLonaTallasWithColors(lona.id)" :key="lt.id" class="size-pill" style="display: flex; align-items: center; gap: 6px;">
+                    <span class="color-dot" :style="{ backgroundColor: lt.color_hex || '#000000', width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid var(--color-border)' }" :title="lt.color || 'Color'"></span>
                     <span class="size-label">{{ lt.talla }}:</span>
                     <strong class="size-qty" :class="{ 'text-danger': lt.cantidad === 0 }">{{ lt.cantidad }}</strong>
                   </div>
@@ -121,7 +115,7 @@
                   Editar Lona
                 </button>
                 <button class="btn btn--danger btn--sm" style="padding: 6px 14px; display: block; width: 100%;" @click="confirmDeleteLona(lona)">
-                  Eliminar Lona
+                  Desactivar Lona
                 </button>
               </td>
             </tr>
@@ -252,10 +246,6 @@
             </div>
           </div>
           <div class="grid-2">
-            <div class="form-group">
-              <label>Color *</label>
-              <input type="text" class="input-text" placeholder="Ej: Azul, Blanco" v-model="lonaForm.color" @input="lonaForm.color = lonaForm.color.replace(/[^a-zA-Z\sñÑáéíóúÁÉÍÓÚ]/g, '')" required />
-            </div>
             <div class="form-group">
               <label>Estado Inicial *</label>
               <select class="select-input" v-model="lonaForm.estado">
@@ -481,7 +471,6 @@ const lonaForm = reactive({
   codigo: '',
   tipo_producto: '',
   categoria_id: null,
-  color: '',
   estado: 'nuevo',
   capacidad_maxima: 500,
   tallas: { S: 0, M: 0, L: 0, XL: 0 }
@@ -548,6 +537,19 @@ const getLonaTallas = (lonaId) => {
   return Object.keys(tallasMap).map(t => ({ id: t, talla: t, cantidad: tallasMap[t] }))
 }
 
+const getLonaTallasWithColors = (lonaId) => {
+  const vars = state.variantes.filter(v => v.lona_id === lonaId)
+  const tallasMap = {}
+  vars.forEach(v => {
+    const key = `${v.talla}_${v.color_hex}_${v.color}`
+    if (!tallasMap[key]) {
+      tallasMap[key] = { talla: v.talla, color: v.color, color_hex: v.color_hex, cantidad: 0 }
+    }
+    tallasMap[key].cantidad += v.stock
+  })
+  return Object.values(tallasMap).map((item, index) => ({ id: index, ...item }))
+}
+
 const getLonaTotalStock = (lonaId) => {
   return state.variantes
     .filter(v => v.lona_id === lonaId)
@@ -574,30 +576,6 @@ const getCapacityColorClass = (lona) => {
   if (count >= lona.capacidad_maxima) return 'gauge-bar--danger'
   if (count >= lona.capacidad_maxima * 0.8) return 'gauge-bar--warning'
   return 'gauge-bar--success'
-}
-
-const getColorHex = (colorName) => {
-  if (!colorName) return '#7a6a53'
-  
-  const normalized = colorName.toLowerCase().trim()
-  const colors = {
-    'azul': '#3b82f6',
-    'blanco': '#f3f4f6',
-    'naranja': '#f97316',
-    'rojo': '#ef4444',
-    'negro': '#1f2937',
-    'gris': '#9ca3af',
-    'verde': '#22c55e',
-    'amarillo': '#eab308',
-    'morado': '#a855f7',
-    'rosado': '#ec4899',
-    'rosa': '#ec4899',
-    'cafe': '#8b5a2b',
-    'marrón': '#8b5a2b',
-    'marron': '#8b5a2b',
-    'beige': '#d5bdaf'
-  }
-  return colors[normalized] || '#7a6a53'
 }
 
 const getLonaCode = (lonaId) => {
@@ -633,7 +611,6 @@ const openCreateLonaDrawer = () => {
   lonaForm.codigo = ''
   lonaForm.tipo_producto = ''
   lonaForm.categoria_id = null
-  lonaForm.color = ''
   lonaForm.estado = 'nuevo'
   lonaForm.capacidad_maxima = 500
   lonaForm.tallas = { S: 0, M: 0, L: 0, XL: 0 }
@@ -662,7 +639,6 @@ const editLona = (lona) => {
   lonaForm.dotacion_id = lona.dotacion_id
   lonaForm.tipo_producto = lona.tipo_producto || ''
   lonaForm.categoria_id = lona.categoria_id || null
-  lonaForm.color = lona.color || ''
   lonaForm.estado = lona.estado
   lonaForm.capacidad_maxima = lona.capacidad_maxima || 500
   showLonaDrawer.value = true
@@ -777,10 +753,6 @@ const submitLona = async () => {
   }
   if (!lonaForm.categoria_id) {
     errorMsg.value = 'Debes asignar obligatoriamente una Categoría a esta lona.'
-    return
-  }
-  if (!lonaForm.color || lonaForm.color.trim() === '') {
-    errorMsg.value = 'El color predominante de la lona es obligatorio.'
     return
   }
   if (lonaForm.capacidad_maxima === null || lonaForm.capacidad_maxima < 1) {

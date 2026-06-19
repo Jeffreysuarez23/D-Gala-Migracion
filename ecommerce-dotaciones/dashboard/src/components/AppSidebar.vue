@@ -2,8 +2,8 @@
   <aside class="app-sidebar" :class="{ 'app-sidebar--open': isOpen }">
     
     <!-- Brand Logo -->
-    <div class="sidebar__brand">
-      <h2 class="title-serif">Dotaciones<br /><span class="subtitle-serif">Control Panel</span></h2>
+    <div class="sidebar__brand" style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 16px; padding-top: 10px;">
+      <img src="/logo.png" alt="Logo" style="max-width: 120px; height: auto; filter: brightness(0) invert(1);" />
     </div>
 
     <!-- Navigation Links -->

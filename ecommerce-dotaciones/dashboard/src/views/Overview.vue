@@ -105,33 +105,33 @@
         </div>
       </div>
 
-      <!-- Metric 4: Stock Alerts -->
+      <!-- Metric 4: Inactive Lonas -->
       <div class="card metric-card">
         <div class="metric-card__header">
-          <span class="metric-card__title">Alertas Críticas</span>
+          <span class="metric-card__title">Lonas inactivas</span>
           <span class="metric-card__icon text-danger">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
             </svg>
           </span>
         </div>
         <div class="metric-card__body">
-          <h2 class="metric-card__value">{{ lowStockLonasCount }}</h2>
+          <h2 class="metric-card__value">{{ inactiveLonasCount }}</h2>
           <div class="metric-card__trend">
-            <span class="trend-indicator trend-indicator--down" v-if="lowStockLonasCount > 0">
-              Necesita atención
+            <span class="trend-indicator trend-indicator--down" v-if="inactiveLonasCount > 0">
+              Desactivadas
             </span>
             <span class="trend-indicator trend-indicator--up" v-else>
-              Todo en orden
+              Ninguna
             </span>
           </div>
         </div>
         <!-- Sparkline -->
-        <div class="metric-card__sparkline" v-if="lowStockLonasCount > 0">
+        <div class="metric-card__sparkline" v-if="inactiveLonasCount > 0">
           <svg viewBox="0 0 100 20" class="sparkline-svg">
-            <path d="M0,5 L20,15 L40,3 L60,18 L80,12 L100,18" fill="none" stroke="var(--color-danger)" stroke-width="2"></path>
+            <path d="M0,15 L20,10 L40,15 L60,10 L80,15 L100,10" fill="none" stroke="var(--color-danger)" stroke-width="2"></path>
           </svg>
         </div>
         <div class="metric-card__sparkline" v-else>
@@ -404,8 +404,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { state, actions } from '../store/state.js'
+import axios from 'axios'
+
+const apiResumen = ref({
+  lonas_activas: 0,
+  lonas_inactivas: 0
+})
+
+onMounted(async () => {
+  try {
+    // Request is intercepted by main.js to add Bearer token
+    const res = await axios.get('http://localhost:8000/api/dashboard/resumen')
+    apiResumen.value = res.data
+  } catch (error) {
+    console.error('Error fetching dashboard summary:', error)
+  }
+})
 
 // Date string helper
 const todayDateString = computed(() => {
@@ -421,22 +437,8 @@ const totalSales = computed(() => {
 })
 
 const totalOrdersCount = computed(() => state.ordenes.length)
-const totalLonasCount = computed(() => state.lonas.length)
-
-const lowStockLonasCount = computed(() => {
-  let count = 0
-  state.lonas.forEach(l => {
-    const totalQty = state.lona_tallas
-      .filter(lt => lt.lona_id === l.id)
-      .reduce((sum, lt) => sum + lt.cantidad, 0)
-    
-    const dot = state.dotaciones.find(d => d.id === l.dotacion_id)
-    if (dot && totalQty < dot.min_lonas) {
-      count++
-    }
-  })
-  return count
-})
+const totalLonasCount = computed(() => apiResumen.value.lonas_activas)
+const inactiveLonasCount = computed(() => apiResumen.value.lonas_inactivas)
 
 const recentOrders = computed(() => {
   return [...state.ordenes]

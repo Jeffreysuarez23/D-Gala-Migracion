@@ -47,6 +47,9 @@ class DashboardController extends Controller
             )
             ->get();
 
+        $lonasActivas = \App\Models\Lona::where('activa', 1)->count();
+        $lonasInactivas = \App\Models\Lona::where('activa', 0)->count();
+
         return response()->json([
             'ventas_totales' => $ventasTotales,
             'total_ordenes' => $totalOrdenes,
@@ -54,7 +57,9 @@ class DashboardController extends Controller
             'total_usuarios' => $totalUsuarios,
             'ordenes_por_estado' => $ordenesPorEstado,
             'productos_mas_vendidos' => $productosMasVendidos,
-            'stock_bajo' => $stockBajo
+            'stock_bajo' => $stockBajo,
+            'lonas_activas' => $lonasActivas,
+            'lonas_inactivas' => $lonasInactivas
         ]);
     }
 }
